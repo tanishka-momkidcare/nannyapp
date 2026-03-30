@@ -97,12 +97,12 @@ export function WelcomeScreen() {
         <Text style={styles.logoMom}>mom</Text>
         <Text style={styles.logoKid}>kid</Text>
         <Text style={styles.logoCare}>care</Text>
-        <Text style={styles.logoTM}>®</Text>
+        <Text style={styles.logoTM}>ï¿½</Text>
       </View>
 
       {/* -- Hero: organic blob + photo ---------------------------------- */}
       <View style={styles.heroSection}>
-        {/* Decorative dots – upper right */}
+        {/* Decorative dots ï¿½ upper right */}
         <Svg style={styles.decorSvg} width={28} height={52}>
           <Circle cx="18" cy="9"  r="5.5" fill={BLUE} opacity={0.55} />
           <Circle cx="8"  cy="27" r="3.5" fill={BLUE} opacity={0.40} />
@@ -123,7 +123,7 @@ export function WelcomeScreen() {
             />
           </Svg>
 
-          {/* Nanny photo – rendered on top of blob */}
+          {/* Nanny photo ï¿½ rendered on top of blob */}
           <Image
             source={SLIDES[currentIndex].image}
             style={styles.heroImage}
@@ -132,7 +132,7 @@ export function WelcomeScreen() {
         </View>
       </View>
 
-      {/* -- Slide text (badge · title · description) ------------------- */}
+      {/* -- Slide text (badge ï¿½ title ï¿½ description) ------------------- */}
       <FlatList
         ref={flatListRef}
         data={SLIDES}
@@ -176,7 +176,7 @@ export function WelcomeScreen() {
         )}
         <TouchableOpacity style={styles.button} onPress={handleNext} activeOpacity={0.85}>
           <Text style={styles.buttonText}>
-            {currentIndex === SLIDES.length - 1 ? '???? ????  ›' : '??? ?????  ›'}
+            {currentIndex === SLIDES.length - 1 ? '???? ????  ï¿½' : '??? ?????  ï¿½'}
           </Text>
         </TouchableOpacity>
       </View>
