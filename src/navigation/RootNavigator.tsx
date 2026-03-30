@@ -1,41 +1,20 @@
 import React from 'react';
 import {ActivityIndicator, StyleSheet, View} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {useAuth, useTheme} from '../context';
-import {WelcomeScreen, SignInScreen, SignUpScreen, HomeScreen, OTPScreen} from '../screens';
-import type {AuthStackParamList, AppStackParamList, OnboardingStackParamList} from './types';
+import {OnboardingStack, AuthStack, AppStack} from './stacks';
 
-const OnboardingStack = createNativeStackNavigator<OnboardingStackParamList>();
-const AuthStack = createNativeStackNavigator<AuthStackParamList>();
-const AppStack = createNativeStackNavigator<AppStackParamList>();
-
-function OnboardingNavigator() {
-  return (
-    <OnboardingStack.Navigator screenOptions={{headerShown: false}}>
-      <OnboardingStack.Screen name="Welcome" component={WelcomeScreen} />
-    </OnboardingStack.Navigator>
-  );
-}
-
-function AuthNavigator() {
-  return (
-    <AuthStack.Navigator screenOptions={{headerShown: false}} initialRouteName="SignIn">
-      <AuthStack.Screen name="SignIn" component={SignInScreen} />
-      <AuthStack.Screen name="SignUp" component={SignUpScreen} />
-      <AuthStack.Screen name="OTPVerification" component={OTPScreen} />
-    </AuthStack.Navigator>
-  );
-}
-
-function AppNavigator() {
-  return (
-    <AppStack.Navigator screenOptions={{headerShown: false}}>
-      <AppStack.Screen name="Home" component={HomeScreen} />
-    </AppStack.Navigator>
-  );
-}
-
+/**
+ * Root navigator — decides which stack to render based on auth state.
+ *
+ * Flow:
+ *   1. First launch  → OnboardingStack  (unprotected)
+ *   2. Not logged in → AuthStack         (unprotected)
+ *   3. Logged in     → AppStack          (protected)
+ *
+ * React Navigation automatically resets the stack when switching between
+ * these groups, so a logged-out user can never access protected screens.
+ */
 export function RootNavigator() {
   const {isLoggedIn, isLoading, hasSeenOnboarding} = useAuth();
   const {colors} = useTheme();
@@ -51,11 +30,11 @@ export function RootNavigator() {
   return (
     <NavigationContainer>
       {!hasSeenOnboarding ? (
-        <OnboardingNavigator />
+        <OnboardingStack />
       ) : !isLoggedIn ? (
-        <AuthNavigator />
+        <AuthStack />
       ) : (
-        <AppNavigator />
+        <AppStack />
       )}
     </NavigationContainer>
   );
