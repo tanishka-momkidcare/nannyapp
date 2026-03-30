@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="136.463" height="135.959" viewBox="0 0 136.463 135.959">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="Rectangle_569" data-name="Rectangle 569" width="60.303" height="60.918" fill="rgba(102,139,237,0.51)"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect id="Rectangle_569-2" data-name="Rectangle 569" width="100.964" height="101.995" fill="rgba(102,139,237,0.51)"/>
+    </clipPath>
+  </defs>
+  <g id="Group_5082" data-name="Group 5082" transform="translate(49 -4)">
+    <g id="Group_5078" data-name="Group 5078" transform="translate(72.944 86.403) rotate(109)" opacity="0.582">
+      <g id="Group_307" data-name="Group 307" transform="translate(-8 -12.601)" opacity="0.3" clip-path="url(#clip-path)">
+        <path id="Path_1847" data-name="Path 1847" d="M42.647,17.709c-2.074-5.593-5.064-8.93-12.674-9.965-4.785-.65-5.461,4.7-8.554,7.432-4.447,3.931-13.345,6.644-14.3,17.472-.121,1.381-.077,3.934-.051,5.547,0,15.878,20.29,17.8,29.813,7.342,2.276-2.5,9.477-17.808,5.762-27.828M30.255,60.918C12.892,60.918,0,47.271,0,30.458V30.24C0,13.427,12.789,0,30.048,0,47.412,0,60.3,13.647,60.3,30.46v.218c0,4.27-2.393,12.12-2.393,12.12s-14.78,18.12-27.656,18.12" transform="translate(0 0)" fill="rgba(102,139,237,0.51)"/>
+      </g>
+    </g>
+    <g id="Group_5077" data-name="Group 5077" transform="translate(65.79 40.668) rotate(109)" opacity="0.582">
+      <g id="Group_307-2" data-name="Group 307" transform="translate(-8 -12.601)" opacity="0.3" clip-path="url(#clip-path-2)">
+        <path id="Path_1847-2" data-name="Path 1847" d="M71.4,29.649C67.931,20.285,62.925,14.7,50.184,12.966c-8.012-1.089-9.143,7.866-14.322,12.443-7.445,6.582-22.344,11.123-23.937,29.253-.2,2.313-.13,6.586-.085,9.287,0,26.584,33.971,29.81,49.915,12.293,3.811-4.187,15.868-29.816,9.647-46.592M50.655,101.995C21.584,101.994,0,79.145,0,51V50.63C0,22.481,21.413,0,50.309,0c29.071,0,50.656,22.849,50.655,51v.366c0,7.15-4.006,20.293-4.006,20.293S72.212,102,50.655,101.995" transform="translate(0 0)" fill="rgba(102,139,237,0.51)"/>
+      </g>
+    </g>
+  </g>
+</svg>

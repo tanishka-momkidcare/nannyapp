@@ -12,22 +12,31 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Svg, {Circle, Defs, Ellipse, Filter, FeGaussianBlur, Path, Rect} from 'react-native-svg';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {AuthStackParamList} from '../../navigation/types';
-// import {MomWithBabyIllustration} from '../../assets/images/MomWithBabyIllustration';
-// import {PhoneIcon} from '../../assets/icons/PhoneIcon';
+import {LoginScreenMomWithBaby} from '../../assets/images/LoginScreenMomWithBaby';
+import {MKCLogo} from '../../assets/images/MKCLogo';
+import {MKCLogoIconBlue} from '../../assets/images/MKCLogoIconBlue';
+import {LoginScreenBottomIcon} from '../../assets/images/LoginScreenBottomIcon';
+import {
+  CountryCodePicker,
+  DEFAULT_COUNTRY,
+  type Country,
+} from '../../components/CountryCodePicker';
+import {useTheme} from '../../context';
+import {FontSizes} from '../../constants';
+import {GreyLockIcon} from '../../assets/images/GreyLockIcon';
 
 const {width} = Dimensions.get('window');
-
-const BLUE = '#3B82F6';
-const AMBER = '#F5A623';
-const BG = '#EEF6FF';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignIn'>;
 
 export function SignInScreen({navigation}: Props) {
+  const {colors, isDark} = useTheme();
   const [phone, setPhone] = useState('');
   const [agreed, setAgreed] = useState(false);
+  const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
 
   function handleSendOTP() {
     if (phone.trim().length < 10 || !agreed) {
@@ -39,45 +48,57 @@ export function SignInScreen({navigation}: Props) {
   const canSubmit = phone.length >= 10 && agreed;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={BLUE} />
-
-      {/* Top blob with portrait */}
-      <View style={styles.blobContainer}>
-        <View style={styles.blob} />
-        <View style={styles.portraitCircle}>
-          {/* <MomWithBabyIllustration width={150} height={150} /> */}
-        </View>
-        <View style={styles.logoRow}>
-          <Text style={styles.logoMom}>mom</Text>
-          <Text style={styles.logoKid}>kid</Text>
-          <Text style={styles.logoCare}>care</Text>
-          <Text style={styles.logoTM}>®</Text>
-        </View>
-      </View>
+    <SafeAreaView style={[styles.container, {backgroundColor: colors.background}]}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
 
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
-
-          <Text style={styles.title}>लॉगिन करें या नया खाता बनाएं</Text>
-          <Text style={styles.subtitle}>अपना मोबाइल नंबर दर्ज करके शुरू करें</Text>
-
-          {/* Phone input row */}
-          <View style={styles.phoneRow}>
-            <View style={styles.prefixBox}>
-              {/* <PhoneIcon width={18} height={18} /> */}
-              <Text style={styles.flagText}>🇮🇳</Text>
-              <Text style={styles.prefixText}>+91</Text>
+          <View style={styles.heroSection}>
+            <View style={styles.heroImageWrap}>
+              <LoginScreenMomWithBaby width={width * 0.8} height={width * 0.62} />
             </View>
+          </View>
+          <View style={styles.logoContainer}>
+            <MKCLogoIconBlue width={150} height={150} style={{marginLeft: -88, marginTop: -100}} />
+            <MKCLogo width={98} height={41} style={{paddingHorizontal: 24,marginTop: -50 }} />
+          </View>
+          <Text style={[styles.title, {color: colors.text}]}>
+            लॉगिन करें या नया खाता बनाएं
+          </Text>
+          <Text style={[styles.subtitle, {color: colors.textMuted}]}>
+            अपना मोबाइल नंबर दर्ज करके शुरू करें
+          </Text>
+          <View
+            style={[
+              styles.phoneRow,
+              {
+                backgroundColor: colors.inputBackground,
+                borderColor: colors.inputBorder,
+              },
+            ]}>
+            <View style={styles.phoneIconBox}>
+              <Svg width={18} height={18} viewBox="0 0 24 24">
+                <Path
+                  d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2a1.003 1.003 0 011.01-.24c1.12.37 2.33.57 3.57.57.55 0 1.01.46 1.01 1.01v3.49c0 .55-.46 1.01-1.01 1.01C10.07 21.02 2.98 13.93 2.98 4.98c0-.55.46-1.01 1.01-1.01H7.5c.55 0 1.01.46 1.01 1.01 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.01l-2.22 2.23z"
+                  fill="hsla(213, 92%, 54%, 1)"
+                />
+              </Svg>
+            </View>
+            <View style={[styles.verticalDivider, {backgroundColor: colors.border}]} />
+            <CountryCodePicker selected={country} onSelect={setCountry} />
             <TextInput
-              style={styles.phoneInput}
+              style={[styles.phoneInput, {color: colors.inputText}]}
               placeholder="मोबाइल नंबर"
-              placeholderTextColor="#AAAAAA"
+              placeholderTextColor={colors.inputPlaceholder}
               keyboardType="phone-pad"
               maxLength={10}
               value={phone}
@@ -85,33 +106,91 @@ export function SignInScreen({navigation}: Props) {
             />
           </View>
 
-          <Text style={styles.otpHint}>
-            आपके मोबाइल नंबर की पुष्टि के लिए हम SMS के माध्यम से OTP भेजेंगे
+          {/* ── OTP hint ── */}
+          <Text style={[styles.otpHint, {color: colors.textMuted}]}>
+            आपके मोबाइल नंबर की पुष्टि के लिए हम{'\n'}SMS के माध्यम से OTP भेजेंगे
           </Text>
 
-          {/* Terms checkbox */}
+          {/* ── Terms checkbox ── */}
           <TouchableOpacity
             style={styles.checkboxRow}
             onPress={() => setAgreed(v => !v)}
             activeOpacity={0.7}>
-            <View style={[styles.checkbox, agreed && styles.checkboxChecked]}>
-              {agreed && <Text style={styles.checkmark}>✓</Text>}
+            <View
+              style={[
+                styles.checkbox,
+                {borderColor: colors.checkboxBorder},
+                agreed && {
+                  backgroundColor: colors.checkboxChecked,
+                  borderColor: colors.checkboxChecked,
+                },
+              ]}>
+              {agreed && <Text style={[styles.checkmark, {color: colors.textInverse}]}>✓</Text>}
             </View>
-            <Text style={styles.termsText}>
+            <Text style={[styles.termsText, {color: colors.textSecondary}]}>
               I agree to{' '}
-              <Text style={styles.termsLink}>Terms &amp; Conditions</Text>
+              <Text style={[styles.termsLink, {color: colors.link}]}>
+                Terms &amp; Conditions.
+              </Text>
             </Text>
           </TouchableOpacity>
 
-          {/* Send OTP button */}
+          {/* ── Send OTP button ── */}
           <TouchableOpacity
-            style={[styles.button, !canSubmit && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              {
+                backgroundColor: canSubmit
+                  ? 'hsla(213, 92%, 54%, 1)'
+                  : colors.buttonDisabled,
+              },
+            ]}
             onPress={handleSendOTP}
-            activeOpacity={0.85}>
-            <Text style={styles.buttonText}>🔒  OTP भेजें ›</Text>
+            activeOpacity={0.85}
+            disabled={!canSubmit}>
+            <View style={styles.buttonContent}>
+              <GreyLockIcon
+                width={15}
+                height={15}
+                color={canSubmit ? '#FFFFFF' : undefined}
+                style={{marginRight: 8}}
+              />
+              <Text
+                style={[
+                  styles.buttonText,
+                  {
+                    color: canSubmit
+                      ? colors.buttonPrimaryText
+                      : colors.buttonDisabledText,
+                  },
+                ]}>
+                OTP भेजें  ›
+              </Text>
+            </View>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* ── Bottom-right decorative icon ── */}
+      <View style={styles.bottomIconWrap} pointerEvents="none">
+        <Svg width={320} height={280} style={styles.bottomIconBgSvg}>
+          <Defs>
+            <Filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+              <FeGaussianBlur in="SourceGraphic" stdDeviation="50" />
+            </Filter>
+          </Defs>
+          <Ellipse
+            cx={200}
+            cy={180}
+            rx={160}
+            ry={140}
+            fill="hsla(227, 81%, 87%, 1)"
+            filter="url(#blur)"
+            opacity={0.48}
+          />
+        </Svg>
+        <LoginScreenBottomIcon width={250} height={250} />
+      </View>
     </SafeAreaView>
   );
 }
@@ -119,167 +198,143 @@ export function SignInScreen({navigation}: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BG,
+    overflow: 'hidden',
+  },
+  bottomIconWrap: {
+    position: 'absolute',
+    bottom: -110,
+    right: -60,
+  },
+  bottomIconBgSvg: {
+    position: 'absolute',
+    bottom: -20,
+    right: -20,
   },
   flex: {
     flex: 1,
   },
-  blobContainer: {
-    alignItems: 'center',
-    height: 270,
-  },
-  blob: {
-    position: 'absolute',
-    width: width * 1.15,
-    height: 240,
-    borderBottomLeftRadius: width * 0.65,
-    borderBottomRightRadius: width * 0.65,
-    backgroundColor: BLUE,
-    top: 0,
-  },
-  portraitCircle: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 62,
-    borderWidth: 4,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    shadowOffset: {width: 0, height: 4},
-    elevation: 6,
-    overflow: 'hidden',
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    position: 'absolute',
-    top: 14,
-    left: 24,
-  },
-  logoMom: {fontSize: 21, fontWeight: '800', color: '#FFFFFF'},
-  logoKid: {fontSize: 21, fontWeight: '800', color: '#FFF176'},
-  logoCare: {fontSize: 12, fontWeight: '400', color: '#FFF176', marginBottom: 1},
-  logoTM: {fontSize: 9, color: '#FFFFFFAA', marginBottom: 2, marginLeft: 1},
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 22,
+  scrollContent: {
     paddingBottom: 40,
   },
+
+  /* ── Hero ── */
+  heroSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: width * 0.75,
+    marginTop: 20,
+  },
+  decorDots: {
+    position: 'absolute',
+    top: 12,
+    right: width * 0.12,
+    zIndex: 2,
+  },
+  blobSvg: {
+    position: 'absolute',
+  },
+  heroImageWrap: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  /* ── Logo ── */
+  logoContainer: {
+    paddingHorizontal: 0,
+    marginBottom: 14,
+    gap: 2,
+  },
+
+  /* ── Text ── */
   title: {
-    fontSize: 22,
+    fontSize: FontSizes.title,
     fontWeight: '800',
-    color: '#1A1A1A',
-    marginBottom: 6,
-    lineHeight: 30,
+    paddingHorizontal: 24,
+    marginBottom: 4,
+    lineHeight: 28,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 22,
+    fontSize: FontSizes.caption,
+    paddingHorizontal: 24,
+    marginBottom: 20,
   },
+
+  /* ── Phone input ── */
   phoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 14,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: {width: 0, height: 2},
-    elevation: 2,
+    marginHorizontal: 24,
+    borderWidth: 1,
   },
-  prefixBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 17,
-    borderRightWidth: 1,
-    borderRightColor: '#E5E7EB',
+  phoneIconBox: {
+    paddingLeft: 10,
+    paddingRight: 6,
   },
-  phoneIcon: {
-    marginRight: 4,
-  },
-  flagText: {
-    fontSize: 18,
-    marginRight: 6,
-  },
-  prefixText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1A1A1A',
+  verticalDivider: {
+    width: 1,
+    height: 24,
+    color:"hsla(0, 0%, 1%, 1)"
   },
   phoneInput: {
     flex: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 17,
-    fontSize: 15,
-    color: '#1A1A1A',
+    paddingHorizontal: 6,
+    paddingVertical: 16,
+    fontSize: FontSizes.input,
   },
+
+  /* ── Hint ── */
   otpHint: {
-    fontSize: 12,
-    color: '#888888',
+    fontSize: FontSizes.sm,
     marginTop: 10,
     marginBottom: 22,
     lineHeight: 18,
+    paddingHorizontal: 24,
   },
+
+  /* ── Checkbox ── */
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 28,
+    paddingHorizontal: 24,
   },
   checkbox: {
     width: 20,
     height: 20,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: '#AAAAAA',
     marginRight: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkboxChecked: {
-    backgroundColor: BLUE,
-    borderColor: BLUE,
-  },
   checkmark: {
-    color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: FontSizes.caption,
     fontWeight: '700',
   },
   termsText: {
-    fontSize: 13,
-    color: '#555555',
+    fontSize: FontSizes.caption,
   },
   termsLink: {
-    color: BLUE,
     fontWeight: '600',
   },
+
+  /* ── Button ── */
   button: {
-    backgroundColor: AMBER,
-    borderRadius: 30,
+    borderRadius: 14,
     height: 54,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: AMBER,
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    shadowOffset: {width: 0, height: 4},
-    elevation: 5,
+    marginHorizontal: 48,
   },
-  buttonDisabled: {
-    backgroundColor: '#DDDDDD',
-    shadowOpacity: 0,
-    elevation: 0,
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: FontSizes.button,
     fontWeight: '700',
-    color: '#FFFFFF',
   },
 });

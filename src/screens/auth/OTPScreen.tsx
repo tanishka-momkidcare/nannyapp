@@ -3,6 +3,7 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -12,24 +13,28 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Svg, {Defs, Ellipse, FeGaussianBlur, Filter} from 'react-native-svg';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {useAuth} from '../../context';
+import {useAuth, useTheme} from '../../context';
+import {FontSizes} from '../../constants';
 import type {AuthStackParamList} from '../../navigation/types';
-import {MomWithBabyIllustration} from '../../assets/images/MomWithBabyIllustration';
+import {LoginScreenMomWithBaby} from '../../assets/images/LoginScreenMomWithBaby';
+import {MKCLogo} from '../../assets/images/MKCLogo';
+import {MKCLogoIconBlue} from '../../assets/images/MKCLogoIconBlue';
+import {LoginScreenBottomIcon} from '../../assets/images/LoginScreenBottomIcon';
+import {GreyLockIcon} from '../../assets/images/GreyLockIcon';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const {width} = Dimensions.get('window');
-
-const BLUE = '#3B82F6';
-const AMBER = '#F5A623';
-const BG = '#EEF6FF';
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 49;
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'OTPVerification'>;
 
-export function OTPScreen({route}: Props) {
+export function OTPScreen({route, navigation}: Props) {
   const {phone} = route.params;
   const {signIn} = useAuth();
+  const {colors, isDark} = useTheme();
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [timer, setTimer] = useState(RESEND_SECONDS);
@@ -87,37 +92,49 @@ export function OTPScreen({route}: Props) {
   const filled = otp.join('').length === OTP_LENGTH;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={BLUE} />
-
-      {/* Top blob with portrait */}
-      <View style={styles.blobContainer}>
-        <View style={styles.blob} />
-        <View style={styles.portraitCircle}>
-          <MomWithBabyIllustration width={130} height={130} />
-        </View>
-        <View style={styles.logoRow}>
-          <Text style={styles.logoMom}>mom</Text>
-          <Text style={styles.logoKid}>kid</Text>
-          <Text style={styles.logoCare}>care</Text>
-          <Text style={styles.logoTM}>®</Text>
-        </View>
-      </View>
+    <SafeAreaView style={[styles.container, {backgroundColor: colors.background}]}>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
 
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
 
-          <Text style={styles.title}>OTP सत्यापन</Text>
-          <Text style={styles.subtitle}>
+          {/* ── Hero ── */}
+          <View style={styles.heroSection}>
+            <View style={styles.heroImageWrap}>
+              <LoginScreenMomWithBaby width={width * 0.8} height={width * 0.62} />
+            </View>
+          </View>
+
+          {/* ── Logo ── */}
+          <View style={styles.logoContainer}>
+            <MKCLogoIconBlue width={150} height={150} style={{marginLeft: -88, marginTop: -100}} />
+            <MKCLogo width={98} height={41} style={{paddingHorizontal: 24, marginTop: -50}} />
+          </View>
+
+          {/* ── Title ── */}
+          <Text style={[styles.title, {color: colors.text}]}>
+            OTP सत्यापन
+          </Text>
+          <Text style={[styles.subtitle, {color: colors.textMuted}]}>
             +91 {phone} पर भेजा गया OTP दर्ज करें
           </Text>
 
-          {/* OTP input boxes */}
+          {/* ── Change number ── */}
+          <Pressable style={styles.changeNumberRow} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={14} color="hsla(213, 92%, 54%, 1)" />
+            <Text style={styles.changeNumberText}>नंबर बदलें</Text>
+          </Pressable>
+
+          {/* ── OTP input boxes ── */}
           <View style={styles.otpRow}>
             {otp.map((digit, i) => (
               <TextInput
@@ -125,7 +142,20 @@ export function OTPScreen({route}: Props) {
                 ref={ref => {
                   inputRefs.current[i] = ref;
                 }}
-                style={[styles.otpBox, digit ? styles.otpBoxFilled : null]}
+                style={[
+                  styles.otpBox,
+                  {
+                    backgroundColor: colors.inputBackground,
+                    borderColor: colors.inputBorder,
+                    color: colors.text,
+                  },
+                  digit
+                    ? {
+                        borderColor: 'hsla(213, 92%, 54%, 1)',
+                        backgroundColor: colors.otpFilledBackground,
+                      }
+                    : null,
+                ]}
                 value={digit}
                 onChangeText={text => handleChange(text, i)}
                 onKeyPress={({nativeEvent}) => handleKeyPress(nativeEvent.key, i)}
@@ -137,23 +167,77 @@ export function OTPScreen({route}: Props) {
             ))}
           </View>
 
-          {/* Resend section */}
-          <Text style={styles.resendQuestion}>क्या आपको OTP नहीं मिला?</Text>
+          {/* ── Resend ── */}
+          <Text style={[styles.resendQuestion, {color: colors.textMuted}]}>
+            क्या आपको OTP नहीं मिला?
+          </Text>
           <TouchableOpacity onPress={handleResend} disabled={timer > 0} activeOpacity={0.7}>
-            <Text style={[styles.resendText, timer > 0 && styles.resendDisabled]}>
+            <Text
+              style={[
+                styles.resendText,
+                {color: 'hsla(213, 92%, 54%, 1)'},
+                timer > 0 && {color: colors.textMuted},
+              ]}>
               {timer > 0 ? `${timer} सेकंड में पुनः प्रयास करें` : 'पुनः भेजें'}
             </Text>
           </TouchableOpacity>
 
-          {/* Verify button */}
+          {/* ── Verify button ── */}
           <TouchableOpacity
-            style={[styles.button, !filled && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              {
+                backgroundColor: filled
+                  ? 'hsla(213, 92%, 54%, 1)'
+                  : colors.buttonDisabled,
+              },
+            ]}
             onPress={handleVerify}
-            activeOpacity={0.85}>
-            <Text style={styles.buttonText}>🔒  सत्यापित करें ›</Text>
+            activeOpacity={0.85}
+            disabled={!filled}>
+            <View style={styles.buttonContent}>
+              <GreyLockIcon
+                width={15}
+                height={15}
+                color={filled ? '#FFFFFF' : undefined}
+                style={{marginRight: 8}}
+              />
+              <Text
+                style={[
+                  styles.buttonText,
+                  {
+                    color: filled
+                      ? '#FFFFFF'
+                      : colors.buttonDisabledText,
+                  },
+                ]}>
+                सत्यापित करें  ›
+              </Text>
+            </View>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* ── Bottom-right decorative icon ── */}
+      <View style={styles.bottomIconWrap} pointerEvents="none">
+        <Svg width={320} height={280} style={styles.bottomIconBgSvg}>
+          <Defs>
+            <Filter id="otpBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <FeGaussianBlur in="SourceGraphic" stdDeviation="50" />
+            </Filter>
+          </Defs>
+          <Ellipse
+            cx={200}
+            cy={180}
+            rx={160}
+            ry={140}
+            fill="hsla(227, 81%, 87%, 1)"
+            filter="url(#otpBlur)"
+            opacity={0.48}
+          />
+        </Svg>
+        <LoginScreenBottomIcon width={250} height={250} />
+      </View>
     </SafeAreaView>
   );
 }
@@ -161,128 +245,119 @@ export function OTPScreen({route}: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: BG,
+    overflow: 'hidden',
   },
   flex: {
     flex: 1,
   },
-  blobContainer: {
-    alignItems: 'center',
-    height: 250,
-  },
-  blob: {
-    position: 'absolute',
-    width: width * 1.15,
-    height: 220,
-    borderBottomLeftRadius: width * 0.65,
-    borderBottomRightRadius: width * 0.65,
-    backgroundColor: BLUE,
-    top: 0,
-  },
-  portraitCircle: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 58,
-    borderWidth: 4,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    shadowOffset: {width: 0, height: 4},
-    elevation: 6,
-    overflow: 'hidden',
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    position: 'absolute',
-    top: 14,
-    left: 24,
-  },
-  logoMom: {fontSize: 21, fontWeight: '800', color: '#FFFFFF'},
-  logoKid: {fontSize: 21, fontWeight: '800', color: '#FFF176'},
-  logoCare: {fontSize: 12, fontWeight: '400', color: '#FFF176', marginBottom: 1},
-  logoTM: {fontSize: 9, color: '#FFFFFFAA', marginBottom: 2, marginLeft: 1},
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 22,
+  scrollContent: {
     paddingBottom: 40,
   },
+
+  /* ── Hero ── */
+  heroSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: width * 0.75,
+    marginTop: 20,
+  },
+  heroImageWrap: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  /* ── Logo ── */
+  logoContainer: {
+    paddingHorizontal: 0,
+    marginBottom: 14,
+    gap: 2,
+  },
+
+  /* ── Text ── */
   title: {
-    fontSize: 22,
+    fontSize: FontSizes.title,
     fontWeight: '800',
-    color: '#1A1A1A',
-    marginBottom: 6,
+    paddingHorizontal: 24,
+    marginBottom: 4,
+    lineHeight: 28,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 28,
-    lineHeight: 20,
+    fontSize: FontSizes.caption,
+    paddingHorizontal: 24,
+    marginBottom: 8,
   },
+
+  /* ── Change number ── */
+  changeNumberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    marginBottom: 20,
+    gap: 6,
+  },
+  changeNumberText: {
+    fontSize: FontSizes.caption,
+    fontWeight: '600',
+    color: 'hsla(213, 92%, 54%, 1)',
+  },
+
+  /* ── OTP ── */
   otpRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 28,
+    marginHorizontal: 24,
+    marginBottom: 20,
   },
   otpBox: {
     width: (width - 48 - 30) / OTP_LENGTH,
     height: 54,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#E0E0E0',
-    fontSize: 22,
+    fontSize: FontSizes.h2,
     fontWeight: '700',
-    color: '#1A1A1A',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: {width: 0, height: 1},
-    elevation: 1,
   },
-  otpBoxFilled: {
-    borderColor: BLUE,
-    backgroundColor: '#EEF6FF',
-  },
+
+  /* ── Resend ── */
   resendQuestion: {
-    fontSize: 13,
-    color: '#888888',
+    fontSize: FontSizes.caption,
     marginBottom: 4,
+    paddingHorizontal: 24,
   },
   resendText: {
-    fontSize: 13,
-    color: BLUE,
+    fontSize: FontSizes.caption,
     fontWeight: '600',
-    marginBottom: 32,
+    marginBottom: 28,
+    paddingHorizontal: 24,
   },
-  resendDisabled: {
-    color: '#AAAAAA',
-  },
+
+  /* ── Button ── */
   button: {
-    backgroundColor: AMBER,
-    borderRadius: 30,
+    borderRadius: 14,
     height: 54,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: AMBER,
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    shadowOffset: {width: 0, height: 4},
-    elevation: 5,
+    marginHorizontal: 48,
   },
-  buttonDisabled: {
-    backgroundColor: '#DDDDDD',
-    shadowOpacity: 0,
-    elevation: 0,
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: FontSizes.button,
     fontWeight: '700',
-    color: '#FFFFFF',
+  },
+
+  /* ── Bottom icon ── */
+  bottomIconWrap: {
+    position: 'absolute',
+    bottom: -110,
+    right: -60,
+  },
+  bottomIconBgSvg: {
+    position: 'absolute',
+    bottom: -20,
+    right: -20,
   },
 });
