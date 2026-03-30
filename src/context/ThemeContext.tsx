@@ -21,13 +21,13 @@ const STORAGE_KEY = '@nannyapp_theme_mode';
 const ThemeContext = createContext<ThemeContextType>({
   colors: Colors.light,
   isDark: false,
-  themeMode: 'light',
+  themeMode: 'system',
   setThemeMode: () => {},
 });
 
 export function ThemeProvider({children}: {children: React.ReactNode}) {
   const systemScheme = useColorScheme();
-  const [themeMode, setThemeModeState] = useState<ThemeMode>('light');
+  const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then(stored => {

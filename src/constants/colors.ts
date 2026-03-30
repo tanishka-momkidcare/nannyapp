@@ -62,64 +62,64 @@ export const Colors = {
   },
   dark: {
     // Core
-    background: '#0F172A',
-    surface: '#1E293B',
-    card: '#1E293B',
-    primary: '#60A5FA',
-    primaryDark: '#3B82F6',
-    secondary: '#FF6584',
-    accent: '#F5A623',
-    success: '#22C55E',
+    background: '#0D1B2A',
+    surface: '#1B2838',
+    card: '#1B2838',
+    primary: '#7CB8FF',
+    primaryDark: '#5A9CF5',
+    secondary: '#FF7A95',
+    accent: '#FFB74D',
+    success: '#4ADE80',
 
     // Text
-    text: '#F1F5F9',
-    textSecondary: '#94A3B8',
-    textMuted: '#64748B',
-    textInverse: '#0F172A',
+    text: '#E8EAED',
+    textSecondary: '#9AA0A6',
+    textMuted: '#5E6D7F',
+    textInverse: '#0D1B2A',
 
     // Borders & Dividers
-    border: '#334155',
-    borderLight: '#334155',
-    divider: '#1E293B',
+    border: '#243447',
+    borderLight: '#243447',
+    divider: '#192533',
 
     // Input
-    inputBackground: '#1E293B',
-    inputText: '#F1F5F9',
-    inputPlaceholder: '#64748B',
-    inputBorder: '#334155',
+    inputBackground: '#1B2838',
+    inputText: '#E8EAED',
+    inputPlaceholder: '#5E6D7F',
+    inputBorder: '#2A3D52',
 
     // Button
-    buttonPrimary: '#F5A623',
-    buttonPrimaryText: '#FFFFFF',
-    buttonDisabled: '#334155',
-    buttonDisabledText: '#64748B',
+    buttonPrimary: '#FFB74D',
+    buttonPrimaryText: '#0D1B2A',
+    buttonDisabled: '#1B2838',
+    buttonDisabledText: '#4A5B6E',
 
     // Checkbox
-    checkboxBorder: '#475569',
-    checkboxChecked: '#60A5FA',
+    checkboxBorder: '#3A5068',
+    checkboxChecked: '#7CB8FF',
 
     // OTP
-    otpBackground: '#1E293B',
-    otpBorder: '#334155',
-    otpFilledBackground: '#1E3A5F',
-    otpFilledBorder: '#60A5FA',
+    otpBackground: '#1B2838',
+    otpBorder: '#2A3D52',
+    otpFilledBackground: '#1A2E45',
+    otpFilledBorder: '#7CB8FF',
 
     // Overlay / Modal
-    overlay: 'rgba(0,0,0,0.6)',
-    sheetBackground: '#1E293B',
-    sheetHandle: '#475569',
-    searchBackground: '#334155',
-    selectedRow: '#1E3A5F',
+    overlay: 'rgba(0,0,0,0.55)',
+    sheetBackground: '#1B2838',
+    sheetHandle: '#3A5068',
+    searchBackground: '#243447',
+    selectedRow: '#1A2E45',
 
     // Status bar
     statusBar: 'light-content' as const,
 
     // Misc
     shadow: '#000000',
-    link: '#60A5FA',
-    badgeBackground: '#1E293B',
-    blobColor: '#2563EB',
-    onboardingBackground: '#0F172A',
+    link: '#7CB8FF',
+    badgeBackground: '#1B2838',
+    blobColor: '#5A9CF5',
+    onboardingBackground: '#0D1B2A',
   },
 };
 
