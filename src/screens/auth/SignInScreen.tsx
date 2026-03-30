@@ -14,8 +14,8 @@ import {
 } from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {AuthStackParamList} from '../../navigation/types';
-import {MomWithBabyIllustration} from '../../assets/images/MomWithBabyIllustration';
-import {PhoneIcon} from '../../assets/icons/PhoneIcon';
+// import {MomWithBabyIllustration} from '../../assets/images/MomWithBabyIllustration';
+// import {PhoneIcon} from '../../assets/icons/PhoneIcon';
 
 const {width} = Dimensions.get('window');
 
@@ -46,7 +46,7 @@ export function SignInScreen({navigation}: Props) {
       <View style={styles.blobContainer}>
         <View style={styles.blob} />
         <View style={styles.portraitCircle}>
-          <MomWithBabyIllustration width={150} height={150} />
+          {/* <MomWithBabyIllustration width={150} height={150} /> */}
         </View>
         <View style={styles.logoRow}>
           <Text style={styles.logoMom}>mom</Text>
@@ -70,7 +70,7 @@ export function SignInScreen({navigation}: Props) {
           {/* Phone input row */}
           <View style={styles.phoneRow}>
             <View style={styles.prefixBox}>
-              <PhoneIcon width={18} height={18} />
+              {/* <PhoneIcon width={18} height={18} /> */}
               <Text style={styles.flagText}>🇮🇳</Text>
               <Text style={styles.prefixText}>+91</Text>
             </View>
