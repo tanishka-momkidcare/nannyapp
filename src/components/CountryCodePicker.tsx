@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Animated,
   Dimensions,
@@ -248,10 +248,37 @@ export function CountryCodePicker({selected, onSelect}: Props) {
   const [search, setSearch] = useState('');
   const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
-  const filtered = COUNTRIES.filter(
-    c =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.dialCode.includes(search),
+  const filtered = useMemo(
+    () =>
+      COUNTRIES.filter(
+        c =>
+          c.name.toLowerCase().includes(search.toLowerCase()) ||
+          c.dialCode.includes(search),
+      ),
+    [search],
+  );
+
+  const renderItem = useCallback(
+    ({item}: {item: Country}) => (
+      <TouchableOpacity
+        style={[
+          styles.row,
+          {borderBottomColor: colors.divider},
+          item.code === selected.code && [
+            styles.rowSelected,
+            {backgroundColor: colors.selectedRow},
+          ],
+        ]}
+        onPress={() => handleSelect(item)}
+        activeOpacity={0.7}>
+        <Text style={styles.rowFlag}>{item.flag}</Text>
+        <Text style={[styles.rowName, {color: colors.text}]}>{item.name}</Text>
+        <Text style={[styles.rowDial, {color: colors.textSecondary}]}>
+          {item.dialCode}
+        </Text>
+      </TouchableOpacity>
+    ),
+    [colors, selected.code],
   );
 
   function open() {
@@ -335,28 +362,23 @@ export function CountryCodePicker({selected, onSelect}: Props) {
 
             <FlatList
               data={filtered}
-              keyExtractor={item => item.code}
+              keyExtractor={item => item.code + item.dialCode}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
-              renderItem={({item}) => (
-                <TouchableOpacity
-                  style={[
-                    styles.row,
-                    {borderBottomColor: colors.divider},
-                    item.code === selected.code && [
-                      styles.rowSelected,
-                      {backgroundColor: colors.selectedRow},
-                    ],
-                  ]}
-                  onPress={() => handleSelect(item)}
-                  activeOpacity={0.7}>
-                  <Text style={styles.rowFlag}>{item.flag}</Text>
-                  <Text style={[styles.rowName, {color: colors.text}]}>{item.name}</Text>
-                  <Text style={[styles.rowDial, {color: colors.textSecondary}]}>
-                    {item.dialCode}
-                  </Text>
-                </TouchableOpacity>
-              )}
+              initialNumToRender={15}
+              maxToRenderPerBatch={20}
+              windowSize={5}
+              getItemLayout={(_data, index) => ({
+                length: 49,
+                offset: 49 * index,
+                index,
+              })}
+              renderItem={renderItem}
+              ListEmptyComponent={
+                <View style={styles.emptyList}>
+                  <Text style={[styles.emptyText, {color: colors.textMuted}]}>No results found</Text>
+                </View>
+              }
             />
           </Animated.View>
         </View>
@@ -398,6 +420,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '70%',
+    minHeight: '60%',
     paddingHorizontal: 20,
     paddingBottom: 30,
   },
@@ -442,5 +465,12 @@ const styles = StyleSheet.create({
   rowDial: {
     fontSize: FontSizes.input,
     fontWeight: '500',
+  },
+  emptyList: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: FontSizes.body,
   },
 });
