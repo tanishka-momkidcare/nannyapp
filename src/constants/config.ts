@@ -1,4 +1,6 @@
-export const GOOGLE_MAPS_API_KEY = 'AIzaSyDO_eSBGKu-qwUCeB4eP6_a0pXoF8r35lM';
+import Config from 'react-native-config';
+
+export const GOOGLE_MAPS_API_KEY = Config.GOOGLE_MAPS_API_KEY || '';
 
 export async function reverseGeocode(lat: number, lng: number): Promise<string> {
   try {

@@ -3,6 +3,7 @@ import Geolocation from '@react-native-community/geolocation';
 import {
   ActivityIndicator,
   Animated,
+  AppState,
   Dimensions,
   Easing,
   Linking,
@@ -102,6 +103,7 @@ export function LocationPermissionScreen({navigation}: Props) {
   const [permState, setPermState] = useState<PermState>('initial');
   const [detectedAddress, setDetectedAddress] = useState('');
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const appStateRef = useRef(AppState.currentState);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -147,6 +149,29 @@ export function LocationPermissionScreen({navigation}: Props) {
     })();
   }, [fetchLocationAndNavigate]);
 
+  // Auto-recheck permission when returning from Settings
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', async (nextAppState) => {
+      if (
+        appStateRef.current.match(/inactive|background/) &&
+        nextAppState === 'active' &&
+        permState === 'denied'
+      ) {
+        if (Platform.OS === 'android') {
+          const granted = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          );
+          if (granted) {
+            setPermState('initial');
+            fetchLocationAndNavigate();
+          }
+        }
+      }
+      appStateRef.current = nextAppState;
+    });
+    return () => subscription.remove();
+  }, [permState, fetchLocationAndNavigate]);
+
   const handlePress = useCallback(async () => {
     if (permState === 'denied') {
       Linking.openSettings();
@@ -154,6 +179,39 @@ export function LocationPermissionScreen({navigation}: Props) {
     }
     if (Platform.OS === 'android') {
       setLoading(true);
+
+      const apiLevel = Number(Platform.Version);
+
+      if (apiLevel === 29) {
+        // Android 10: request fine + background together → shows "Allow all the time" in dialog
+        const fineResult = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'लोकेशन की अनुमति',
+            message: 'आपके आस-पास उपलब्ध सेवाएं दिखाने के लिए लोकेशन आवश्यक है।',
+            buttonPositive: 'अनुमति दें',
+            buttonNegative: 'रद्द करें',
+          },
+        );
+        if (fineResult === PermissionsAndroid.RESULTS.GRANTED) {
+          // Also request background on API 29 (combined dialog)
+          await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+          );
+          setLoading(false);
+          fetchLocationAndNavigate();
+          return;
+        }
+        setLoading(false);
+        if (fineResult === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
+          setPermState('denied');
+        } else {
+          setPermState('notGranted');
+        }
+        return;
+      }
+
+      // Android 11+ (API 30+): request fine location first
       const result = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         {
@@ -165,6 +223,25 @@ export function LocationPermissionScreen({navigation}: Props) {
       );
       setLoading(false);
       if (result === PermissionsAndroid.RESULTS.GRANTED) {
+        // After granting fine location, request background ("Allow all the time")
+        // On API 30+ this opens the system settings page for background permission
+        if (apiLevel >= 30) {
+          const bgGranted = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+          );
+          if (!bgGranted) {
+            await PermissionsAndroid.request(
+              PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+              {
+                title: 'हमेशा लोकेशन की अनुमति',
+                message:
+                  'बेहतर अनुभव के लिए कृपया "हमेशा अनुमति दें" चुनें ताकि हम आपको नज़दीकी सेवाएं दिखा सकें।',
+                buttonPositive: 'सेटिंग्स खोलें',
+                buttonNegative: 'अभी नहीं',
+              },
+            );
+          }
+        }
         fetchLocationAndNavigate();
       } else if (result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
         setPermState('denied');
