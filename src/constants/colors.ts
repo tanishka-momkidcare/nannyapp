@@ -1,19 +1,26 @@
 export const Colors = {
+  primary: '#1B7FF6',
+  iconBlue: '#1B7FF6',
+  textBlue: '#4D99F1',
   light: {
     // Core
     background: '#FFFFFF',
     surface: '#F7F8FA',
     card: '#FFFFFF',
-    primary: '#3B82F6',
+    primary: '#1B7FF6',
     primaryDark: '#2563EB',
     secondary: '#FF6584',
     accent: '#F5A623',
     success: '#22C55E',
 
+    // Colors specifically requested
+    iconBlue: '#1B7FF6',
+    textBlue: '#4D99F1',
+
     // Text
-    text: '#1A1A1A',
+    text: '#333333',
     textSecondary: '#6B7280',
-    textMuted: '#888888',
+    textMuted: '#707070',
     textInverse: '#FFFFFF',
 
     // Borders & Dividers
@@ -35,13 +42,13 @@ export const Colors = {
 
     // Checkbox
     checkboxBorder: '#CCCCCC',
-    checkboxChecked: '#3B82F6',
+    checkboxChecked: '#1B7FF6',
 
     // OTP
     otpBackground: '#FFFFFF',
     otpBorder: '#E0E0E0',
     otpFilledBackground: '#EEF6FF',
-    otpFilledBorder: '#3B82F6',
+    otpFilledBorder: '#1B7FF6',
 
     // Overlay / Modal
     overlay: 'rgba(0,0,0,0.4)',
@@ -55,7 +62,6 @@ export const Colors = {
 
     // Misc
     shadow: '#000000',
-    link: '#3B82F6',
     badgeBackground: '#FFFFFF',
     blobColor: '#3B82F6',
     onboardingBackground: '#EEF6FF',
@@ -70,6 +76,10 @@ export const Colors = {
     secondary: '#FF7A95',
     accent: '#FFB74D',
     success: '#4ADE80',
+
+    // Colors specifically requested
+    iconBlue: '#7CB8FF',
+    textBlue: '#7CB8FF',
 
     // Text
     text: '#E8EAED',
@@ -116,7 +126,6 @@ export const Colors = {
 
     // Misc
     shadow: '#000000',
-    link: '#7CB8FF',
     badgeBackground: '#1B2838',
     blobColor: '#5A9CF5',
     onboardingBackground: '#0D1B2A',

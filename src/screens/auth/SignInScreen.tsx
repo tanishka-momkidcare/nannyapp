@@ -1,10 +1,6 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   Dimensions,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -12,28 +8,31 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Svg, {Circle, Defs, Ellipse, Filter, FeGaussianBlur, Path, Rect} from 'react-native-svg';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import type {AuthStackParamList} from '../../navigation/types';
-import {LoginScreenMomWithBaby} from '../../assets/images/LoginScreenMomWithBaby';
-import {MKCLogo} from '../../assets/images/MKCLogo';
-import {MKCLogoIconBlue} from '../../assets/images/MKCLogoIconBlue';
-import {LoginScreenBottomIcon} from '../../assets/images/LoginScreenBottomIcon';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { AuthStackParamList } from '../../navigation/types';
+import { LoginScreenMomWithBaby } from '../../assets/images/LoginScreenMomWithBaby';
+import { MKCLogo } from '../../assets/images/MKCLogo';
+import { MKCLogoIconBlue } from '../../assets/images/MKCLogoIconBlue';
+import { LoginScreenBottomIcon } from '../../assets/images/LoginScreenBottomIcon';
 import {
   CountryCodePicker,
   DEFAULT_COUNTRY,
   type Country,
 } from '../../components/CountryCodePicker';
-import {useTheme} from '../../context';
-import {FontSizes} from '../../constants';
-import {GreyLockIcon} from '../../assets/images/GreyLockIcon';
+import { BottomRightDecoration } from '../../components/BottomRightDecoration';
+import { useTheme } from '../../context';
+import { FontSizes } from '../../constants';
+import { GreyLockIcon } from '../../assets/images/GreyLockIcon';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignIn'>;
 
-export function SignInScreen({navigation}: Props) {
-  const {colors, isDark} = useTheme();
+export function SignInScreen({ navigation }: Props) {
+  const { colors, isDark } = useTheme();
   const [phone, setPhone] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
@@ -42,155 +41,160 @@ export function SignInScreen({navigation}: Props) {
     if (phone.trim().length < 10 || !agreed) {
       return;
     }
-    navigation.navigate('OTPVerification', {phone: phone.trim()});
+    navigation.navigate('OTPVerification', { phone: phone.trim() });
   }
 
   const canSubmit = phone.length >= 10 && agreed;
 
   return (
-    <SafeAreaView style={[styles.container, {backgroundColor: colors.background}]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.background}
       />
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}>
-          <View style={styles.heroSection}>
-            <View style={styles.heroImageWrap}>
-              <LoginScreenMomWithBaby width={width * 0.8} height={width * 0.62} />
-            </View>
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        enableOnAndroid={true}
+        bounces={false}
+        alwaysBounceVertical={false}
+      >
+        <View style={styles.heroSection}>
+          <View style={styles.heroImageWrap}>
+            <LoginScreenMomWithBaby width={width * 0.8} height={width * 0.62} />
           </View>
-          <View style={styles.logoContainer}>
-            <MKCLogoIconBlue width={150} height={150} style={{marginLeft: -88, marginTop: -100}} />
-            <MKCLogo width={98} height={41} style={{paddingHorizontal: 24,marginTop: -50 }} />
+        </View>
+        <View style={styles.logoContainer}>
+          <MKCLogoIconBlue
+            width={150}
+            height={150}
+            style={styles.logoIcon}
+          />
+          <MKCLogo
+            width={98}
+            height={41}
+            style={styles.logoMain}
+          />
+        </View>
+        <Text style={[styles.title, { color: colors.text }]}>
+          लॉगिन करें या नया खाता बनाएं
+        </Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          अपना मोबाइल नंबर दर्ज करके शुरू करें
+        </Text>
+        <View
+          style={[
+            styles.phoneRow,
+            {
+              backgroundColor: colors.inputBackground,
+            },
+          ]}
+        >
+          <View style={styles.phoneIconBox}>
+            <Svg width={18} height={18} viewBox="0 0 24 24">
+              <Path
+                d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2a1.003 1.003 0 011.01-.24c1.12.37 2.33.57 3.57.57.55 0 1.01.46 1.01 1.01v3.49c0 .55-.46 1.01-1.01 1.01C10.07 21.02 2.98 13.93 2.98 4.98c0-.55.46-1.01 1.01-1.01H7.5c.55 0 1.01.46 1.01 1.01 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.01l-2.22 2.23z"
+                fill={colors.iconBlue}
+              />
+            </Svg>
           </View>
-          <Text style={[styles.title, {color: colors.text}]}>
-            लॉगिन करें या नया खाता बनाएं
-          </Text>
-          <Text style={[styles.subtitle, {color: colors.textMuted}]}>
-            अपना मोबाइल नंबर दर्ज करके शुरू करें
-          </Text>
+          <View
+            style={[styles.verticalDivider, { backgroundColor: colors.border }]}
+          />
+          <CountryCodePicker selected={country} onSelect={setCountry} />
+          <TextInput
+            style={[styles.phoneInput, { color: colors.inputText }]}
+            placeholder="मोबाइल नंबर"
+            placeholderTextColor={colors.inputPlaceholder}
+            keyboardType="phone-pad"
+            maxLength={10}
+            value={phone}
+            onChangeText={setPhone}
+          />
+        </View>
+
+        {/* ── OTP hint ── */}
+        <Text style={[styles.otpHint, { color: colors.textMuted }]}>
+          आपके मोबाइल नंबर की पुष्टि के लिए हम{'\n'}SMS के माध्यम से OTP भेजेंगे
+        </Text>
+
+        {/* ── Terms checkbox ── */}
+        <TouchableOpacity
+          style={styles.checkboxRow}
+          onPress={() => setAgreed(v => !v)}
+          activeOpacity={0.7}
+        >
           <View
             style={[
-              styles.phoneRow,
-              {
-                backgroundColor: colors.inputBackground,
-                borderColor: colors.inputBorder,
-              },
-            ]}>
-            <View style={styles.phoneIconBox}>
-              <Svg width={18} height={18} viewBox="0 0 24 24">
-                <Path
-                  d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2a1.003 1.003 0 011.01-.24c1.12.37 2.33.57 3.57.57.55 0 1.01.46 1.01 1.01v3.49c0 .55-.46 1.01-1.01 1.01C10.07 21.02 2.98 13.93 2.98 4.98c0-.55.46-1.01 1.01-1.01H7.5c.55 0 1.01.46 1.01 1.01 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.01l-2.22 2.23z"
-                  fill="hsla(213, 92%, 54%, 1)"
-                />
-              </Svg>
-            </View>
-            <View style={[styles.verticalDivider, {backgroundColor: colors.border}]} />
-            <CountryCodePicker selected={country} onSelect={setCountry} />
-            <TextInput
-              style={[styles.phoneInput, {color: colors.inputText}]}
-              placeholder="मोबाइल नंबर"
-              placeholderTextColor={colors.inputPlaceholder}
-              keyboardType="phone-pad"
-              maxLength={10}
-              value={phone}
-              onChangeText={setPhone}
-            />
-          </View>
-
-          {/* ── OTP hint ── */}
-          <Text style={[styles.otpHint, {color: colors.textMuted}]}>
-            आपके मोबाइल नंबर की पुष्टि के लिए हम{'\n'}SMS के माध्यम से OTP भेजेंगे
-          </Text>
-
-          {/* ── Terms checkbox ── */}
-          <TouchableOpacity
-            style={styles.checkboxRow}
-            onPress={() => setAgreed(v => !v)}
-            activeOpacity={0.7}>
-            <View
-              style={[
-                styles.checkbox,
-                {borderColor: colors.checkboxBorder},
-                agreed && {
-                  backgroundColor: colors.checkboxChecked,
-                  borderColor: colors.checkboxChecked,
-                },
-              ]}>
-              {agreed && <Text style={[styles.checkmark, {color: colors.textInverse}]}>✓</Text>}
-            </View>
-            <Text style={[styles.termsText, {color: colors.textSecondary}]}>
-              I agree to{' '}
-              <Text style={[styles.termsLink, {color: colors.link}]}>
-                Terms &amp; Conditions.
-              </Text>
-            </Text>
-          </TouchableOpacity>
-
-          {/* ── Send OTP button ── */}
-          <TouchableOpacity
-            style={[
-              styles.button,
-              {
-                backgroundColor: canSubmit
-                  ? 'hsla(213, 92%, 54%, 1)'
-                  : colors.buttonDisabled,
+              styles.checkbox,
+              { borderColor: colors.checkboxBorder },
+              agreed && {
+                backgroundColor: colors.checkboxChecked,
+                borderColor: colors.checkboxChecked,
               },
             ]}
-            onPress={handleSendOTP}
-            activeOpacity={0.85}
-            disabled={!canSubmit}>
-            <View style={styles.buttonContent}>
-              <GreyLockIcon
-                width={15}
-                height={15}
-                color={canSubmit ? '#FFFFFF' : undefined}
-                style={{marginRight: 8}}
-              />
-              <Text
-                style={[
-                  styles.buttonText,
-                  {
-                    color: canSubmit
-                      ? colors.buttonPrimaryText
-                      : colors.buttonDisabledText,
-                  },
-                ]}>
-                OTP भेजें  ›
+          >
+            {agreed && (
+              <Text style={[styles.checkmark, { color: colors.textInverse }]}>
+                ✓
               </Text>
-            </View>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            )}
+          </View>
+          <Text style={[styles.termsText, { color: colors.textSecondary }]}>
+            I agree to{' '}
+            <Text style={[styles.termsLink, { color: colors.textBlue }]}>
+              Terms &amp; Conditions.
+            </Text>
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.flex} />
+
+        {/* ── Send OTP button ── */}
+        <TouchableOpacity
+          style={[
+            styles.button,
+            {
+              backgroundColor: canSubmit
+                ? colors.iconBlue
+                : colors.buttonDisabled,
+            },
+          ]}
+          onPress={handleSendOTP}
+          activeOpacity={0.85}
+          disabled={!canSubmit}
+        >
+          <View style={styles.buttonContent}>
+            <GreyLockIcon
+              width={15}
+              height={15}
+              color={canSubmit ? '#FFFFFF' : undefined}
+              style={{ marginRight: 8 }}
+            />
+            <Text
+              style={[
+                styles.buttonText,
+                {
+                  color: canSubmit
+                    ? colors.buttonPrimaryText
+                    : colors.buttonDisabledText,
+                },
+              ]}
+            >
+              OTP भेजें ›
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </KeyboardAwareScrollView>
 
       {/* ── Bottom-right decorative icon ── */}
-      <View style={styles.bottomIconWrap} pointerEvents="none">
-        <Svg width={320} height={280} style={styles.bottomIconBgSvg}>
-          <Defs>
-            <Filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
-              <FeGaussianBlur in="SourceGraphic" stdDeviation="50" />
-            </Filter>
-          </Defs>
-          <Ellipse
-            cx={200}
-            cy={180}
-            rx={160}
-            ry={140}
-            fill="hsla(227, 81%, 87%, 1)"
-            filter="url(#blur)"
-            opacity={0.48}
-          />
-        </Svg>
-        <LoginScreenBottomIcon width={250} height={250} />
-      </View>
+      <BottomRightDecoration
+        icon={<LoginScreenBottomIcon width={280} height={280} />}
+      />
     </SafeAreaView>
   );
 }
@@ -200,20 +204,19 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: 'hidden',
   },
-  bottomIconWrap: {
-    position: 'absolute',
-    bottom: -110,
-    right: -60,
-  },
-  bottomIconBgSvg: {
-    position: 'absolute',
-    bottom: -20,
-    right: -20,
-  },
   flex: {
     flex: 1,
   },
+  logoIcon: {
+    marginLeft: -88,
+    marginTop: -100,
+  },
+  logoMain: {
+    paddingHorizontal: 24,
+    marginTop: -50,
+  },
   scrollContent: {
+    flexGrow: 1,
     paddingBottom: 40,
   },
 
@@ -223,15 +226,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     height: width * 0.75,
     marginTop: 20,
-  },
-  decorDots: {
-    position: 'absolute',
-    top: 12,
-    right: width * 0.12,
-    zIndex: 2,
-  },
-  blobSvg: {
-    position: 'absolute',
   },
   heroImageWrap: {
     position: 'absolute',
@@ -266,7 +260,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 14,
     marginHorizontal: 24,
-    borderWidth: 1,
+    borderWidth: 0,
   },
   phoneIconBox: {
     paddingLeft: 10,
@@ -275,7 +269,6 @@ const styles = StyleSheet.create({
   verticalDivider: {
     width: 1,
     height: 24,
-    color:"hsla(0, 0%, 1%, 1)"
   },
   phoneInput: {
     flex: 1,

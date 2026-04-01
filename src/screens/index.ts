@@ -1,3 +1,3 @@
 export {WelcomeScreen} from './onboarding';
-export {SignInScreen, SignUpScreen, OTPScreen} from './auth';
+export {SignInScreen, SignUpScreen, OTPScreen, LocationPermissionScreen, LocationSelectionScreen, AreaSearchScreen} from './auth';
 export {HomeScreen} from './home';

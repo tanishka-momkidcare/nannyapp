@@ -10,7 +10,8 @@ import {
   View,
 } from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {ScreenWrapper} from '../../components';
+import {BottomRightDecoration, ScreenWrapper} from '../../components';
+import {LoginScreenBottomIcon} from '../../assets/images/LoginScreenBottomIcon';
 import {Spacing, Typography} from '../../constants';
 import {useAuth, useTheme} from '../../context';
 import type {AuthStackParamList} from '../../navigation/types';
@@ -112,13 +113,17 @@ export function SignUpScreen({navigation}: Props) {
               Already have an account?{' '}
             </Text>
             <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
-              <Text style={[Typography.caption, {color: colors.primary, fontWeight: '600'}]}>
+              <Text style={[Typography.caption, {color: colors.textBlue, fontWeight: '600'}]}>
                 Sign In
               </Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <BottomRightDecoration
+        icon={<LoginScreenBottomIcon width={280} height={280} />}
+      />
     </ScreenWrapper>
   );
 }

@@ -258,6 +258,23 @@ export function CountryCodePicker({selected, onSelect}: Props) {
     [search],
   );
 
+  function close() {
+    Animated.timing(slideAnim, {
+      toValue: SCREEN_HEIGHT,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      setVisible(false);
+      setSearch('');
+      slideAnim.setValue(SCREEN_HEIGHT);
+    });
+  }
+
+  const handleSelect = useCallback((country: Country) => {
+    onSelect(country);
+    close();
+  }, [onSelect]);
+
   const renderItem = useCallback(
     ({item}: {item: Country}) => (
       <TouchableOpacity
@@ -278,7 +295,7 @@ export function CountryCodePicker({selected, onSelect}: Props) {
         </Text>
       </TouchableOpacity>
     ),
-    [colors, selected.code],
+    [colors, selected.code, handleSelect],
   );
 
   function open() {
@@ -296,31 +313,14 @@ export function CountryCodePicker({selected, onSelect}: Props) {
     }
   }, [visible, slideAnim]);
 
-  function close() {
-    Animated.timing(slideAnim, {
-      toValue: SCREEN_HEIGHT,
-      duration: 250,
-      useNativeDriver: true,
-    }).start(() => {
-      setVisible(false);
-      setSearch('');
-      slideAnim.setValue(SCREEN_HEIGHT);
-    });
-  }
-
-  function handleSelect(country: Country) {
-    onSelect(country);
-    close();
-  }
-
   return (
     <View>
       <Pressable
         style={styles.trigger}
         onPress={open}>
         <Text style={styles.flag}>{selected.flag}</Text>
-        <Text style={[styles.dialCode, {color: colors.text}]}>{selected.dialCode}</Text>
-        <Ionicons name="chevron-down" size={14} color={colors.textMuted} style={styles.arrow} />
+        <Text style={[styles.dialCode, {color: colors.textBlue}]}>{selected.dialCode}</Text>
+        <Ionicons name="chevron-down" size={14} color={colors.iconBlue} style={styles.arrow} />
       </Pressable>
 
       <Modal
