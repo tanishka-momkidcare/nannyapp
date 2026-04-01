@@ -11,6 +11,12 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		8E291501FFB44021942FCAFE /* GolosText-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AD8A469104E84F90812C2954 /* GolosText-Bold.ttf */; };
+		EC159248760B425B81F9991B /* GolosText-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1F6AB32925D14CB9B307CFC2 /* GolosText-Medium.ttf */; };
+		69CC5548F26A43E28E138555 /* GolosText-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = AAA0F448F1BA4450B7ED17BE /* GolosText-Regular.ttf */; };
+		3FB84AFC96704993B0EB74EB /* GolosText-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E2667CFBD96E45CBA0513E38 /* GolosText-SemiBold.ttf */; };
+		42115781B039405A886D21E3 /* NotoSansDevanagari-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4D2A5F01EE38424796DE2D96 /* NotoSansDevanagari-Medium.ttf */; };
+		E64A95AF0EFF4CB686923815 /* NotoSansDevanagari-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 796044AB3C1B4BC194978504 /* NotoSansDevanagari-SemiBold.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +30,12 @@
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = nannyApp/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = nannyApp/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		AD8A469104E84F90812C2954 /* GolosText-Bold.ttf */ = {isa = PBXFileReference; name = "GolosText-Bold.ttf"; path = "../src/assets/fonts/GolosText-Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		1F6AB32925D14CB9B307CFC2 /* GolosText-Medium.ttf */ = {isa = PBXFileReference; name = "GolosText-Medium.ttf"; path = "../src/assets/fonts/GolosText-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		AAA0F448F1BA4450B7ED17BE /* GolosText-Regular.ttf */ = {isa = PBXFileReference; name = "GolosText-Regular.ttf"; path = "../src/assets/fonts/GolosText-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		E2667CFBD96E45CBA0513E38 /* GolosText-SemiBold.ttf */ = {isa = PBXFileReference; name = "GolosText-SemiBold.ttf"; path = "../src/assets/fonts/GolosText-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		4D2A5F01EE38424796DE2D96 /* NotoSansDevanagari-Medium.ttf */ = {isa = PBXFileReference; name = "NotoSansDevanagari-Medium.ttf"; path = "../src/assets/fonts/NotoSansDevanagari-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		796044AB3C1B4BC194978504 /* NotoSansDevanagari-SemiBold.ttf */ = {isa = PBXFileReference; name = "NotoSansDevanagari-SemiBold.ttf"; path = "../src/assets/fonts/NotoSansDevanagari-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +86,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				1BF30D7B387D4859B6E41511 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -96,6 +109,20 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
+		};
+		1BF30D7B387D4859B6E41511 /* Resources */ = {
+			isa = "PBXGroup";
+			children = (
+				AD8A469104E84F90812C2954 /* GolosText-Bold.ttf */,
+				1F6AB32925D14CB9B307CFC2 /* GolosText-Medium.ttf */,
+				AAA0F448F1BA4450B7ED17BE /* GolosText-Regular.ttf */,
+				E2667CFBD96E45CBA0513E38 /* GolosText-SemiBold.ttf */,
+				4D2A5F01EE38424796DE2D96 /* NotoSansDevanagari-Medium.ttf */,
+				796044AB3C1B4BC194978504 /* NotoSansDevanagari-SemiBold.ttf */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+			path = "";
 		};
 /* End PBXGroup section */
 
@@ -159,6 +186,12 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				8E291501FFB44021942FCAFE /* GolosText-Bold.ttf in Resources */,
+				EC159248760B425B81F9991B /* GolosText-Medium.ttf in Resources */,
+				69CC5548F26A43E28E138555 /* GolosText-Regular.ttf in Resources */,
+				3FB84AFC96704993B0EB74EB /* GolosText-SemiBold.ttf in Resources */,
+				42115781B039405A886D21E3 /* NotoSansDevanagari-Medium.ttf in Resources */,
+				E64A95AF0EFF4CB686923815 /* NotoSansDevanagari-SemiBold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

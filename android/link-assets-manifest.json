@@ -1,0 +1,29 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "src/assets/fonts/GolosText-Bold.ttf",
+      "sha1": "a4bf9a6798087c3dbf884ae0293dbb36d8eb35ab"
+    },
+    {
+      "path": "src/assets/fonts/GolosText-Medium.ttf",
+      "sha1": "0f0f40eb6d312172c385aa4d03c91bfecf44020b"
+    },
+    {
+      "path": "src/assets/fonts/GolosText-Regular.ttf",
+      "sha1": "00cb67722a28cb95ae743083c5502bccf2c597c6"
+    },
+    {
+      "path": "src/assets/fonts/GolosText-SemiBold.ttf",
+      "sha1": "46e29b98d4d36a3e559d88ede0f0e240af1536f3"
+    },
+    {
+      "path": "src/assets/fonts/NotoSansDevanagari-Medium.ttf",
+      "sha1": "4c4d8b1f8be4508399ea46c5b4c8472c51a90fec"
+    },
+    {
+      "path": "src/assets/fonts/NotoSansDevanagari-SemiBold.ttf",
+      "sha1": "4b2096dee139157a9ce90a5ad777bcc7faede1ba"
+    }
+  ]
+}

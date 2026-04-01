@@ -1,4 +1,4 @@
-﻿import React, {useRef, useState} from 'react';
+﻿import React, { useRef, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -9,15 +9,16 @@ import {
   View,
   ViewToken,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import Svg, {Circle, Path, Defs, LinearGradient, Stop, Ellipse} from 'react-native-svg';
-import {useAuth, useTheme} from '../../context';
-import {FontSizes} from '../../constants';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import LinearGradient from 'react-native-linear-gradient';
+import { useAuth, useTheme } from '../../context';
+import { FontSizes } from '../../constants';
 import NannyImage from '../../assets/Group 13273.svg';
-import {MKCLogoIconBlue} from '../../assets/images/MKCLogoIconBlue';
-import {MKCLogo} from '../../assets/images/MKCLogo';
+import BlueShieldIcon from '../../assets/BlueShield.svg';
+import { MKCLogoIconBlue } from '../../assets/images/MKCLogoIconBlue';
+import { MKCLogo } from '../../assets/images/MKCLogo';
 
-const {width: SW, height: SH} = Dimensions.get('window');
+const { width: SW, height: SH } = Dimensions.get('window');
 
 const HERO_H = SH * 0.42;
 
@@ -33,68 +34,20 @@ const SLIDES: SlideConfig[] = [
     id: '1',
     badge: '100% वेरिफाइड जॉब्स',
     title: 'अपने क्षेत्र में काम ढूंढें !',
-    description: 'मां और बच्चे की देखभाल के काम में\nअपना करियर बनाएं।',
-  },
-  {
-    id: '2',
-    badge: 'सुरक्षित काम',
-    title: 'भरोसेमंद और सुरक्षित !',
-    description: 'सभी परिवार वेरिफाइड हैं,\nआप पूरी सुरक्षा के साथ काम करें।',
-  },
-  {
-    id: '3',
-    badge: 'अच्छी कमाई',
-    title: 'अपनी शर्तों पर काम करें !',
-    description: 'अपने समय और एरिया के अनुसार\nकाम चुनें और अच्छी कमाई करें।',
+    description: ' मां और बच्चे की देखभाल के काम में\nअपना करियर बनाएं।',
   },
 ];
 
 /* ── Shield icon for badge ── */
-const ShieldIcon = React.memo(({size = 18, color = '#F5A623'}: {size?: number; color?: string}) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Path
-      d="M12 2L4 5.5V11C4 16.52 7.58 21.74 12 23C16.42 21.74 20 16.52 20 11V5.5L12 2Z"
-      fill={color}
-    />
-    <Path
-      d="M10.5 14.59L7.91 12L6.5 13.41L10.5 17.41L18.5 9.41L17.09 8L10.5 14.59Z"
-      fill="#FFF"
-    />
-  </Svg>
-));
-
-/* ── Decorative blob behind hero ── */
-const HeroBlob = React.memo(({width: w, height: h}: {width: number; height: number}) => (
-  <Svg width={w} height={h} viewBox="0 0 320 340">
-    <Defs>
-      <LinearGradient id="blobGrad" x1="0" y1="0" x2="1" y2="1">
-        <Stop offset="0" stopColor="#D6E9FF" stopOpacity="0.9" />
-        <Stop offset="0.5" stopColor="#B8D8FC" stopOpacity="0.7" />
-        <Stop offset="1" stopColor="#EEF6FF" stopOpacity="0.4" />
-      </LinearGradient>
-    </Defs>
-    <Ellipse cx="160" cy="175" rx="155" ry="165" fill="url(#blobGrad)" />
-    <Circle cx="160" cy="170" r="125" fill="none" stroke="#A8D4FF" strokeWidth="1" strokeOpacity="0.5" />
-  </Svg>
-));
-
-/* ── Decorative dots ── */
-const DecorDots = React.memo(({color}: {color: string}) => (
-  <Svg width={30} height={54}>
-    <Circle cx="19" cy="10" r="6" fill={color} opacity={0.5} />
-    <Circle cx="8" cy="28" r="4" fill={color} opacity={0.35} />
-    <Circle cx="22" cy="46" r="3" fill={color} opacity={0.22} />
-  </Svg>
-));
 
 export function WelcomeScreen() {
-  const {completeOnboarding} = useAuth();
-  const {colors, isDark} = useTheme();
+  const { completeOnboarding } = useAuth();
+  const { colors, isDark } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
   const onViewableItemsChanged = useRef(
-    ({viewableItems}: {viewableItems: ViewToken[]}) => {
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (viewableItems.length > 0 && viewableItems[0].index != null) {
         setCurrentIndex(viewableItems[0].index);
       }
@@ -103,135 +56,121 @@ export function WelcomeScreen() {
 
   function handleNext() {
     if (currentIndex < SLIDES.length - 1) {
-      flatListRef.current?.scrollToIndex({index: currentIndex + 1});
+      flatListRef.current?.scrollToIndex({ index: currentIndex + 1 });
     } else {
       completeOnboarding();
     }
   }
 
   return (
-    <SafeAreaView style={[st.container, {backgroundColor: colors.onboardingBackground}]}>
-      <StatusBar
-        barStyle={isDark ? 'light-content' : 'dark-content'}
-        backgroundColor={colors.onboardingBackground}
-      />
-
-      {/* ── Logo row ── */}
-      <View style={st.logoRow}>
-        <MKCLogoIconBlue width={42} height={42} />
-        <MKCLogo width={70} height={30} style={st.logoText} />
-      </View>
-
-      {/* ── Hero ── */}
-      <View style={st.heroSection}>
-        {/* Blob background */}
-        <View style={st.blobWrap}>
-          <HeroBlob width={SW * 0.85} height={HERO_H} />
+    <LinearGradient
+      colors={['#FFFFFF', '#C4D9FA']}
+      start={{ x: 0.4, y: 0 }}
+      end={{ x: 0.6, y: 1 }}
+      style={st.container}>
+      <SafeAreaView style={st.container}>
+        <StatusBar
+          barStyle={isDark ? 'light-content' : 'dark-content'}
+          backgroundColor={colors.onboardingBackground}
+        />
+        <View style={st.logoRow}>
+          <MKCLogo width={80} height={40} style={st.logoText} />
         </View>
-        {/* Decorative dots */}
-        <View style={st.decorDots}>
-          <DecorDots color={colors.primary} />
-        </View>
-        {/* Nanny illustration */}
-        <View style={st.nannyWrap}>
-          <NannyImage width={SW * 0.62} height={HERO_H * 0.88} />
-        </View>
-      </View>
-
-      {/* ── Slide content ── */}
-      <FlatList
-        ref={flatListRef}
-        data={SLIDES}
-        horizontal
-        pagingEnabled
-        scrollEnabled={SLIDES.length > 1}
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={item => item.id}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={{viewAreaCoveragePercentThreshold: 50}}
-        style={st.flatList}
-        renderItem={({item}) => (
-          <View style={[st.slide, {width: SW}]}>
-            {/* Badge */}
-            <View
-              style={[
-                st.badge,
-                {
-                  backgroundColor: isDark ? colors.card : '#FFFFFF',
-                  shadowColor: colors.shadow,
-                },
-              ]}>
-              <ShieldIcon size={18} color={colors.accent} />
-              <Text style={[st.badgeText, {color: colors.text}]}>{item.badge}</Text>
-            </View>
-
-            {/* Title */}
-            <Text style={[st.title, {color: colors.text}]}>{item.title}</Text>
-
-            {/* Description */}
-            <Text style={[st.description, {color: colors.textSecondary}]}>
-              {item.description}
-            </Text>
+        <View style={st.heroSection}>
+          <View style={st.nannyWrap}>
+            <NannyImage width={SW * 1.02} height={HERO_H * 1.2} />
           </View>
-        )}
-      />
-
-      {/* ── Footer ── */}
-      <View style={st.footer}>
-        {/* Pagination dots */}
-        <View style={st.pagination}>
-          {SLIDES.map((_, i) => (
-            <View
-              key={i}
-              style={[
-                st.dot,
-                {
-                  width: i === currentIndex ? 22 : 8,
-                  backgroundColor:
-                    i === currentIndex
-                      ? colors.primary
-                      : isDark
-                        ? colors.primary + '44'
-                        : '#C5D8F0',
-                },
-              ]}
-            />
-          ))}
+          <View
+            style={[
+              st.badge,
+              {
+                backgroundColor: isDark ? colors.card : '#FFFFFF',
+                shadowColor: colors.shadow,
+              },
+            ]}>
+            <BlueShieldIcon width={18} height={18} />
+            <Text style={[st.badgeText, { color: '#1A3B70' }]}>{SLIDES[0].badge}</Text>
+          </View>
         </View>
+        <FlatList
+          ref={flatListRef}
+          data={SLIDES}
+          horizontal
+          pagingEnabled
+          scrollEnabled={SLIDES.length > 1}
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={item => item.id}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
+          style={st.flatList}
+          renderItem={({ item }) => (
+            <View style={[st.slide, { width: SW }]}>
+              <Text style={[st.title, { color: '#1A3B70' }]}>{item.title}</Text>
+              <Text style={[st.description, { color: '#1A3B70' }]}>
+                {item.description}
+              </Text>
+            </View>
+          )}
+        />
 
-        {/* CTA Button */}
-        <TouchableOpacity
-          style={[
-            st.button,
-            {
-              backgroundColor: colors.accent,
-              shadowColor: colors.accent,
-            },
-          ]}
-          onPress={handleNext}
-          activeOpacity={0.85}>
-          <Text style={[st.buttonText, {color: '#FFFFFF'}]}>
-            {currentIndex === SLIDES.length - 1
-              ? 'अंदर शुरू करें  ›'
-              : 'आगे बढ़ें  ›'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+        {/* ── Footer ── */}
+        <View style={st.footer}>
+          {/* Pagination dots — only show when multiple slides */}
+          {SLIDES.length > 1 && (
+            <View style={st.pagination}>
+              {SLIDES.map((_, i) => (
+                <View
+                  key={i}
+                  style={[
+                    st.dot,
+                    {
+                      width: i === currentIndex ? 22 : 8,
+                      backgroundColor:
+                        i === currentIndex
+                          ? colors.primary
+                          : isDark
+                            ? colors.primary + '44'
+                            : '#C5D8F0',
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+          )}
+
+          {/* CTA Button */}
+          <TouchableOpacity
+            style={[
+              st.button,
+              {
+                backgroundColor: colors.accent,
+                shadowColor: colors.accent,
+              },
+            ]}
+            onPress={handleNext}
+            activeOpacity={0.85}>
+            <Text style={[st.buttonText, { color: '#FFFFFF' }]}>
+              {currentIndex === SLIDES.length - 1
+                ? 'अंदर शुरू करें  ›'
+                : 'आगे बढ़ें  ›'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const st = StyleSheet.create({
-  container: {flex: 1},
+  container: { flex: 1, },
 
   /* ── Logo ── */
   logoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 8,
-    paddingBottom: 0,
-    gap: -8,
+    paddingTop: 40,
+    paddingBottom: 40,
   },
   logoText: {
     marginLeft: -12,
@@ -243,6 +182,7 @@ const st = StyleSheet.create({
     height: HERO_H,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
   blobWrap: {
     position: 'absolute',
@@ -260,7 +200,7 @@ const st = StyleSheet.create({
   },
 
   /* ── Slides ── */
-  flatList: {flexGrow: 0},
+  flatList: { flexGrow: 0 },
   slide: {
     paddingHorizontal: 24,
     paddingTop: 8,
@@ -270,43 +210,49 @@ const st = StyleSheet.create({
 
   /* ── Badge ── */
   badge: {
+    position: 'absolute',
+    bottom: 21,
+    zIndex: 10,
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
-    borderRadius: 24,
+    borderRadius: 14,
     paddingHorizontal: 18,
     paddingVertical: 10,
-    marginBottom: 18,
     elevation: 4,
     shadowOpacity: 0.08,
     shadowRadius: 10,
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
   },
   badgeText: {
     fontSize: FontSizes.body,
+    fontFamily: 'NotoSansDevanagari-SemiBold',
     fontWeight: '700',
     marginLeft: 8,
   },
 
   /* ── Text ── */
   title: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 18,
+    fontFamily: 'NotoSansDevanagari-SemiBold',
+    fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 10,
-    lineHeight: 32,
+    marginBottom: 4,
+    lineHeight: 24,
   },
   description: {
-    fontSize: FontSizes.body,
+    fontSize: 16,
+    fontFamily: 'NotoSansDevanagari-Medium',
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 17,
+    letterSpacing: 0,
   },
 
   /* ── Footer ── */
   footer: {
     paddingHorizontal: 32,
     paddingBottom: 30,
-    paddingTop: 16,
+    paddingTop: 52,
   },
   pagination: {
     flexDirection: 'row',
@@ -320,17 +266,20 @@ const st = StyleSheet.create({
     marginHorizontal: 4,
   },
   button: {
-    borderRadius: 28,
+    borderRadius: 14,
     height: 54,
+    width: SW * 0.6,
+    alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 5,
     shadowOpacity: 0.35,
     shadowRadius: 12,
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: { width: 0, height: 4 },
   },
   buttonText: {
     fontSize: FontSizes.button,
+    fontFamily: 'NotoSansDevanagari-SemiBold',
     fontWeight: '700',
     letterSpacing: 0.3,
   },
