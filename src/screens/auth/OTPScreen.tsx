@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Dimensions,
   Modal,
-  Pressable,
   StatusBar,
   StyleSheet,
   Text,
@@ -15,7 +14,8 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BottomRightDecoration } from '../../components/BottomRightDecoration';
-import {useTheme} from '../../context';
+import Svg, { Path } from 'react-native-svg';
+import { useAuth, useTheme } from '../../context';
 import { FontSizes } from '../../constants';
 import type { AuthStackParamList } from '../../navigation/types';
 import { LoginScreenMomWithBaby } from '../../assets/images/LoginScreenMomWithBaby';
@@ -23,7 +23,6 @@ import { MKCLogo } from '../../assets/images/MKCLogo';
 import { MKCLogoIconBlue } from '../../assets/images/MKCLogoIconBlue';
 import { LoginScreenBottomIcon } from '../../assets/images/LoginScreenBottomIcon';
 import { GreyLockIcon } from '../../assets/images/GreyLockIcon';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width } = Dimensions.get('window');
 const OTP_LENGTH = 6;
@@ -117,6 +116,23 @@ export function OTPScreen({ route, navigation }: Props) {
         bounces={false}
         alwaysBounceVertical={false}
       >
+        {/* ── Back button ── */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+            <Path
+              d="M15 6l-6 6 6 6"
+              stroke={colors.text}
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </Svg>
+        </TouchableOpacity>
+
         {/* ── Hero ── */}
         <View style={styles.heroSection}>
           <View style={styles.heroImageWrap}>
@@ -144,17 +160,6 @@ export function OTPScreen({ route, navigation }: Props) {
           +91 {phone} पर भेजा गया OTP दर्ज करें
         </Text>
 
-        {/* ── Change number ── */}
-        <Pressable
-          style={styles.changeNumberRow}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={14} color={colors.iconBlue} />
-          <Text style={[styles.changeNumberText, { color: colors.textBlue }]}>
-            नंबर बदलें
-          </Text>
-        </Pressable>
-
         {/* ── OTP input boxes ── */}
         <View style={styles.otpRow}>
           {otp.map((digit, i) => (
@@ -168,7 +173,7 @@ export function OTPScreen({ route, navigation }: Props) {
                 {
                   backgroundColor: colors.inputBackground,
                   borderColor: colors.inputBorder,
-                  color: colors.text,
+                  color: colors.textBlue,
                 },
                 digit
                   ? {
@@ -327,18 +332,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
-  /* ── Change number ── */
-  changeNumberRow: {
-    flexDirection: 'row',
+  /* ── Back Button ── */
+  backButton: {
+    width: 40,
+    height: 40,
     alignItems: 'center',
-    paddingHorizontal: 24,
-    marginBottom: 20,
-    gap: 6,
-  },
-  changeNumberText: {
-    fontSize: FontSizes.caption,
-    fontWeight: '600',
-    color: '#4D99F1',
+    justifyContent: 'center',
+    marginLeft: 12,
+    marginTop: 8,
   },
 
   /* ── OTP ── */
@@ -352,7 +353,6 @@ const styles = StyleSheet.create({
     width: (width - 48 - 30) / OTP_LENGTH,
     height: 54,
     borderRadius: 14,
-    borderWidth: 1.5,
     fontSize: FontSizes.h2,
     fontWeight: '700',
   },

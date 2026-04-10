@@ -7,8 +7,17 @@ export type AuthStackParamList = {
   AreaSearch: {latitude: number; longitude: number};
 };
 
-export type AppStackParamList = {
+export type BottomTabParamList = {
   Home: undefined;
+  Jobs: undefined;
+  IDCard: undefined;
+  Course: undefined;
+  Profile: undefined;
+};
+
+export type AppStackParamList = {
+  MainTabs: undefined;
+  ProfileSettings: undefined;
 };
 
 export type OnboardingStackParamList = {

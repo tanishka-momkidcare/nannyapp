@@ -1,0 +1,11 @@
+<resources>
+
+    <!-- Dark theme variant -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+        <!-- Slightly transparent dark nav bar with light (white) button icons -->
+        <item name="android:navigationBarColor">#E60D1B2A</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+</resources>

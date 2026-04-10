@@ -123,12 +123,10 @@ export function SignInScreen({ navigation }: Props) {
         </Text>
 
         {/* ── Terms checkbox ── */}
-        <TouchableOpacity
-          style={styles.checkboxRow}
-          onPress={() => setAgreed(v => !v)}
-          activeOpacity={0.7}
-        >
-          <View
+        <View style={styles.checkboxRow}>
+          <TouchableOpacity
+            onPress={() => setAgreed(v => !v)}
+            activeOpacity={0.7}
             style={[
               styles.checkbox,
               { borderColor: colors.checkboxBorder },
@@ -143,14 +141,14 @@ export function SignInScreen({ navigation }: Props) {
                 ✓
               </Text>
             )}
-          </View>
+          </TouchableOpacity>
           <Text style={[styles.termsText, { color: colors.textSecondary }]}>
             I agree to{' '}
             <Text style={[styles.termsLink, { color: colors.textBlue }]}>
               Terms &amp; Conditions.
             </Text>
           </Text>
-        </TouchableOpacity>
+        </View>
 
         <View style={styles.flex} />
 

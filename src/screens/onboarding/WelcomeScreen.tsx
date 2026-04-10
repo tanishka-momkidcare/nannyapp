@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
+import Svg, { Path } from 'react-native-svg';
 import { useAuth, useTheme } from '../../context';
 import { FontSizes } from '../../constants';
 import NannyImage from '../../assets/Group 13273.svg';
@@ -144,16 +145,26 @@ export function WelcomeScreen() {
               st.button,
               {
                 backgroundColor: colors.accent,
-                shadowColor: colors.accent,
               },
             ]}
             onPress={handleNext}
             activeOpacity={0.85}>
-            <Text style={[st.buttonText, { color: '#FFFFFF' }]}>
-              {currentIndex === SLIDES.length - 1
-                ? 'अंदर शुरू करें  ›'
-                : 'आगे बढ़ें  ›'}
-            </Text>
+            <View style={st.buttonContent}>
+              <Text style={[st.buttonText, { color: '#FFFFFF' }]}>
+                {currentIndex === SLIDES.length - 1
+                  ? 'अंदर शुरू करें'
+                  : 'आगे बढ़ें'}
+              </Text>
+              <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M9 6l6 6-6 6"
+                  stroke="#FFFFFF"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </View>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -227,7 +238,6 @@ const st = StyleSheet.create({
   badgeText: {
     fontSize: FontSizes.body,
     fontFamily: 'NotoSansDevanagari-SemiBold',
-    fontWeight: '700',
     marginLeft: 8,
   },
 
@@ -235,7 +245,6 @@ const st = StyleSheet.create({
   title: {
     fontSize: 18,
     fontFamily: 'NotoSansDevanagari-SemiBold',
-    fontWeight: '600',
     textAlign: 'center',
     marginBottom: 4,
     lineHeight: 24,
@@ -244,7 +253,7 @@ const st = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'NotoSansDevanagari-Medium',
     textAlign: 'center',
-    lineHeight: 17,
+    lineHeight: 20,
     letterSpacing: 0,
   },
 
@@ -272,15 +281,15 @@ const st = StyleSheet.create({
     alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 5,
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   buttonText: {
     fontSize: FontSizes.button,
     fontFamily: 'NotoSansDevanagari-SemiBold',
-    fontWeight: '700',
     letterSpacing: 0.3,
   },
 });

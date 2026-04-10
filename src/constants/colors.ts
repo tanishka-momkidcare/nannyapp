@@ -29,7 +29,7 @@ export const Colors = {
     divider: '#F0F0F0',
 
     // Input
-    inputBackground: '#F7F8FA',
+    inputBackground: '#F3F4F4',
     inputText: '#1A1A1A',
     inputPlaceholder: '#AAAAAA',
     inputBorder: '#E8ECF0',
