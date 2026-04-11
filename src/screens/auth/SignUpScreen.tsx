@@ -12,7 +12,7 @@ import {
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {BottomRightDecoration, ScreenWrapper} from '../../components';
 import {LoginScreenBottomIcon} from '../../assets/images/LoginScreenBottomIcon';
-import {Spacing, Typography} from '../../constants';
+import {Spacing, Typography, BorderRadius} from '../../constants';
 import {useAuth, useTheme} from '../../context';
 import type {AuthStackParamList} from '../../navigation/types';
 
@@ -104,7 +104,7 @@ export function SignUpScreen({navigation}: Props) {
               style={[styles.button, {backgroundColor: colors.primary}]}
               onPress={handleSignUp}
               activeOpacity={0.8}>
-              <Text style={[Typography.button, {color: '#FFFFFF'}]}>Sign Up</Text>
+              <Text style={[Typography.button, {color: colors.buttonPrimaryText}]}>Sign Up</Text>
             </TouchableOpacity>
           </View>
 
@@ -145,14 +145,14 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 56,
-    borderRadius: 12,
+    borderRadius: BorderRadius.lg,
     paddingHorizontal: Spacing.md,
     borderWidth: 1,
     ...Typography.body,
   },
   button: {
     height: 56,
-    borderRadius: 16,
+    borderRadius: BorderRadius.xl,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: Spacing.sm,

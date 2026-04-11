@@ -16,7 +16,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BottomRightDecoration } from '../../components/BottomRightDecoration';
 import Svg, { Path } from 'react-native-svg';
 import { useAuth, useTheme } from '../../context';
-import { FontSizes } from '../../constants';
+import { FontSizes, BorderRadius } from '../../constants';
 import type { AuthStackParamList } from '../../navigation/types';
 import { LoginScreenMomWithBaby } from '../../assets/images/LoginScreenMomWithBaby';
 import { MKCLogo } from '../../assets/images/MKCLogo';
@@ -235,14 +235,14 @@ export function OTPScreen({ route, navigation }: Props) {
             <GreyLockIcon
               width={15}
               height={15}
-              color={filled ? '#FFFFFF' : undefined}
+              color={filled ? colors.buttonPrimaryText : undefined}
               style={{ marginRight: 8 }}
             />
             <Text
               style={[
                 styles.buttonText,
                 {
-                  color: filled ? '#FFFFFF' : colors.buttonDisabledText,
+                  color: filled ? colors.buttonPrimaryText : colors.buttonDisabledText,
                 },
               ]}
             >
@@ -264,8 +264,8 @@ export function OTPScreen({ route, navigation }: Props) {
         animationType="fade"
         statusBarTranslucent
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalBox, { backgroundColor: colors.card }]}>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[styles.modalBox, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
             <ActivityIndicator size="large" color={colors.iconBlue} />
             <Text style={[styles.modalText, { color: colors.text }]}>
               आपका नंबर वेरिफाई किया जा रहा है…
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   otpBox: {
     width: (width - 48 - 30) / OTP_LENGTH,
     height: 54,
-    borderRadius: 14,
+    borderRadius: BorderRadius.button,
     fontSize: FontSizes.h2,
     fontWeight: '700',
   },
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
 
   /* ── Button ── */
   button: {
-    borderRadius: 14,
+    borderRadius: BorderRadius.button,
     height: 54,
     alignItems: 'center',
     justifyContent: 'center',
@@ -393,18 +393,16 @@ const styles = StyleSheet.create({
   /* ── Modal ── */
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalBox: {
-    borderRadius: 16,
+    borderRadius: BorderRadius.xl,
     paddingVertical: 32,
     paddingHorizontal: 36,
     alignItems: 'center',
     gap: 16,
     elevation: 5,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,

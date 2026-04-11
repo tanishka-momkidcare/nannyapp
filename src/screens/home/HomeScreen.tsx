@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -13,7 +13,7 @@ import {
   View,
   ViewToken,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { BlurView } from '@react-native-community/blur';
 import Svg, { Path, Circle } from 'react-native-svg';
@@ -22,13 +22,20 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth, useTheme } from '../../context';
 import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
 import type { AppStackParamList } from '../../navigation/types';
-import { FontSizes, Spacing } from '../../constants';
+import { FontSizes, Spacing, BorderRadius } from '../../constants';
 import { MKCLogo } from '../../assets/images/MKCLogo';
 import { MKCLogoIconBlue } from '../../assets/images/MKCLogoIconBlue';
 import { BlurEllipse } from '../../components';
+import { LoginScreenBottomIcon } from '../../assets/images/LoginScreenBottomIcon';
 import HelpWoman from '../../assets/helpCardWomen.png';
+import japaIcon from '../../assets/JapaIcon.png';
+import nannyIcon from '../../assets/nannyIcon.png';
+import babySitterIcon from '../../assets/babySitterIcon.png';
+import babyMaidIcon from '../../assets/babyMaidIcon.png';
 
 const { width: SW } = Dimensions.get('window');
+const SECTION_GAP = 32;
+const SECTION_CONTENT_GAP = 8;
 
 /* ── Dummy data ── */
 const USER = {
@@ -72,11 +79,18 @@ const ACTION_CARDS: ActionCard[] = [
   },
 ];
 
-const JOB_CATEGORIES = [
-  { id: '1', title: 'जापा', subtitle: 'Japa', icon: null, bgColor: '#F3F4F9' },
-  { id: '2', title: 'नैनी', subtitle: 'Nanny', icon: null, bgColor: '#FEF5F6' },
-  { id: '3', title: 'बेबीसिटर', subtitle: 'Babysitter', icon: null, bgColor: '#FDF9F0' },
-  { id: '4', title: 'बेबी मेड', subtitle: 'BabyMaid', icon: null, bgColor: '#E7F0F4' },
+const JOB_CATEGORIES_LIGHT = [
+  { id: '1', title: 'जापा', subtitle: 'Japa', icon: japaIcon, bgColor: '#F3F4F9' },
+  { id: '2', title: 'नैनी', subtitle: 'Nanny', icon: nannyIcon, bgColor: '#FEF5F6' },
+  { id: '3', title: 'बेबीसिटर', subtitle: 'Babysitter', icon: babySitterIcon, bgColor: '#FDF9F0' },
+  { id: '4', title: 'बेबी मेड', subtitle: 'BabyMaid', icon: babyMaidIcon, bgColor: '#E7F0F4' },
+];
+
+const JOB_CATEGORIES_DARK = [
+  { id: '1', title: 'जापा', subtitle: 'Japa', icon: japaIcon, bgColor: '#1B2838' },
+  { id: '2', title: 'नैनी', subtitle: 'Nanny', icon: nannyIcon, bgColor: '#2A1B1E' },
+  { id: '3', title: 'बेबीसिटर', subtitle: 'Babysitter', icon: babySitterIcon, bgColor: '#2A2418' },
+  { id: '4', title: 'बेबी मेड', subtitle: 'BabyMaid', icon: babyMaidIcon, bgColor: '#1A2830' },
 ];
 
 /* ── Icons ── */
@@ -115,24 +129,24 @@ function MenuIcon({ color }: { color: string }) {
   );
 }
 
-function LocationIcon() {
+function LocationIcon({ color, strokeColor }: { color: string; strokeColor: string }) {
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="#4D99F1">
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill={color}>
       <Path
         d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0Z"
-        stroke="#ffffff"
+        stroke={strokeColor}
         strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <Circle cx={12} cy={10} r={3} stroke="#ffffff" strokeWidth={2} />
+      <Circle cx={12} cy={10} r={3} stroke={strokeColor} strokeWidth={2} />
     </Svg>
   );
 }
 
-function StarIcon() {
+function StarIcon({ color }: { color: string }) {
   return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="#F5A623">
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill={color}>
       <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2Z" />
     </Svg>
   );
@@ -152,11 +166,69 @@ function ChevronRight({ color = '#1B7FF6' }: { color?: string }) {
   );
 }
 
+function WaveLine() {
+  return (
+    <Svg width={32} height={18} viewBox="0 0 31.244 18.434" fill="none">
+      <Path
+        d="M-2893.9,22918.082s9.628,3.348,11.063-4.338,11.063-4.342,11.063-4.342,9.219.986,8.4-8.482"
+        transform="translate(2894.061 -22900.877)"
+        fill="none"
+        stroke="#98C4F7"
+        strokeWidth={1.5}
+      />
+    </Svg>
+  );
+}
+
+function JobTypeCard({
+  badgeText,
+  badgeSubText,
+  title,
+  subtitle,
+  isDark,
+  colors,
+}: {
+  badgeText: string;
+  badgeSubText?: string;
+  title: string;
+  subtitle?: string;
+  isDark: boolean;
+  colors: any;
+}) {
+  return (
+    <TouchableOpacity style={[styles.jobTypeCard, { backgroundColor: colors.card, borderColor: colors.textBlue }]} activeOpacity={0.8}>
+      <View style={[styles.jobTypeInner, { backgroundColor: colors.cardInner }]}>
+        <View style={styles.jobTypeLeft}>
+          <View style={[styles.jobTypeBadge, { backgroundColor: colors.card }]}>
+            <Text style={[styles.jobTypeBadgeText, { color: colors.textDark }]}>{badgeText}</Text>
+            {badgeSubText && (
+              <Text style={[styles.jobTypeBadgeSubText, { color: colors.textSecondary }]}>{badgeSubText}</Text>
+            )}
+          </View>
+          <View>
+            <Text style={[styles.jobTypeTitle, { color: colors.textDark }]}>{title}</Text>
+            {subtitle && (
+              <Text style={[styles.jobTypeSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
+            )}
+          </View>
+        </View>
+        <View style={styles.jobTypeWaveContainer}>
+          <WaveLine />
+          <View style={{ marginTop: -8 }}>
+            <WaveLine />
+          </View>
+        </View>
+        <ChevronRight color={colors.primary} />
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export function HomeScreen() {
   const { colors, isDark, themeMode, setThemeMode } = useTheme();
   const { signOut } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
-  const { handleScroll } = useTabBarVisibility();
+  const { handleScroll, hide, show } = useTabBarVisibility();
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
@@ -172,6 +244,13 @@ export function HomeScreen() {
   function toggleTheme() {
     setThemeMode(themeMode === 'light' ? 'system' : 'light');
   }
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      show();
+    });
+    return unsubscribe;
+  }, [navigation, show]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -195,15 +274,15 @@ export function HomeScreen() {
               <Switch
                 value={isDark}
                 onValueChange={toggleTheme}
-                trackColor={{ false: '#D1D5DB', true: '#374151' }}
-                thumbColor={isDark ? '#E5E7EB' : '#FFFFFF'}
+                trackColor={{ false: colors.switchTrackOff, true: colors.switchTrackOn }}
+                thumbColor={colors.switchThumb}
                 style={styles.themeSwitch}
               />
               <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
                 <BellIcon color={colors.text} />
-                <View style={styles.bellBadge} />
+                <View style={[styles.bellBadge, { backgroundColor: colors.danger }]} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton} activeOpacity={0.7} onPress={() => navigation.navigate('ProfileSettings')}>
+              <TouchableOpacity style={styles.iconButton} activeOpacity={0.7} onPress={() => { hide(); navigation.navigate('ProfileSettings'); }}>
                 <MenuIcon color={colors.text} />
               </TouchableOpacity>
             </View>
@@ -222,40 +301,40 @@ export function HomeScreen() {
         </View>
 
         {/* ── User Card ── */}
-        <View style={styles.userCard}>
+        <View style={[styles.userCard, { backgroundColor: colors.background }]}>
           <View style={styles.userCardTop}>
             <View style={styles.userLeft}>
-              <View style={[styles.avatar, { backgroundColor: isDark ? '#374151' : '#C5D8F0' }]}>
-                <Text style={[styles.avatarText, { color: isDark ? colors.textMuted : colors.textMuted, backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.5)' }]}>
+              <View style={[styles.avatar, { backgroundColor: colors.avatarBackground }]}>
+                <Text style={[styles.avatarText, { color: colors.textMuted, backgroundColor: colors.avatarOverlay }]}>
                   {USER.initial}
                 </Text>
               </View>
               <View style={styles.userInfo}>
-                <Text style={[styles.greeting, { color: isDark ? colors.text : colors.text }]}>
+                <Text style={[styles.greeting, { color: colors.text }]}>
                   नमस्ते, {USER.name}!
                 </Text>
                 <View style={styles.statusRow}>
-                  <Text style={[styles.statusText, { color: isDark ? colors.textMuted : colors.textMuted }]}>
+                  <Text style={[styles.statusText, { color: colors.textMuted }]}>
                     स्टेटस: {USER.status}
                   </Text>
                 </View>
               </View>
             </View>
             <View style={styles.userRight}>
-              <Text style={[styles.scoreLabel, { color: isDark ? colors.textSecondary : '#4A6FA5' }]}>
+              <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>
                 अंक: {USER.score}
               </Text>
-              <View style={[styles.ratingBadge, { backgroundColor: isDark ? '#243447' : '#EEF2FF' }]}>
-                <StarIcon />
-                <Text style={[styles.ratingText, { color: isDark ? '#FFB74D' : '#1A3B70' }]}>
+              <View style={[styles.ratingBadge, { backgroundColor: colors.badgeSurface }]}>
+                <StarIcon color={colors.accent} />
+                <Text style={[styles.ratingText, { color: colors.textDark }]}>
                   {USER.rating}
                 </Text>
               </View>
             </View>
           </View>
           <View style={styles.locationRow}>
-            <LocationIcon />
-            <Text style={[styles.locationText, { color: isDark ? colors.textMuted : colors.textMuted }]}>
+            <LocationIcon color={colors.textBlue} strokeColor={colors.card} />
+            <Text style={[styles.locationText, { color: colors.textMuted }]}>
               {USER.location}
             </Text>
           </View>
@@ -286,21 +365,21 @@ export function HomeScreen() {
           viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
           contentContainerStyle={styles.carouselContainer}
           renderItem={({ item }) => (
-            <View style={[styles.actionCard, { backgroundColor: isDark ? '#1B2838' : '#FFF5E6' }]}>
+            <View style={[styles.actionCard, { backgroundColor: colors.cardWarm }]}>
               <View style={styles.actionCardContent}>
-                <Text style={[styles.actionTitle, { color: isDark ? colors.text : '#1A3B70' }]}>
+                <Text style={[styles.actionTitle, { color: colors.textDark }]}>
                   {item.title}
                 </Text>
-                <Text style={[styles.actionDesc, { color: isDark ? colors.textSecondary : '#5A7A9A' }]}>
+                <Text style={[styles.actionDesc, { color: colors.textSecondary }]}>
                   {item.description}
                 </Text>
                 <TouchableOpacity style={styles.actionCta} activeOpacity={0.7}>
-                  <Text style={styles.actionCtaText}>{item.cta}</Text>
-                  <ChevronRight color="#1B7FF6" />
+                  <Text style={[styles.actionCtaText, { color: colors.primary }]}>{item.cta}</Text>
+                  <ChevronRight color={colors.primary} />
                 </TouchableOpacity>
               </View>
-              <View style={[styles.actionImagePlaceholder, { backgroundColor: isDark ? '#243447' : '#F0E0C8' }]}>
-                <Text style={{ color: isDark ? colors.textMuted : '#A89070', fontSize: 12 }}>Image</Text>
+              <View style={[styles.actionImagePlaceholder, { backgroundColor: colors.surface }]}>
+                <Text style={{ color: colors.textMuted, fontSize: 12 }}>Image</Text>
               </View>
             </View>
           )}
@@ -310,50 +389,53 @@ export function HomeScreen() {
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>काम के प्रकार (Job categories)</Text>
         </View>
-        <Text style={[styles.sectionDescription, { color: colors.textMuted, marginLeft: Spacing.md, marginBottom: Spacing.md }]}>अपनी सुविधा के अनुसार काम चुनें, अप्लाई करें</Text>
+        <Text style={[styles.sectionDescription, { color: colors.textMuted, marginLeft: Spacing.md, marginBottom: Spacing.sm }]}>अपनी सुविधा के अनुसार काम चुनें, अप्लाई करें</Text>
 
         <View style={styles.jobCategoriesContainer}>
-          {JOB_CATEGORIES.map(category => (
+          {(isDark ? JOB_CATEGORIES_DARK : JOB_CATEGORIES_LIGHT).map(category => (
             <TouchableOpacity key={category.id} style={[styles.jobCategoryCard, { backgroundColor: category.bgColor }]} activeOpacity={0.8}>
-              <View style={[styles.jobCategoryIcon, { backgroundColor: isDark ? '#243447' : '#F3F4F6' }]}>
-                <Text style={{ color: colors.textMuted }}>Icon</Text>
+              <View style={[styles.jobCategoryIcon,]}>
+                <Image
+                  source={category.icon}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    // resizeMode: 'contain',
+                  }}
+                />
               </View>
-              <Text style={[styles.jobCategoryTitle, { color: isDark ? colors.text : colors.textMuted }]}>{category.title}</Text>
-              <Text style={[styles.jobCategorySubtitle, { color: isDark ? colors.textSecondary : colors.textMuted }]}>({category.subtitle})</Text>
+              <Text style={[styles.jobCategoryTitle, { color: colors.textMuted }]}>{category.title}</Text>
+              <Text style={[styles.jobCategorySubtitle, { color: colors.textMuted }]}>({category.subtitle})</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* ── Job Type Cards ── */}
-        <TouchableOpacity style={[styles.jobTypeCard, { backgroundColor: isDark ? '#1B2838' : '#EBF5FF' }]} activeOpacity={0.8}>
-          <View style={styles.jobTypeLeft}>
-            <View style={[styles.jobTypeBadge, { backgroundColor: isDark ? '#101D2C' : '#FFFFFF' }]}>
-              <Text style={[styles.jobTypeBadgeText, { color: isDark ? colors.text : '#1A3B70' }]}>24</Text>
-            </View>
-            <View>
-              <Text style={[styles.jobTypeTitle, { color: isDark ? colors.text : '#1A3B70' }]}>फुल-टाइम (24 घंटे) के काम</Text>
-            </View>
-          </View>
-          <ChevronRight />
-        </TouchableOpacity>
+        <JobTypeCard
+          badgeText="24"
+          badgeSubText="Hrs"
+          title="फुल-टाइम (24 घंटे) के काम"
+          subtitle="जापा / नैनी / बेबीसिटर"
+          isDark={isDark}
+          colors={colors}
+        />
+        <JobTypeCard
+          badgeText="10"
+          badgeSubText="Hrs"
+          title="पार्ट-टाइम (10 घंटे) के काम"
+          subtitle="जापा / नैनी / बेबीसिटर"
+          isDark={isDark}
+          colors={colors}
+        />
 
-        <TouchableOpacity style={[styles.jobTypeCard, { backgroundColor: isDark ? '#1B2838' : '#EBF5FF' }]} activeOpacity={0.8}>
-          <View style={styles.jobTypeLeft}>
-            <View style={[styles.jobTypeBadge, { backgroundColor: isDark ? '#101D2C' : '#FFFFFF' }]}>
-              <Text style={[styles.jobTypeBadgeText, { color: isDark ? colors.text : '#1A3B70' }]}>10</Text>
-              <Text style={[styles.jobTypeBadgeSubText, { color: isDark ? colors.textSecondary : '#5A7A9A' }]}>Hrs</Text>
-            </View>
-            <View>
-              <Text style={[styles.jobTypeTitle, { color: isDark ? colors.text : '#1A3B70' }]}>पार्ट-टाइम (10 घंटे) के काम</Text>
-              <Text style={[styles.jobTypeSubtitle, { color: isDark ? colors.textSecondary : '#5A7A9A' }]}>जापा / नैनी / बेबीसिटर</Text>
-            </View>
-          </View>
-          <ChevronRight />
-        </TouchableOpacity>
+        {/* ── Decorative Icon ── */}
+        <View style={styles.bottomIconContainer}>
+          <LoginScreenBottomIcon width={250} height={320} />
+        </View>
 
         {/* ── Help Card ── */}
         <LinearGradient
-          colors={['#CB9785', '#C4888F', '#A983B9', '#8B7FBF']}
+          colors={isDark ? ['#2A1F3D', '#1F2A3D', '#1B2838', '#243447'] : ['#CB9785', '#C4888F', '#A983B9', '#8B7FBF']}
           start={{ x: 0, y: 0.8 }}
           end={{ x: 1, y: 0.2 }}
           style={styles.helpCard}
@@ -365,18 +447,24 @@ export function HomeScreen() {
             </Text>
 
             <Text style={styles.helpCardSubtitle}>
-              हमारे जॉब सलाहकार आपकी मदद करने के लिए तैयार हैं।
+              हमारे जॉब सलाहकार आपकी मदद करने के{`\n`}लिए तैयार हैं।
             </Text>
 
             <View style={styles.helpButtonsContainer}>
-              <TouchableOpacity style={[styles.helpButton, { backgroundColor: '#FBBF24' }]}>
-                <Text style={[styles.helpButtonText, { color: '#000' }]}>
+              <TouchableOpacity style={[styles.helpButton, { backgroundColor: colors.accent }]}>
+                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                  <Path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke={colors.textInverse} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                </Svg>
+                <Text style={[styles.helpButtonText, { color: colors.textInverse }]}>
                   चैट करें
                 </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.helpButton, { backgroundColor: '#374151' }]}>
-                <Text style={[styles.helpButtonText, { color: '#FFF' }]}>
+              <TouchableOpacity style={[styles.helpButton, { backgroundColor: colors.surface }]}>
+                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                  <Path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" stroke={colors.text} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                </Svg>
+                <Text style={[styles.helpButtonText, { color: colors.text }]}>
                   कॉल करें
                 </Text>
               </TouchableOpacity>
@@ -387,6 +475,10 @@ export function HomeScreen() {
           <Image source={HelpWoman} style={styles.helpImage} resizeMode="contain" />
 
         </LinearGradient>
+        {/* ── Decorative Icon Left (flipped) ── */}
+        <View style={styles.bottomIconContainerLeft}>
+          <LoginScreenBottomIcon width={250} height={320} />
+        </View>
 
       </ScrollView>
 
@@ -435,7 +527,7 @@ const styles = StyleSheet.create({
   /* ── Header ── */
   headerWrapper: {
     zIndex: 10,
-    marginBottom: 30,
+    marginBottom: SECTION_GAP,
   },
   header: {
     flexDirection: 'row',
@@ -444,12 +536,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 12,
     paddingBottom: 12,
-    // zIndex: 10,
   },
-  headerShadow: {
-    // height: 4,
-    // zIndex: 9,
-  },
+  headerShadow: {},
   logoIconOverlap: {
     position: 'absolute',
     left: -74,
@@ -476,15 +564,13 @@ const styles = StyleSheet.create({
     right: 6,
     width: 8,
     height: 8,
-    borderRadius: 4,
-    backgroundColor: '#EF4444',
+    borderRadius: BorderRadius.xs,
   },
 
   /* ── User Card ── */
   userCard: {
     paddingHorizontal: 14,
-    borderRadius: 16,
-    backgroundColor: 'white',
+    borderRadius: BorderRadius.xl,
   },
   userCardTop: {
     flexDirection: 'row',
@@ -498,9 +584,8 @@ const styles = StyleSheet.create({
     zIndex: 10
   },
   avatar: {
-    borderRadius: 10,
+    borderRadius: BorderRadius.md,
     padding: 4,
-    backgroundColor: '#E5E5E5',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -508,10 +593,7 @@ const styles = StyleSheet.create({
   avatarText: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: BorderRadius.xxl,
     overflow: 'hidden',
     textAlign: 'center',
     textAlignVertical: 'center',
@@ -552,7 +634,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: BorderRadius.sm,
     gap: 4,
   },
   ratingText: {
@@ -574,8 +656,8 @@ const styles = StyleSheet.create({
   /* ── Section ── */
   sectionHeader: {
     paddingHorizontal: 14,
-    marginTop: 54,
-    marginBottom: 4
+    marginTop: SECTION_GAP,
+    marginBottom: SECTION_CONTENT_GAP,
   },
   sectionTitle: {
     fontSize: 18,
@@ -596,7 +678,7 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     padding: Spacing.md,
-    borderRadius: 16,
+    borderRadius: BorderRadius.xl,
     width: SW - Spacing.md * 2,
     flexDirection: 'row',
     alignItems: 'center',
@@ -619,7 +701,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   actionCtaText: {
-    color: '#1B7FF6',
     fontSize: FontSizes.body,
     fontWeight: '600',
     marginRight: Spacing.xs,
@@ -627,7 +708,7 @@ const styles = StyleSheet.create({
   actionImagePlaceholder: {
     width: 80,
     height: 80,
-    borderRadius: 12,
+    borderRadius: BorderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: Spacing.md,
@@ -647,12 +728,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: Spacing.sm,
     paddingVertical: Spacing.md,
-    borderRadius: 10,
+    borderRadius: BorderRadius.md,
   },
   jobCategoryIcon: {
     width: 56,
     height: 56,
-    borderRadius: 12,
+    borderRadius: BorderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.sm,
@@ -665,18 +746,26 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   jobTypeCard: {
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.md,
+    padding: 6,
+    borderRadius: BorderRadius.xl,
+    borderWidth: 1,
+  },
+  jobTypeInner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginHorizontal: Spacing.md,
-    marginBottom: Spacing.md,
     padding: Spacing.md,
-    borderRadius: 16,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+  },
+  jobTypeWaveContainer: {
+    position: 'absolute',
+    right: 55,
+    top: '90%',
+    marginTop: -18,
+    opacity: 1,
   },
   jobTypeLeft: {
     flexDirection: 'row',
@@ -685,7 +774,7 @@ const styles = StyleSheet.create({
   jobTypeBadge: {
     width: 60,
     height: 60,
-    borderRadius: 12,
+    borderRadius: BorderRadius.lg,
     marginRight: Spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
@@ -708,50 +797,69 @@ const styles = StyleSheet.create({
   },
   helpCard: {
     marginHorizontal: Spacing.md,
-    borderRadius: 20,
-    padding: Spacing.lg,
+    borderRadius: BorderRadius.xxl,
+    paddingLeft: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.lg,
+    paddingRight: 0,
     flexDirection: 'row',
-    marginBottom: 120,
+    alignItems: 'center',
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    shadowOffset: { width: 2, height: 2 },
+    elevation: 10,
+    marginTop: -80,
+    zIndex: 2
   },
   helpCardContent: {
     flex: 1,
+    zIndex: 1,
   },
   helpImage: {
-    width: 200,
-    height: 200,
+    width: 130 * 0.85,
+    height: 130,
   },
   helpCardTitle: {
-    fontSize: FontSizes.title,
+    fontSize: FontSizes.subtitle,
     fontWeight: 'bold',
     marginBottom: Spacing.xs,
+    color: '#FFF',
+    fontFamily: 'NotoSansDevanagari-Bold',
   },
   helpCardSubtitle: {
     fontSize: FontSizes.sm,
     lineHeight: 18,
     marginBottom: Spacing.lg,
+    color: 'rgba(255,255,255,0.9)',
+    fontFamily: 'NotoSansDevanagari-Regular',
   },
   helpButtonsContainer: {
     flexDirection: 'row',
     gap: Spacing.md,
   },
   helpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
-    borderRadius: 10,
+    borderRadius: BorderRadius.sm,
   },
   helpButtonText: {
     fontSize: FontSizes.sm,
     fontWeight: '600',
   },
-  helpCardImage: {
-    width: 100,
-    height: 120,
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
+  bottomIconContainer: {
+    alignSelf: 'flex-end',
+    marginRight: -45,
+    marginTop: -225,
+    marginBottom: 20,
   },
-  imageContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
+  bottomIconContainerLeft: {
+    alignSelf: 'flex-start',
+    marginLeft: -75,
+    marginTop: -180,
+    marginBottom: 20,
+    zIndex: 1
   },
 });

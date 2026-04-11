@@ -14,7 +14,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Svg, {Circle, Path} from 'react-native-svg';
 
 import {useAuth, useTheme} from '../../context';
-import {FontSizes} from '../../constants';
+import {FontSizes, BorderRadius} from '../../constants';
 import type {AuthStackParamList} from '../../navigation/types';
 import {LoginScreenMomWithBaby} from '../../assets/images/LoginScreenMomWithBaby';
 import {BottomRightDecoration} from '../../components/BottomRightDecoration';
@@ -23,15 +23,18 @@ import {LoginScreenBottomIcon} from '../../assets/images/LoginScreenBottomIcon';
 const {width: SW} = Dimensions.get('window');
 type Props = NativeStackScreenProps<AuthStackParamList, 'LocationSelection'>;
 
-const PinIcon = ({size = 24, color = '#1B7FF6'}: {size?: number; color?: string}) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Path
-      d="M12 21.7C12 21.7 20 14.16 20 8.8A8 8 0 004 8.8C4 14.16 12 21.7 12 21.7Z"
-      fill={color}
-    />
-    <Circle cx="12" cy="8.8" r="3" fill="#FFF" />
-  </Svg>
-);
+const PinIcon = ({size = 24, color = '#1B7FF6'}: {size?: number; color?: string}) => {
+  const {colors: themeColors} = useTheme();
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 21.7C12 21.7 20 14.16 20 8.8A8 8 0 004 8.8C4 14.16 12 21.7 12 21.7Z"
+        fill={color}
+      />
+      <Circle cx="12" cy="8.8" r="3" fill={themeColors.textInverse} />
+    </Svg>
+  );
+};
 
 const MemoPinIcon = React.memo(PinIcon);
 
@@ -114,7 +117,7 @@ export function LocationSelectionScreen({route, navigation}: Props) {
           </Text>
           {selectedArea ? (
             <View style={[s.selectedCheck, {backgroundColor: colors.iconBlue}]}>
-              <Ionicons name="checkmark" size={12} color="#FFF" />
+              <Ionicons name="checkmark" size={12} color={colors.textInverse} />
             </View>
           ) : (
             <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
@@ -131,7 +134,7 @@ export function LocationSelectionScreen({route, navigation}: Props) {
               backgroundColor: selectedArea ? colors.iconBlue : colors.buttonDisabled,
             },
             selectedArea
-              ? s.ctaShadow
+              ? [s.ctaShadow, {shadowColor: colors.primary}]
               : null,
           ]}
           activeOpacity={0.85}
@@ -140,7 +143,7 @@ export function LocationSelectionScreen({route, navigation}: Props) {
           <Text
             style={[
               s.ctaText,
-              {color: selectedArea ? '#FFF' : colors.buttonDisabledText},
+              {color: selectedArea ? colors.buttonPrimaryText : colors.buttonDisabledText},
             ]}>
             आगे बढ़ें
           </Text>
@@ -183,7 +186,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     height: 54,
-    borderRadius: 14,
+    borderRadius: BorderRadius.button,
     borderWidth: 1.5,
     paddingHorizontal: 16,
   },
@@ -202,12 +205,11 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     height: 54,
-    borderRadius: 14,
+    borderRadius: BorderRadius.button,
     marginBottom: 32,
   },
   ctaShadow: {
     elevation: 3,
-    shadowColor: '#1B7FF6',
     shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.25,
     shadowRadius: 8,

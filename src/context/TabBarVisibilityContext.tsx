@@ -6,11 +6,17 @@ type TabBarVisibilityContextType = {
   translateAnim: Animated.Value;
   /** Attach this to your ScrollView's onScroll */
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  /** Instantly hide the tab bar (no animation) */
+  hide: () => void;
+  /** Instantly show the tab bar (no animation) */
+  show: () => void;
 };
 
 const TabBarVisibilityContext = createContext<TabBarVisibilityContextType>({
   translateAnim: new Animated.Value(0),
   handleScroll: () => {},
+  hide: () => {},
+  show: () => {},
 });
 
 const SCROLL_THRESHOLD = 10;
@@ -52,8 +58,18 @@ export function TabBarVisibilityProvider({children}: {children: React.ReactNode}
     [translateAnim],
   );
 
+  const hide = useCallback(() => {
+    isHidden.current = true;
+    translateAnim.setValue(1);
+  }, [translateAnim]);
+
+  const show = useCallback(() => {
+    isHidden.current = false;
+    translateAnim.setValue(0);
+  }, [translateAnim]);
+
   return (
-    <TabBarVisibilityContext.Provider value={{translateAnim, handleScroll}}>
+    <TabBarVisibilityContext.Provider value={{translateAnim, handleScroll, hide, show}}>
       {children}
     </TabBarVisibilityContext.Provider>
   );

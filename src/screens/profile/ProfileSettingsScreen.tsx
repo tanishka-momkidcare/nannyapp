@@ -11,7 +11,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import Svg, {Path, Circle} from 'react-native-svg';
 import {useNavigation} from '@react-navigation/native';
 import {useAuth, useTheme} from '../../context';
-import {FontSizes} from '../../constants';
+import {FontSizes, BorderRadius} from '../../constants';
 
 /* ── Icons ── */
 function BackArrowIcon({color}: {color: string}) {
@@ -213,29 +213,29 @@ export function ProfileSettingsScreen() {
         <View
           style={[
             styles.userCard,
-            {backgroundColor: isDark ? '#1B2838' : '#E8EFF9'},
+            {backgroundColor: colors.cardTinted},
           ]}>
           <View
             style={[
               styles.avatar,
-              {backgroundColor: isDark ? '#374151' : '#C5D8F0'},
+              {backgroundColor: colors.avatarBackground},
             ]}>
             <Text
               style={[
                 styles.avatarText,
-                {color: isDark ? '#E8EAED' : '#1A3B70'},
+                {color: colors.textDark},
               ]}>
               {USER.initial}
             </Text>
           </View>
           <View style={styles.userInfo}>
-            <Text style={[styles.userName, {color: isDark ? colors.text : '#1A3B70'}]}>
+            <Text style={[styles.userName, {color: colors.textDark}]}>
               {USER.name}
             </Text>
-            <Text style={[styles.userPhone, {color: isDark ? colors.textSecondary : '#4A6FA5'}]}>
+            <Text style={[styles.userPhone, {color: colors.textSecondary}]}>
               {USER.phone}
             </Text>
-            <Text style={[styles.userLocation, {color: isDark ? colors.textSecondary : '#4A6FA5'}]}>
+            <Text style={[styles.userLocation, {color: colors.textSecondary}]}>
               {USER.location}
             </Text>
           </View>
@@ -245,14 +245,14 @@ export function ProfileSettingsScreen() {
         <View
           style={[
             styles.menuCard,
-            {backgroundColor: isDark ? '#1B2838' : colors.card},
+            {backgroundColor: colors.card},
           ]}>
           {menuItems.map((item, index) => {
             const textColor = item.danger
-              ? '#EF4444'
+              ? colors.danger
               : colors.text;
             const iconColor = item.danger
-              ? '#EF4444'
+              ? colors.danger
               : colors.primary;
 
             return (
@@ -273,7 +273,7 @@ export function ProfileSettingsScreen() {
                     {item.label}
                   </Text>
                 </View>
-                <ChevronRightIcon color={isDark ? colors.textMuted : '#9CA3AF'} />
+                <ChevronRightIcon color={colors.textMuted} />
               </TouchableOpacity>
             );
           })}
@@ -314,14 +314,14 @@ const styles = StyleSheet.create({
   userCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
+    borderRadius: BorderRadius.xl,
     padding: 18,
     marginBottom: 24,
   },
   avatar: {
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: BorderRadius.xxl + 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   menuCard: {
-    borderRadius: 16,
+    borderRadius: BorderRadius.xl,
     overflow: 'hidden',
   },
   menuItem: {

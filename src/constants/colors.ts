@@ -65,6 +65,25 @@ export const Colors = {
     badgeBackground: '#FFFFFF',
     blobColor: '#3B82F6',
     onboardingBackground: '#EEF6FF',
+
+    // Dark mode specific
+    textDark: '#1A3B70',
+    danger: '#EF4444',
+    avatarBackground: '#C5D8F0',
+    avatarOverlay: 'rgba(255,255,255,0.5)',
+    cardWarm: '#FFF5E6',
+    cardInner: '#BDDAFC',
+    badgeSurface: '#EEF2FF',
+    tabInactive: '#9CA3AF',
+    iconCircleBackground: '#EEF6FF',
+    accentSurface: '#FFF5E6',
+    primaryLight: '#D0E3FF',
+    decorativeLine: '#DEE8F5',
+    cardTinted: '#E8EFF9',
+    dotInactive: '#C5D8F0',
+    switchTrackOff: '#D1D5DB',
+    switchTrackOn: '#374151',
+    switchThumb: '#FFFFFF',
   },
   dark: {
     // Core
@@ -129,6 +148,25 @@ export const Colors = {
     badgeBackground: '#1B2838',
     blobColor: '#5A9CF5',
     onboardingBackground: '#0D1B2A',
+
+    // Dark mode specific
+    textDark: '#E8EAED',
+    danger: '#EF4444',
+    avatarBackground: '#374151',
+    avatarOverlay: 'rgba(255,255,255,0.15)',
+    cardWarm: '#1B2838',
+    cardInner: '#101D2C',
+    badgeSurface: '#243447',
+    tabInactive: '#8899AA',
+    iconCircleBackground: '#1B3A5C',
+    accentSurface: '#1B3A5C',
+    primaryLight: '#1B3A5C',
+    decorativeLine: '#3C3C3E',
+    cardTinted: '#1B2838',
+    dotInactive: '#374151',
+    switchTrackOff: '#374151',
+    switchTrackOn: '#7CB8FF',
+    switchThumb: '#E5E7EB',
   },
 };
 

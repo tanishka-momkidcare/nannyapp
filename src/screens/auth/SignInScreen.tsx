@@ -24,7 +24,7 @@ import {
 } from '../../components/CountryCodePicker';
 import { BottomRightDecoration } from '../../components/BottomRightDecoration';
 import { useTheme } from '../../context';
-import { FontSizes } from '../../constants';
+import { FontSizes, BorderRadius } from '../../constants';
 import { GreyLockIcon } from '../../assets/images/GreyLockIcon';
 
 const { width } = Dimensions.get('window');
@@ -170,7 +170,7 @@ export function SignInScreen({ navigation }: Props) {
             <GreyLockIcon
               width={15}
               height={15}
-              color={canSubmit ? '#FFFFFF' : undefined}
+              color={canSubmit ? colors.buttonPrimaryText : undefined}
               style={{ marginRight: 8 }}
             />
             <Text
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   phoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 14,
+    borderRadius: BorderRadius.button,
     marginHorizontal: 24,
     borderWidth: 0,
   },
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 20,
     height: 20,
-    borderRadius: 4,
+    borderRadius: BorderRadius.xs,
     borderWidth: 1.5,
     marginRight: 10,
     alignItems: 'center',
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
 
   /* ── Button ── */
   button: {
-    borderRadius: 14,
+    borderRadius: BorderRadius.button,
     height: 54,
     alignItems: 'center',
     justifyContent: 'center',

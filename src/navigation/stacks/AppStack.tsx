@@ -40,7 +40,11 @@ export function AppStack() {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
       <Stack.Screen name="MainTabs" component={BottomTabs} />
-      <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
+      <Stack.Screen
+        name="ProfileSettings"
+        component={ProfileSettingsScreen}
+        options={{animation: 'fade'}}
+      />
     </Stack.Navigator>
   );
 }

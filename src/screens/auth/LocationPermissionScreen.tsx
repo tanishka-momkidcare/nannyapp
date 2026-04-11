@@ -20,7 +20,7 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import Svg, {Circle, Defs, ClipPath, G, Path} from 'react-native-svg';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../context';
-import {FontSizes, GOOGLE_MAPS_API_KEY, reverseGeocode} from '../../constants';
+import {FontSizes, GOOGLE_MAPS_API_KEY, reverseGeocode, BorderRadius} from '../../constants';
 import type {AuthStackParamList} from '../../navigation/types';
 import {MKCLogoIconBlue} from '../../assets/images/MKCLogoIconBlue';
 import {LoginScreenMomWithBaby} from '../../assets/images/LoginScreenMomWithBaby';
@@ -48,8 +48,8 @@ function RadarGraphic({size}: {size: number}) {
     ).start();
   }, [pulse]);
 
-  const bg = isDark ? '#2C2C2E' : '#F5F8FF';
-  const road = isDark ? '#3C3C3E' : '#DEE8F5';
+  const bg = isDark ? colors.surface : colors.onboardingBackground;
+  const road = isDark ? colors.decorativeLine : colors.decorativeLine;
 
   return (
     <View style={{width: size, height: size, alignItems: 'center', justifyContent: 'center'}}>
@@ -61,7 +61,7 @@ function RadarGraphic({size}: {size: number}) {
           height: size * 0.65,
           borderRadius: size * 0.325,
           borderWidth: 2,
-          borderColor: '#1B7FF6',
+          borderColor: colors.primary,
           opacity: pulse.interpolate({inputRange: [0, 1], outputRange: [0.7, 0]}),
           transform: [{scale: pulse.interpolate({inputRange: [0, 1], outputRange: [0.6, 1.4]})}],
         }}
@@ -299,15 +299,15 @@ export function LocationPermissionScreen({navigation}: Props) {
         ) : null}
 
         {/* ── Radar card ── */}
-        <View style={[st.radarCard, {backgroundColor: isDark ? colors.surface : '#F5F8FF'}]}>
+        <View style={[st.radarCard, {backgroundColor: isDark ? colors.surface : colors.onboardingBackground}]}>
           <MemoRadarGraphic size={110} />
           <Text style={[st.fetchingText, {color: colors.textMuted}]} numberOfLines={2}>
             {detectedAddress || 'Fetching your location.....'}
           </Text>
           {detectedAddress ? (
             <View style={st.detectedBadge}>
-              <Ionicons name="checkmark-circle" size={14} color="#22C55E" />
-              <Text style={st.detectedBadgeText}>आगे बढ़ रहे हैं...</Text>
+              <Ionicons name="checkmark-circle" size={14} color={colors.success} />
+              <Text style={[st.detectedBadgeText, { color: colors.success }]}>आगे बढ़ रहे हैं...</Text>
             </View>
           ) : null}
         </View>
@@ -316,16 +316,16 @@ export function LocationPermissionScreen({navigation}: Props) {
 
         {/* ── CTA ── */}
         <TouchableOpacity
-          style={[st.ctaBtn, {backgroundColor: colors.iconBlue}]}
+          style={[st.ctaBtn, {backgroundColor: colors.iconBlue, shadowColor: colors.primary}]}
           activeOpacity={0.85}
           onPress={handlePress}
           disabled={loading}>
           {loading ? (
-            <ActivityIndicator color="#FFF" />
+            <ActivityIndicator color={colors.buttonPrimaryText} />
           ) : (
             <View style={st.ctaBtnInner}>
-              <Ionicons name={buttonIcon} size={18} color="#FFF" style={{marginRight: 8}} />
-              <Text style={st.ctaText}>{buttonLabel}</Text>
+              <Ionicons name={buttonIcon} size={18} color={colors.buttonPrimaryText} style={{marginRight: 8}} />
+              <Text style={[st.ctaText, { color: colors.buttonPrimaryText }]}>{buttonLabel}</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -372,7 +372,7 @@ const st = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 20,
     paddingHorizontal: 24,
-    borderRadius: 20,
+    borderRadius: BorderRadius.xxl,
     marginTop: 16,
     width: '100%',
   },
@@ -391,7 +391,6 @@ const st = StyleSheet.create({
   },
   detectedBadgeText: {
     fontSize: FontSizes.sm,
-    color: '#22C55E',
     fontWeight: '600',
   },
 
@@ -401,14 +400,13 @@ const st = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
     height: 54,
-    borderRadius: 14,
+    borderRadius: BorderRadius.button,
     marginBottom: 32,
     elevation: 3,
-    shadowColor: '#1B7FF6',
     shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.25,
     shadowRadius: 8,
   },
   ctaBtnInner: {flexDirection: 'row', alignItems: 'center'},
-  ctaText: {fontSize: FontSizes.button, fontWeight: '700', color: '#FFF'},
+  ctaText: {fontSize: FontSizes.button, fontWeight: '700'},
 });

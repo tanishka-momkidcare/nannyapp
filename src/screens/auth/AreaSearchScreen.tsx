@@ -19,7 +19,7 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import {useTheme} from '../../context';
-import {FontSizes, GOOGLE_MAPS_API_KEY, reverseGeocode} from '../../constants';
+import {FontSizes, GOOGLE_MAPS_API_KEY, reverseGeocode, BorderRadius} from '../../constants';
 import type {AuthStackParamList} from '../../navigation/types';
 
 const RECENT_STORAGE_KEY = '@nannyapp_recent_searches';
@@ -237,7 +237,7 @@ export function AreaSearchScreen({route, navigation}: Props) {
         style={[st.resultItem, {backgroundColor: colors.background}]}
         activeOpacity={0.65}
         onPress={() => handleSelectPlace(item)}>
-        <View style={[st.resultIconWrap, {backgroundColor: isDark ? '#1B3A5C' : '#EEF6FF'}]}>
+        <View style={[st.resultIconWrap, {backgroundColor: colors.iconCircleBackground}]}>
           <Ionicons name="location-outline" size={18} color={colors.iconBlue} />
         </View>
         <View style={st.resultTextWrap}>
@@ -259,8 +259,8 @@ export function AreaSearchScreen({route, navigation}: Props) {
         style={[st.resultItem, {backgroundColor: colors.background}]}
         activeOpacity={0.65}
         onPress={() => handleSelectRecent(item)}>
-        <View style={[st.resultIconWrap, {backgroundColor: isDark ? '#1B3A5C' : '#FFF5E6'}]}>
-          <Ionicons name="time-outline" size={18} color="#F5A623" />
+        <View style={[st.resultIconWrap, {backgroundColor: isDark ? colors.accentSurface : colors.cardWarm}]}>
+          <Ionicons name="time-outline" size={18} color={colors.accent} />
         </View>
         <View style={st.resultTextWrap}>
           <Text style={[st.resultMain, {color: colors.text}]} numberOfLines={1}>
@@ -309,15 +309,15 @@ export function AreaSearchScreen({route, navigation}: Props) {
 
       {/* ── Current location card ── */}
       <TouchableOpacity
-        style={[st.gpsCard, {backgroundColor: isDark ? '#1a2636' : '#EEF6FF', borderColor: isDark ? '#2a3a4f' : '#D0E3FF'}]}
+        style={[st.gpsCard, {backgroundColor: isDark ? colors.surface : colors.iconCircleBackground, borderColor: isDark ? colors.inputBorder : colors.primaryLight}]}
         activeOpacity={0.75}
         onPress={handleCurrentLocation}
         disabled={gpsLoading}>
-        <View style={[st.gpsIconCircle, {backgroundColor: isDark ? '#1B3A5C' : '#D0E3FF'}]}>
+        <View style={[st.gpsIconCircle, {backgroundColor: isDark ? colors.iconCircleBackground : colors.primaryLight}]}>
           {gpsLoading ? (
-            <ActivityIndicator size="small" color="#1B7FF6" />
+            <ActivityIndicator size="small" color={colors.primary} />
           ) : (
-            <Ionicons name="navigate" size={18} color="#1B7FF6" />
+            <Ionicons name="navigate" size={18} color={colors.primary} />
           )}
         </View>
         <View style={{flex: 1}}>
@@ -412,7 +412,7 @@ const st = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     height: 46,
-    borderRadius: 14,
+    borderRadius: BorderRadius.button,
     borderWidth: 1.5,
     paddingHorizontal: 14,
   },
@@ -427,7 +427,7 @@ const st = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 16,
     padding: 14,
-    borderRadius: 14,
+    borderRadius: BorderRadius.button,
     borderWidth: 1,
     marginBottom: 8,
   },

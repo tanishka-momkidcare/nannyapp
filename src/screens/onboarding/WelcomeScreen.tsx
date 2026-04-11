@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { useAuth, useTheme } from '../../context';
-import { FontSizes } from '../../constants';
+import { FontSizes, BorderRadius } from '../../constants';
 import NannyImage from '../../assets/Group 13273.svg';
 import BlueShieldIcon from '../../assets/BlueShield.svg';
 import { MKCLogoIconBlue } from '../../assets/images/MKCLogoIconBlue';
@@ -65,7 +65,7 @@ export function WelcomeScreen() {
 
   return (
     <LinearGradient
-      colors={['#FFFFFF', '#C4D9FA']}
+      colors={isDark ? [colors.background, colors.surface] : ['#FFFFFF', '#C4D9FA']}
       start={{ x: 0.4, y: 0 }}
       end={{ x: 0.6, y: 1 }}
       style={st.container}>
@@ -90,7 +90,7 @@ export function WelcomeScreen() {
               },
             ]}>
             <BlueShieldIcon width={18} height={18} />
-            <Text style={[st.badgeText, { color: '#1A3B70' }]}>{SLIDES[0].badge}</Text>
+            <Text style={[st.badgeText, { color: colors.textDark }]}>{SLIDES[0].badge}</Text>
           </View>
         </View>
         <FlatList
@@ -106,8 +106,8 @@ export function WelcomeScreen() {
           style={st.flatList}
           renderItem={({ item }) => (
             <View style={[st.slide, { width: SW }]}>
-              <Text style={[st.title, { color: '#1A3B70' }]}>{item.title}</Text>
-              <Text style={[st.description, { color: '#1A3B70' }]}>
+              <Text style={[st.title, { color: colors.textDark }]}>{item.title}</Text>
+              <Text style={[st.description, { color: colors.textDark }]}>
                 {item.description}
               </Text>
             </View>
@@ -129,9 +129,7 @@ export function WelcomeScreen() {
                       backgroundColor:
                         i === currentIndex
                           ? colors.primary
-                          : isDark
-                            ? colors.primary + '44'
-                            : '#C5D8F0',
+                          : colors.dotInactive,
                     },
                   ]}
                 />
@@ -150,7 +148,7 @@ export function WelcomeScreen() {
             onPress={handleNext}
             activeOpacity={0.85}>
             <View style={st.buttonContent}>
-              <Text style={[st.buttonText, { color: '#FFFFFF' }]}>
+              <Text style={[st.buttonText, { color: colors.buttonPrimaryText }]}>
                 {currentIndex === SLIDES.length - 1
                   ? 'अंदर शुरू करें'
                   : 'आगे बढ़ें'}
@@ -158,7 +156,7 @@ export function WelcomeScreen() {
               <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
                 <Path
                   d="M9 6l6 6-6 6"
-                  stroke="#FFFFFF"
+                  stroke={colors.buttonPrimaryText}
                   strokeWidth={2.5}
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -227,7 +225,7 @@ const st = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
-    borderRadius: 14,
+    borderRadius: BorderRadius.button,
     paddingHorizontal: 18,
     paddingVertical: 10,
     elevation: 4,
@@ -271,11 +269,11 @@ const st = StyleSheet.create({
   },
   dot: {
     height: 8,
-    borderRadius: 4,
+    borderRadius: BorderRadius.xs,
     marginHorizontal: 4,
   },
   button: {
-    borderRadius: 14,
+    borderRadius: BorderRadius.button,
     height: 54,
     width: SW * 0.6,
     alignSelf: 'center',

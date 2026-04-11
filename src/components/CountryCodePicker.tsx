@@ -331,7 +331,7 @@ export function CountryCodePicker({selected, onSelect}: Props) {
         onRequestClose={close}>
         <StatusBar
           barStyle="light-content"
-          backgroundColor="rgba(0,0,0,0.4)"
+          backgroundColor={colors.overlay}
           translucent={Platform.OS === 'android'}
         />
         <View style={[styles.overlay, {backgroundColor: colors.overlay}]}>
@@ -403,7 +403,6 @@ const styles = StyleSheet.create({
   dialCode: {
     fontSize: FontSizes.input,
     fontWeight: '500',
-    color: 'hsla(212, 100%, 63%, 1)',
   },
   arrow: {
     fontSize: FontSizes.sm,
