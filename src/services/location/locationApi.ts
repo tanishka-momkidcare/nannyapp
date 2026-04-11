@@ -40,7 +40,7 @@ export async function uploadLocationBatch(
   authToken: string,
 ): Promise<boolean> {
   try {
-    await request('/api/location/batch', {
+    await request('/api/v1/location/batch', {
       method: 'POST',
       body: JSON.stringify(batch),
       headers: { Authorization: `Bearer ${authToken}` },
@@ -59,7 +59,7 @@ export async function fetchActiveShift(
 ): Promise<ShiftAssignment | null> {
   try {
     const data = await request<{ shift: ShiftAssignment | null }>(
-      `/api/shifts/active?nannyId=${encodeURIComponent(nannyId)}`,
+      `/api/v1/location/shifts/active?nannyId=${encodeURIComponent(nannyId)}`,
       { headers: { Authorization: `Bearer ${authToken}` } },
     );
     return data.shift;
@@ -74,7 +74,7 @@ export async function reportFraudAlert(
   alert: Omit<FraudAlert, 'id' | 'resolved'>,
   authToken: string,
 ): Promise<void> {
-  await request('/api/fraud/alert', {
+  await request('/api/v1/location/fraud/alert', {
     method: 'POST',
     body: JSON.stringify(alert),
     headers: { Authorization: `Bearer ${authToken}` },
@@ -88,7 +88,7 @@ export async function fetchTrackingConfig(
 ): Promise<Partial<TrackingConfig> | null> {
   try {
     return await request<Partial<TrackingConfig>>(
-      '/api/location/config',
+      '/api/v1/location/config',
       { headers: { Authorization: `Bearer ${authToken}` } },
     );
   } catch {

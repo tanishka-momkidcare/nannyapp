@@ -119,7 +119,7 @@ async function clearRecents() {
    ══════════════════════════════════════════════════ */
 export function AreaSearchScreen({route, navigation}: Props) {
   const {colors, isDark} = useTheme();
-  const {latitude, longitude} = route.params;
+  const {phone, otp, latitude, longitude} = route.params;
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<PlacePrediction[]>([]);
@@ -171,6 +171,8 @@ export function AreaSearchScreen({route, navigation}: Props) {
         timestamp: Date.now(),
       });
       navigation.navigate('LocationSelection', {
+        phone,
+        otp,
         latitude: details.lat,
         longitude: details.lng,
         selectedArea: areaName,
@@ -182,6 +184,8 @@ export function AreaSearchScreen({route, navigation}: Props) {
     const areaName = recent.main + (recent.secondary ? ', ' + recent.secondary : '');
     await saveRecent(recent);
     navigation.navigate('LocationSelection', {
+      phone,
+      otp,
       latitude: recent.lat,
       longitude: recent.lng,
       selectedArea: areaName,
@@ -210,6 +214,8 @@ export function AreaSearchScreen({route, navigation}: Props) {
       const addr = await reverseGeocodeArea(pos.lat, pos.lng);
       setGpsLoading(false);
       navigation.navigate('LocationSelection', {
+        phone,
+        otp,
         latitude: pos.lat,
         longitude: pos.lng,
         selectedArea: addr || `${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)}`,

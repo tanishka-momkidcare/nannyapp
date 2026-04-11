@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Alert,
   Dimensions,
   StatusBar,
   StyleSheet,
@@ -26,6 +27,7 @@ import { BottomRightDecoration } from '../../components/BottomRightDecoration';
 import { useTheme } from '../../context';
 import { FontSizes, BorderRadius } from '../../constants';
 import { GreyLockIcon } from '../../assets/images/GreyLockIcon';
+import { sendOtp } from '../../services/authApi';
 
 const { width } = Dimensions.get('window');
 
@@ -36,15 +38,24 @@ export function SignInScreen({ navigation }: Props) {
   const [phone, setPhone] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
+  const [sending, setSending] = useState(false);
 
-  function handleSendOTP() {
-    if (phone.trim().length < 10 || !agreed) {
+  async function handleSendOTP() {
+    if (phone.trim().length < 10 || !agreed || sending) {
       return;
     }
-    navigation.navigate('OTPVerification', { phone: phone.trim() });
+    setSending(true);
+    try {
+      await sendOtp(phone.trim());
+      navigation.navigate('OTPVerification', { phone: phone.trim() });
+    } catch (err: any) {
+      Alert.alert('त्रुटि', err.message || 'OTP भेजने में समस्या हुई। कृपया पुनः प्रयास करें।');
+    } finally {
+      setSending(false);
+    }
   }
 
-  const canSubmit = phone.length >= 10 && agreed;
+  const canSubmit = phone.length >= 10 && agreed && !sending;
 
   return (
     <SafeAreaView

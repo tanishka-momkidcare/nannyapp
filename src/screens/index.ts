@@ -6,3 +6,5 @@ export {JobsScreen} from './jobs';
 export {CourseScreen} from './training';
 export {EarningsScreen} from './earnings';
 export {IDCardScreen} from './idcard';
+export {LocationDebugScreen} from './debug/LocationDebugScreen';
+export {CreateShiftScreen} from './shifts/CreateShiftScreen';

@@ -155,9 +155,9 @@ export const DEFAULT_TRACKING_CONFIG: TrackingConfig = {
   geofenceRadius: 150,
   nearClientRadius: 500,
   gpsBurstDuration: 45_000,          // 45 seconds
-  batchInterval: 20 * 60_000,       // 20 minutes
-  shiftCheckInterval: 15 * 60_000,  // 15 minutes
-  maxSilenceBeforeAlert: 45 * 60_000, // 45 minutes
+  batchInterval: __DEV__ ? 60_000 : 20 * 60_000, // 1 min in dev, 20 min in prod
+  shiftCheckInterval: __DEV__ ? 2 * 60_000 : 15 * 60_000, // 2 min in dev, 15 min in prod
+  maxSilenceBeforeAlert: __DEV__ ? 5 * 60_000 : 45 * 60_000, // 5 min in dev, 45 min in prod
   minAccuracyThreshold: 50,
   gpsBurstMaxPoints: 3,
   suspiciousThreshold: 60,

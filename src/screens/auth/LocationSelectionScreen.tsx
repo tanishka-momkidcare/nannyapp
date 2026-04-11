@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
+  Alert,
   Animated,
   Dimensions,
   StatusBar,
@@ -19,6 +20,7 @@ import type {AuthStackParamList} from '../../navigation/types';
 import {LoginScreenMomWithBaby} from '../../assets/images/LoginScreenMomWithBaby';
 import {BottomRightDecoration} from '../../components/BottomRightDecoration';
 import {LoginScreenBottomIcon} from '../../assets/images/LoginScreenBottomIcon';
+import {verifyOtp} from '../../services/authApi';
 
 const {width: SW} = Dimensions.get('window');
 type Props = NativeStackScreenProps<AuthStackParamList, 'LocationSelection'>;
@@ -41,13 +43,14 @@ const MemoPinIcon = React.memo(PinIcon);
 export function LocationSelectionScreen({route, navigation}: Props) {
   const {signIn} = useAuth();
   const {colors, isDark} = useTheme();
-  const {latitude, longitude, selectedArea: areaFromParams} = route.params;
+  const {phone, otp, latitude, longitude, selectedArea: areaFromParams} = route.params;
   const [selectedArea, setSelectedArea] = useState(areaFromParams || '');
+  const [submitting, setSubmitting] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const handleNavigateSearch = useCallback(() => {
-    navigation.navigate('AreaSearch', {latitude, longitude});
-  }, [navigation, latitude, longitude]);
+    navigation.navigate('AreaSearch', {phone, otp, latitude, longitude});
+  }, [navigation, phone, otp, latitude, longitude]);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -64,8 +67,20 @@ export function LocationSelectionScreen({route, navigation}: Props) {
   }, [areaFromParams]);
 
   async function handleProceed() {
-    if (!selectedArea) return;
-    await signIn('dummy-auth-token');
+    if (!selectedArea || submitting) return;
+    setSubmitting(true);
+    try {
+      const result = await verifyOtp(phone, otp, {
+        latitude,
+        longitude,
+        area: selectedArea,
+      });
+      const vendorName = [result.vendor.firstName, result.vendor.lastName].filter(Boolean).join(' ');
+      await signIn(result.token, result.vendor.id, result.vendor.mobile, vendorName, selectedArea);
+    } catch (err: any) {
+      Alert.alert('त्रुटि', err.message || 'लॉगिन में समस्या हुई। कृपया पुनः प्रयास करें।');
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -131,21 +146,21 @@ export function LocationSelectionScreen({route, navigation}: Props) {
           style={[
             s.ctaBtn,
             {
-              backgroundColor: selectedArea ? colors.iconBlue : colors.buttonDisabled,
+              backgroundColor: selectedArea && !submitting ? colors.iconBlue : colors.buttonDisabled,
             },
-            selectedArea
+            selectedArea && !submitting
               ? [s.ctaShadow, {shadowColor: colors.primary}]
               : null,
           ]}
           activeOpacity={0.85}
           onPress={handleProceed}
-          disabled={!selectedArea}>
+          disabled={!selectedArea || submitting}>
           <Text
             style={[
               s.ctaText,
-              {color: selectedArea ? colors.buttonPrimaryText : colors.buttonDisabledText},
+              {color: selectedArea && !submitting ? colors.buttonPrimaryText : colors.buttonDisabledText},
             ]}>
-            आगे बढ़ें
+            {submitting ? 'कृपया प्रतीक्षा करें...' : 'आगे बढ़ें'}
           </Text>
         </TouchableOpacity>
       </Animated.View>

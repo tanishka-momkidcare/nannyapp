@@ -37,16 +37,6 @@ const { width: SW } = Dimensions.get('window');
 const SECTION_GAP = 32;
 const SECTION_CONTENT_GAP = 8;
 
-/* ── Dummy data ── */
-const USER = {
-  name: 'लक्ष्मी',
-  initial: 'L',
-  status: 'Onboarded',
-  score: 56,
-  rating: 3.8,
-  location: 'Karkarduma, Delhi',
-};
-
 type ActionCard = {
   id: string;
   title: string;
@@ -226,7 +216,7 @@ function JobTypeCard({
 
 export function HomeScreen() {
   const { colors, isDark, themeMode, setThemeMode } = useTheme();
-  const { signOut } = useAuth();
+  const { signOut, vendorName, vendorMobile, vendorLocation } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const { handleScroll, hide, show } = useTabBarVisibility();
   const insets = useSafeAreaInsets();
@@ -306,28 +296,28 @@ export function HomeScreen() {
             <View style={styles.userLeft}>
               <View style={[styles.avatar, { backgroundColor: colors.avatarBackground }]}>
                 <Text style={[styles.avatarText, { color: colors.textMuted, backgroundColor: colors.avatarOverlay }]}>
-                  {USER.initial}
+                  {(vendorName || vendorMobile || '?').charAt(0).toUpperCase()}
                 </Text>
               </View>
               <View style={styles.userInfo}>
                 <Text style={[styles.greeting, { color: colors.text }]}>
-                  नमस्ते, {USER.name}!
+                  नमस्ते, {vendorName || vendorMobile || 'User'}!
                 </Text>
                 <View style={styles.statusRow}>
                   <Text style={[styles.statusText, { color: colors.textMuted }]}>
-                    स्टेटस: {USER.status}
+                    स्टेटस: Onboarded
                   </Text>
                 </View>
               </View>
             </View>
             <View style={styles.userRight}>
               <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>
-                अंक: {USER.score}
+                अंक: --
               </Text>
               <View style={[styles.ratingBadge, { backgroundColor: colors.badgeSurface }]}>
                 <StarIcon color={colors.accent} />
                 <Text style={[styles.ratingText, { color: colors.textDark }]}>
-                  {USER.rating}
+                  --
                 </Text>
               </View>
             </View>
@@ -335,7 +325,7 @@ export function HomeScreen() {
           <View style={styles.locationRow}>
             <LocationIcon color={colors.textBlue} strokeColor={colors.card} />
             <Text style={[styles.locationText, { color: colors.textMuted }]}>
-              {USER.location}
+              {vendorLocation || 'Location not set'}
             </Text>
           </View>
         </View>
@@ -384,6 +374,14 @@ export function HomeScreen() {
             </View>
           )}
         />
+
+        {/* ── Create Shift Button ── */}
+        <TouchableOpacity
+          style={[styles.createShiftButton, {backgroundColor: colors.primary}]}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('CreateShift')}>
+          <Text style={styles.createShiftText}>+ नई शिफ्ट बनाएं (Create Shift)</Text>
+        </TouchableOpacity>
 
         {/* ── Job Categories ── */}
         <View style={styles.sectionHeader}>
@@ -722,6 +720,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     marginBottom: Spacing.lg,
+  },
+  createShiftButton: {
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.lg,
+    paddingVertical: 14,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+  },
+  createShiftText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   jobCategoryCard: {
     width: (SW - Spacing.md * 2 - Spacing.md * 2) / 4,

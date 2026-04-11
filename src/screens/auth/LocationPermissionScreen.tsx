@@ -97,7 +97,8 @@ async function reverseGeocodeLocal(lat: number, lng: number): Promise<string> {
 }
 
 /* ════════════════════════  SCREEN  ════════════════════════ */
-export function LocationPermissionScreen({navigation}: Props) {
+export function LocationPermissionScreen({navigation, route}: Props) {
+  const {phone, otp} = route.params;
   const {colors, isDark} = useTheme();
   const [loading, setLoading] = useState(false);
   const [permState, setPermState] = useState<PermState>('initial');
@@ -128,7 +129,7 @@ export function LocationPermissionScreen({navigation}: Props) {
       setDetectedAddress(addr || `${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)}`);
       setLoading(false);
       setTimeout(() => {
-        navigation.navigate('LocationSelection', {latitude: pos.lat, longitude: pos.lng});
+        navigation.navigate('LocationSelection', {phone, otp, latitude: pos.lat, longitude: pos.lng});
       }, 1200);
     } catch {
       setLoading(false);

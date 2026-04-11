@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   Modal,
   StatusBar,
@@ -15,9 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BottomRightDecoration } from '../../components/BottomRightDecoration';
 import Svg, { Path } from 'react-native-svg';
-import { useAuth, useTheme } from '../../context';
+import { useTheme } from '../../context';
 import { FontSizes, BorderRadius } from '../../constants';
 import type { AuthStackParamList } from '../../navigation/types';
+import { sendOtp } from '../../services/authApi';
 import { LoginScreenMomWithBaby } from '../../assets/images/LoginScreenMomWithBaby';
 import { MKCLogo } from '../../assets/images/MKCLogo';
 import { MKCLogoIconBlue } from '../../assets/images/MKCLogoIconBlue';
@@ -77,13 +79,11 @@ export function OTPScreen({ route, navigation }: Props) {
     }
     setVerifying(true);
     try {
-      // TODO: validate OTP via API
-      // Instead of signIn, we now navigate to LocationPermission
-      setTimeout(() => {
-        setVerifying(false);
-        navigation.navigate('LocationPermission');
-      }, 1000);
-    } catch (e) {
+      // Pass phone + otp to LocationPermission; actual verification happens after location is captured
+      navigation.navigate('LocationPermission', { phone, otp: code });
+    } catch (e: any) {
+      Alert.alert('त्रुटि', e.message || 'OTP सत्यापन में समस्या हुई।');
+    } finally {
       setVerifying(false);
     }
   }
@@ -95,6 +95,7 @@ export function OTPScreen({ route, navigation }: Props) {
     setTimer(RESEND_SECONDS);
     setOtp(Array(OTP_LENGTH).fill(''));
     inputRefs.current[0]?.focus();
+    sendOtp(phone).catch(() => {});
   }
 
   const filled = otp.join('').length === OTP_LENGTH;

@@ -10,8 +10,10 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Svg, {Path, Circle} from 'react-native-svg';
 import {useNavigation} from '@react-navigation/native';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useAuth, useTheme} from '../../context';
 import {FontSizes, BorderRadius} from '../../constants';
+import type {AppStackParamList} from '../../navigation/types';
 
 /* ── Icons ── */
 function BackArrowIcon({color}: {color: string}) {
@@ -134,14 +136,6 @@ function ChevronRightIcon({color}: {color: string}) {
   );
 }
 
-/* ── Dummy user ── */
-const USER = {
-  name: 'लक्ष्मी',
-  initial: 'L',
-  phone: '+91 98XXXX1234',
-  location: 'Karkarduma, Delhi',
-};
-
 type MenuItem = {
   key: string;
   label: string;
@@ -152,8 +146,8 @@ type MenuItem = {
 
 export function ProfileSettingsScreen() {
   const {colors, isDark} = useTheme();
-  const {signOut} = useAuth();
-  const navigation = useNavigation();
+  const {signOut, vendorName, vendorMobile, vendorLocation} = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
 
   const menuItems: MenuItem[] = [
     {
@@ -176,6 +170,16 @@ export function ProfileSettingsScreen() {
       label: 'हेल्प और सपोर्ट',
       icon: c => <HelpIcon color={c} />,
     },
+    ...(__DEV__
+      ? [
+          {
+            key: 'locationDebug',
+            label: 'Location Debug',
+            icon: (c: string) => <HelpIcon color={c} />,
+            onPress: () => navigation.navigate('LocationDebug'),
+          } as MenuItem,
+        ]
+      : []),
     {
       key: 'logout',
       label: 'लॉग आउट',
@@ -225,18 +229,18 @@ export function ProfileSettingsScreen() {
                 styles.avatarText,
                 {color: colors.textDark},
               ]}>
-              {USER.initial}
+              {(vendorName || vendorMobile || '?').charAt(0).toUpperCase()}
             </Text>
           </View>
           <View style={styles.userInfo}>
             <Text style={[styles.userName, {color: colors.textDark}]}>
-              {USER.name}
+              {vendorName || 'User'}
             </Text>
             <Text style={[styles.userPhone, {color: colors.textSecondary}]}>
-              {USER.phone}
+              {vendorMobile ? `+91 ${vendorMobile}` : ''}
             </Text>
             <Text style={[styles.userLocation, {color: colors.textSecondary}]}>
-              {USER.location}
+              {vendorLocation || ''}
             </Text>
           </View>
         </View>

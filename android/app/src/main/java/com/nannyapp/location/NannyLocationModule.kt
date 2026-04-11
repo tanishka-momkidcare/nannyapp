@@ -241,6 +241,20 @@ class NannyLocationModule(private val reactContext: ReactApplicationContext) :
         promise.resolve(null)
     }
 
+    // ─── Tracking Config Persistence ─────────────────────────────────────────
+
+    @ReactMethod
+    fun saveTrackingConfig(vendorId: String, apiBase: String, authToken: String, promise: Promise) {
+        LocationForegroundService.saveConfig(reactContext, vendorId, apiBase, authToken)
+        promise.resolve(null)
+    }
+
+    @ReactMethod
+    fun clearTrackingConfig(promise: Promise) {
+        LocationForegroundService.clearConfig(reactContext)
+        promise.resolve(null)
+    }
+
     // ─── Mock Location Detection ─────────────────────────────────────────────
 
     @ReactMethod

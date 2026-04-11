@@ -8,9 +8,12 @@ import {
   JobsScreen,
   CourseScreen,
   IDCardScreen,
+  LocationDebugScreen,
+  CreateShiftScreen,
 } from '../../screens';
 import {GlassPillTabBar} from '../../components/GlassPillTabBar';
 import {TabBarVisibilityProvider} from '../../context';
+import {LocationTrackingProvider} from '../../context/LocationTrackingContext';
 import type {AppStackParamList, BottomTabParamList} from '../types';
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
@@ -38,13 +41,25 @@ function BottomTabs() {
  */
 export function AppStack() {
   return (
-    <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen name="MainTabs" component={BottomTabs} />
-      <Stack.Screen
-        name="ProfileSettings"
-        component={ProfileSettingsScreen}
-        options={{animation: 'fade'}}
-      />
-    </Stack.Navigator>
+    <LocationTrackingProvider>
+      <Stack.Navigator screenOptions={{headerShown: false}}>
+        <Stack.Screen name="MainTabs" component={BottomTabs} />
+        <Stack.Screen
+          name="ProfileSettings"
+          component={ProfileSettingsScreen}
+          options={{animation: 'fade'}}
+        />
+        <Stack.Screen
+          name="LocationDebug"
+          component={LocationDebugScreen}
+          options={{animation: 'slide_from_right'}}
+        />
+        <Stack.Screen
+          name="CreateShift"
+          component={CreateShiftScreen}
+          options={{animation: 'slide_from_bottom'}}
+        />
+      </Stack.Navigator>
+    </LocationTrackingProvider>
   );
 }
