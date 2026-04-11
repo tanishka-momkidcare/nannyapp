@@ -4,6 +4,11 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
     <application
       android:name=".MainApplication"
@@ -32,5 +37,31 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+
+      <!-- Location Foreground Service -->
+      <service
+        android:name=".location.LocationForegroundService"
+        android:foregroundServiceType="location"
+        android:exported="false" />
+
+      <!-- Geofence Broadcast Receiver -->
+      <receiver
+        android:name=".location.GeofenceBroadcastReceiver"
+        android:exported="false" />
+
+      <!-- Activity Recognition Receiver -->
+      <receiver
+        android:name=".location.ActivityRecognitionReceiver"
+        android:exported="false" />
+
+      <!-- Boot Receiver — restart tracking on device boot -->
+      <receiver
+        android:name=".location.BootReceiver"
+        android:exported="false">
+        <intent-filter>
+            <action android:name="android.intent.action.BOOT_COMPLETED" />
+        </intent-filter>
+      </receiver>
+
     </application>
 </manifest>
