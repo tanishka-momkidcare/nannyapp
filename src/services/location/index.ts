@@ -1,7 +1,7 @@
 export { locationTrackingEngine } from './LocationTrackingEngine';
 export { locationBatchManager } from './LocationBatchManager';
 export { uploadLocationBatch, fetchActiveShift, reportFraudAlert, fetchTrackingConfig } from './locationApi';
-export { checkForFraudSignals, checkMockLocation } from './FraudDetection';
+export { checkForFraudSignals, checkMockLocation, resetFraudState } from './FraudDetection';
 export { distanceBetween, distanceBetweenPoints, isInsideRadius, hasMovedSignificantly } from './geoUtils';
 export { checkAllPermissions, checkShiftReadiness, requestActivityRecognitionPermission, checkBackgroundLocationReady } from './permissions';
 export type { PermissionStatus, LocationPermissions } from './permissions';

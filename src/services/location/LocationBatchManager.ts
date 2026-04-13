@@ -4,8 +4,8 @@
  * Buffers location data points and flushes them in batches to the backend.
  * - Filters out low-accuracy readings (>50m)
  * - Deduplicates points that haven't moved significantly (>100m)
- * - Batches every 15–30 minutes
- * - Persists unsent batches to AsyncStorage for retry
+ * - Adaptive flush interval based on tracking mode
+ * - Persists unsent batches to AsyncStorage with exponential backoff retry
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,6 +23,8 @@ import { distanceBetweenPoints, isAccuracyAcceptable } from './geoUtils';
 
 const STORAGE_KEY = '@nannyapp_location_batch';
 const MAX_BUFFER_SIZE = 50;
+const MAX_STORED_BATCHES = 10;
+const MAX_RETRY_DELAY_MS = 5 * 60_000; // 5 min cap on retry delay
 
 type BatchFlushCallback = (batch: LocationBatch) => Promise<boolean>;
 
@@ -33,6 +35,8 @@ class LocationBatchManager {
   private config: TrackingConfig;
   private nannyId: string = '';
   private onFlush: BatchFlushCallback | null = null;
+  private retryAttempt: number = 0;
+  private isRetrying: boolean = false;
 
   constructor(config: TrackingConfig = DEFAULT_TRACKING_CONFIG) {
     this.config = config;
@@ -42,6 +46,7 @@ class LocationBatchManager {
   init(nannyId: string, onFlush: BatchFlushCallback) {
     this.nannyId = nannyId;
     this.onFlush = onFlush;
+    this.retryAttempt = 0;
     this.startFlushTimer();
     this.retrySavedBatches();
   }
@@ -104,8 +109,9 @@ class LocationBatchManager {
 
     if (this.onFlush) {
       const success = await this.onFlush(batch).catch(() => false);
-      if (!success) {
-        // Save to disk for retry
+      if (success) {
+        this.retryAttempt = 0; // Reset on success
+      } else {
         await this.saveBatchToDisk(batch);
       }
     }
@@ -131,7 +137,12 @@ class LocationBatchManager {
 
   /** Update configuration (e.g., when tracking mode changes). */
   updateConfig(config: Partial<TrackingConfig>) {
+    const prevInterval = this.config.batchInterval;
     this.config = { ...this.config, ...config };
+    // Restart timer if interval changed
+    if (config.batchInterval && config.batchInterval !== prevInterval) {
+      this.startFlushTimer();
+    }
   }
 
   // ─── Private ───────────────────────────────────────────────────────────────
@@ -146,8 +157,8 @@ class LocationBatchManager {
       const existing = await AsyncStorage.getItem(STORAGE_KEY);
       const batches: LocationBatch[] = existing ? JSON.parse(existing) : [];
       batches.push(batch);
-      // Keep max 10 failed batches to avoid storage bloat
-      const trimmed = batches.slice(-10);
+      // Keep max stored batches to avoid storage bloat
+      const trimmed = batches.slice(-MAX_STORED_BATCHES);
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
     } catch {
       // Silent fail — best effort persistence
@@ -155,24 +166,55 @@ class LocationBatchManager {
   }
 
   private async retrySavedBatches() {
+    if (this.isRetrying) return;
+    this.isRetrying = true;
+
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (!stored) return;
 
       const batches: LocationBatch[] = JSON.parse(stored);
+      if (batches.length === 0) return;
+
       await AsyncStorage.removeItem(STORAGE_KEY);
+
+      const failedBatches: LocationBatch[] = [];
 
       for (const batch of batches) {
         if (this.onFlush) {
           const success = await this.onFlush(batch).catch(() => false);
           if (!success) {
-            await this.saveBatchToDisk(batch);
+            failedBatches.push(batch);
             break; // Stop retrying if one fails
           }
         }
       }
+
+      // Re-save any that failed, plus remaining unprocessed batches
+      const unprocessedStart = failedBatches.length > 0
+        ? batches.indexOf(failedBatches[0])
+        : batches.length;
+      const remaining = batches.slice(unprocessedStart);
+
+      if (remaining.length > 0) {
+        await AsyncStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(remaining.slice(-MAX_STORED_BATCHES)),
+        );
+        // Schedule exponential backoff retry
+        this.retryAttempt++;
+        const delay = Math.min(
+          (2 ** this.retryAttempt) * 1000,
+          MAX_RETRY_DELAY_MS,
+        );
+        setTimeout(() => this.retrySavedBatches(), delay);
+      } else {
+        this.retryAttempt = 0;
+      }
     } catch {
       // Silent fail
+    } finally {
+      this.isRetrying = false;
     }
   }
 }

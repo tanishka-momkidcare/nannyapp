@@ -4,13 +4,10 @@
  * Manages the adaptive tracking strategy:
  *  IDLE → PASSIVE → ACTIVE → BURST → GEOFENCE_MONITOR → SUSPICIOUS
  *
- * Rules:
- *  - STILL → IDLE (no tracking)
- *  - MOVING → ACTIVE (periodic updates)
- *  - Near client (≤500m) → enable GPS burst
- *  - Inside geofence → GEOFENCE_MONITOR (stop GPS, monitor exit only)
- *  - Shift active → allow occasional GPS burst every 15–20 min
- *  - Suspicious → SUSPICIOUS mode (increased frequency)
+ * Integrates client-side fraud detection directly into the location pipeline:
+ *  - Every significant location change runs fraud heuristics
+ *  - Mock location checks fire on GPS bursts
+ *  - Fraud signals auto-escalate tracking mode + report to backend
  */
 
 import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
@@ -29,6 +26,7 @@ import type {
 import { DEFAULT_TRACKING_CONFIG, LOCATION_EVENTS } from './types';
 import { distanceBetween, isInsideRadius } from './geoUtils';
 import { locationBatchManager } from './LocationBatchManager';
+import { checkForFraudSignals, checkMockLocation } from './FraudDetection';
 import { checkShiftReadiness, requestActivityRecognitionPermission } from './permissions';
 
 // Native module bridge
@@ -40,6 +38,12 @@ const eventEmitter = NativeModules.NannyLocationModule
   : null;
 
 type StateChangeListener = (state: TrackingState) => void;
+type FraudAlertCallback = (alert: {
+  type: string;
+  severity: string;
+  details: string;
+  location?: LocationPoint;
+}) => void;
 
 class LocationTrackingEngine {
   private state: TrackingState = {
@@ -60,11 +64,17 @@ class LocationTrackingEngine {
   private listeners: Set<StateChangeListener> = new Set();
   private eventSubscriptions: Array<{ remove: () => void }> = [];
   private silenceTimer: ReturnType<typeof setTimeout> | null = null;
+  private onFraudAlert: FraudAlertCallback | null = null;
 
   // ─── Public API ────────────────────────────────────────────────────────────
 
   /** Initialize the tracking engine. Call once on app start. */
-  async init(nannyId: string, uploadFn: (batch: any) => Promise<boolean>) {
+  async init(
+    nannyId: string,
+    uploadFn: (batch: any) => Promise<boolean>,
+    fraudAlertFn?: FraudAlertCallback,
+  ) {
+    this.onFraudAlert = fraudAlertFn ?? null;
     locationBatchManager.init(nannyId, uploadFn);
     this.subscribeToNativeEvents();
     await this.startPassiveTracking();
@@ -72,14 +82,12 @@ class LocationTrackingEngine {
 
   /** Begin a shift — sets up geofences and activates tracking. */
   async startShift(shift: ShiftAssignment) {
-    // Verify all permissions before starting
     const { ready, missing } = await checkShiftReadiness();
     if (!ready) {
-      // Try to get activity recognition if that's the only missing one
       if (missing.length === 1 && missing[0] === 'activityRecognition') {
         const status = await requestActivityRecognitionPermission();
-        if (status !== 'GRANTED') {
-          if (__DEV__) console.warn('[LocationEngine] Activity recognition permission denied, continuing without it');
+        if (status !== 'GRANTED' && __DEV__) {
+          console.warn('[LocationEngine] Activity recognition denied, continuing without it');
         }
       } else {
         throw new Error(`Missing permissions: ${missing.join(', ')}. Grant location permissions first.`);
@@ -89,7 +97,6 @@ class LocationTrackingEngine {
     this.currentShift = shift;
     this.state.isShiftActive = true;
 
-    // Create geofence around client location
     const geofence: GeofenceRegion = {
       id: `shift_${shift.shiftId}`,
       latitude: shift.clientLocation.latitude,
@@ -101,13 +108,14 @@ class LocationTrackingEngine {
     await NativeTracking.addGeofence(geofence);
     await NativeTracking.startActivityRecognition();
 
-    // Start periodic burst timer (every 15–20 min during shift)
     this.startShiftBurstTimer();
-
-    // Start silence detection
     this.resetSilenceTimer();
 
-    // Enable foreground service on Android
+    // Adapt batch interval for active shift (flush more frequently)
+    locationBatchManager.updateConfig({
+      batchInterval: this.config.batchInterval,
+    });
+
     if (Platform.OS === 'android' && NativeTracking.startForegroundService) {
       await NativeTracking.startForegroundService(
         'MomKidCare',
@@ -120,6 +128,9 @@ class LocationTrackingEngine {
 
   /** End the current shift — tears down geofences and reduces tracking. */
   async endShift() {
+    // Flush any remaining buffered points before teardown
+    await locationBatchManager.flush();
+
     if (this.currentShift) {
       await NativeTracking.removeGeofence(`shift_${this.currentShift.shiftId}`);
     }
@@ -128,6 +139,7 @@ class LocationTrackingEngine {
     this.state.isShiftActive = false;
     this.state.isInsideGeofence = false;
     this.state.currentGeofence = null;
+    this.state.suspiciousScore = 0;
 
     this.stopShiftBurstTimer();
     this.clearSilenceTimer();
@@ -249,9 +261,13 @@ class LocationTrackingEngine {
   }
 
   private onSignificantLocationChange(location: LocationPoint) {
+    const previousLocation = this.state.lastLocation;
     this.state.lastLocation = location;
     this.state.lastUpdateTime = Date.now();
     this.resetSilenceTimer();
+
+    // ── Fraud check on every significant location change ──
+    this.runFraudChecks(location, previousLocation);
 
     // Check proximity to client
     if (this.currentShift) {
@@ -262,13 +278,11 @@ class LocationTrackingEngine {
         this.currentShift.clientLocation.longitude,
       );
 
-      // Near client → trigger GPS burst for accurate position
       if (dist <= this.config.nearClientRadius && !this.state.isInsideGeofence) {
         this.triggerGPSBurst();
       }
     }
 
-    // Buffer the point
     locationBatchManager.addPoint(
       location,
       this.state.isInsideGeofence,
@@ -334,20 +348,15 @@ class LocationTrackingEngine {
       );
 
       for (const point of points) {
+        const previousLocation = this.state.lastLocation;
         this.state.lastLocation = point;
         this.state.lastUpdateTime = Date.now();
 
-        // Check if this point lands inside geofence
-        let insideGeofence = false;
-        if (this.currentShift) {
-          insideGeofence = isInsideRadius(
-            point,
-            this.currentShift.clientLocation.latitude,
-            this.currentShift.clientLocation.longitude,
-            this.currentShift.geofenceRadius || this.config.geofenceRadius,
-          );
-          this.state.isInsideGeofence = insideGeofence;
-        }
+        const insideGeofence = this.checkInsideGeofence(point);
+        this.state.isInsideGeofence = insideGeofence;
+
+        // Fraud check on GPS burst points (high accuracy = best for detection)
+        this.runFraudChecks(point, previousLocation);
 
         locationBatchManager.addPoint(
           point,
@@ -355,11 +364,61 @@ class LocationTrackingEngine {
           this.state.currentActivity,
         );
       }
+
+      // Check for mock locations on burst points (Android)
+      if (points.length > 0) {
+        this.checkMockLocationAsync(points[0]);
+      }
     } catch (err) {
       if (__DEV__) console.warn('[LocationEngine] GPS burst failed:', err);
     } finally {
       this.state.gpsBurstEndTime = null;
       this.evaluateMode();
+    }
+  }
+
+  /** Reusable geofence check against current shift. */
+  private checkInsideGeofence(point: LocationPoint): boolean {
+    if (!this.currentShift) return false;
+    return isInsideRadius(
+      point,
+      this.currentShift.clientLocation.latitude,
+      this.currentShift.clientLocation.longitude,
+      this.currentShift.geofenceRadius || this.config.geofenceRadius,
+    );
+  }
+
+  // ─── Fraud Detection Integration ──────────────────────────────────────────
+
+  private runFraudChecks(current: LocationPoint, previous: LocationPoint | null) {
+    if (!this.state.isShiftActive) return;
+
+    const signals = checkForFraudSignals(current, previous, this.state, this.currentShift);
+
+    for (const signal of signals) {
+      // Escalate tracking mode based on severity
+      const scoreIncrease = signal.severity === 'CRITICAL' ? 50
+        : signal.severity === 'HIGH' ? 30
+        : signal.severity === 'MEDIUM' ? 15
+        : 5;
+      this.flagSuspicious(this.state.suspiciousScore + scoreIncrease);
+
+      // Report to backend via callback
+      this.onFraudAlert?.(signal);
+    }
+  }
+
+  /** Async mock location check — doesn't block the main flow. */
+  private async checkMockLocationAsync(location: LocationPoint) {
+    const isMock = await checkMockLocation(location);
+    if (isMock) {
+      this.flagSuspicious(this.state.suspiciousScore + 50);
+      this.onFraudAlert?.({
+        type: 'LOCATION_SPOOFING',
+        severity: 'CRITICAL',
+        details: 'Mock/spoofed location detected on device',
+        location,
+      });
     }
   }
 
