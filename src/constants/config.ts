@@ -1,5 +1,23 @@
 import Config from 'react-native-config';
 
+// ─── API Configs ─────────────────────────────────────────────────────────────
+// Use config1.API_HOST for dev, config2 for staging, config3 for prod.
+// Mix and match per API call as needed.
+
+export const config1 = {
+  API_HOST: 'http://192.168.1.31:3000',
+};
+
+export const config2 = {
+  API_HOST: 'https://staging.api.momkidcare.com',
+};
+
+export const config3 = {
+  API_HOST: 'https://api.momkidcare.com',
+};
+
+// ─── Google Maps ─────────────────────────────────────────────────────────────
+
 export const GOOGLE_MAPS_API_KEY = Config.GOOGLE_MAPS_API_KEY || '';
 
 export async function reverseGeocode(lat: number, lng: number): Promise<string> {

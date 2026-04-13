@@ -29,13 +29,11 @@ import MapView, {Circle, Marker, PROVIDER_GOOGLE, Region} from 'react-native-map
 import {GooglePlacesAutocomplete} from 'react-native-google-places-autocomplete';
 import Geolocation from '@react-native-community/geolocation';
 import Svg, {Path} from 'react-native-svg';
-import Config from 'react-native-config';
 import {useAuth, useTheme} from '../../context';
 import {useLocationTrackingContext} from '../../context/LocationTrackingContext';
-import {GOOGLE_MAPS_API_KEY, reverseGeocode} from '../../constants/config';
+import {GOOGLE_MAPS_API_KEY, reverseGeocode, config1} from '../../constants/config';
 
 const {width: SW, height: SH} = Dimensions.get('window');
-const API_BASE = Config.API_BASE_URL || 'http://localhost:3000';
 
 const DURATION_OPTIONS = [
   {label: '2 hrs', hours: 2},
@@ -156,7 +154,7 @@ export function CreateShiftScreen() {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE}/api/v1/location/shifts`, {
+      const res = await fetch(`${config1.API_HOST}/api/v1/location/shifts`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({

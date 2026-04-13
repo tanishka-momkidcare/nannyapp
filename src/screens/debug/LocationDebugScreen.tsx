@@ -24,10 +24,9 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Config from 'react-native-config';
 import {useAuth, useTheme, useLocationTrackingContext} from '../../context';
+import {config1} from '../../constants/config';
 
-const API_BASE = Config.API_BASE_URL || 'http://localhost:3000';
 const AUTO_REFRESH_MS = 30_000;
 
 type Tab = 'dashboard' | 'locations' | 'shifts' | 'fraud' | 'system';
@@ -107,7 +106,7 @@ export function LocationDebugScreen() {
   const fetchAllData = useCallback(async () => {
     // 1. Global counts
     try {
-      const res = await fetch(`${API_BASE}/api/v1/location/test/status`);
+      const res = await fetch(`${config1.API_HOST}/api/v1/location/test/status`);
       const data = await res.json();
       if (data.success) {
         setGlobalCounts(data.counts);
@@ -120,7 +119,7 @@ export function LocationDebugScreen() {
     // 2. Nanny-specific data
     if (vendorId) {
       try {
-        const res = await fetch(`${API_BASE}/api/v1/location/test/nanny/${vendorId}`);
+        const res = await fetch(`${config1.API_HOST}/api/v1/location/test/nanny/${vendorId}`);
         const data = await res.json();
         if (data.success) {
           setNannyData(data);
@@ -168,7 +167,7 @@ export function LocationDebugScreen() {
       return;
     }
     try {
-      const res = await fetch(`${API_BASE}/api/v1/location/test/seed-shift`, {
+      const res = await fetch(`${config1.API_HOST}/api/v1/location/test/seed-shift`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -196,7 +195,7 @@ export function LocationDebugScreen() {
     }
     try {
       const now = Date.now();
-      const res = await fetch(`${API_BASE}/api/v1/location/batch`, {
+      const res = await fetch(`${config1.API_HOST}/api/v1/location/batch`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -229,7 +228,7 @@ export function LocationDebugScreen() {
     if (!vendorId) return;
     try {
       const now = Date.now();
-      const res = await fetch(`${API_BASE}/api/v1/location/batch`, {
+      const res = await fetch(`${config1.API_HOST}/api/v1/location/batch`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -265,7 +264,7 @@ export function LocationDebugScreen() {
     if (!vendorId) return;
     try {
       const now = Date.now();
-      const res = await fetch(`${API_BASE}/api/v1/location/batch`, {
+      const res = await fetch(`${config1.API_HOST}/api/v1/location/batch`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -337,7 +336,7 @@ export function LocationDebugScreen() {
         <View style={[s.connRow, {backgroundColor: serverOk ? '#052e16' : '#450a0a'}]}>
           <View style={[s.connDot, {backgroundColor: serverOk ? '#22C55E' : '#EF4444'}]} />
           <Text style={s.connText}>
-            {serverOk ? `Connected to ${API_BASE}` : `Cannot reach ${API_BASE}`}
+            {serverOk ? `Connected to ${config1.API_HOST}` : `Cannot reach ${config1.API_HOST}`}
           </Text>
           {lastRefresh && (
             <Text style={s.connTime}>Updated {lastRefresh.toLocaleTimeString()}</Text>
@@ -562,7 +561,7 @@ export function LocationDebugScreen() {
 
         <Text style={[s.sectionTitle, {color: colors.text}]}>Config</Text>
         <View style={[s.card, {backgroundColor: colors.card}]}>
-          <StatusLine label="API URL" ok={!!Config.API_BASE_URL} text={Config.API_BASE_URL || 'NOT SET'} />
+          <StatusLine label="API URL" ok={!!config1.API_HOST} text={config1.API_HOST || 'NOT SET'} />
           <StatusLine label="Server" ok={serverOk} text={serverOk ? 'Connected' : 'Offline'} />
           <StatusLine label="Vendor ID" ok={!!vendorId} text={vendorId || 'Not logged in'} />
           <StatusLine label="Auto Refresh" ok={autoRefresh} text={autoRefresh ? '30s' : 'Off'} />

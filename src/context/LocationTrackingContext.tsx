@@ -14,7 +14,6 @@ import React, {createContext, useCallback, useContext, useEffect, useRef, useSta
 import {AppState, AppStateStatus, NativeModules, Platform} from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Config from 'react-native-config';
 import {
   locationTrackingEngine,
   uploadLocationBatch,
@@ -26,8 +25,9 @@ import {
 } from '../services/location';
 import {useAuth} from './AuthContext';
 
+import {config1} from '../constants/config';
+
 const AUTH_TOKEN_KEY = '@nannyapp_auth_token';
-const API_BASE = Config.API_BASE_URL || 'http://localhost:3000';
 const SEND_INTERVAL = __DEV__ ? 60_000 : 20 * 60_000; // 1 min dev, 20 min prod
 
 interface LocationTrackingContextType {
@@ -120,7 +120,7 @@ export function LocationTrackingProvider({children}: {children: React.ReactNode}
           try {
             await NativeModules.NannyLocationModule.saveTrackingConfig(
               vendorId,
-              API_BASE,
+              config1.API_HOST,
               token,
             );
             if (__DEV__) console.log('[LocationTracking] Saved config for foreground service');
@@ -268,7 +268,7 @@ export function LocationTrackingProvider({children}: {children: React.ReactNode}
         try {
           const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
           if (token && vendorId) {
-            await NativeModules.NannyLocationModule.saveTrackingConfig(vendorId, API_BASE, token);
+            await NativeModules.NannyLocationModule.saveTrackingConfig(vendorId, config1.API_HOST, token);
           }
         } catch (e) {
           if (__DEV__) console.warn('[LocationTracking] Failed to save config:', e);

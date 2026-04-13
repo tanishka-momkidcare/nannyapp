@@ -8,16 +8,14 @@
  * - Fetching tracking config from server
  */
 
-import Config from 'react-native-config';
 import type { LocationBatch, ShiftAssignment, FraudAlert, TrackingConfig } from './types';
-
-const API_BASE = Config.API_BASE_URL || 'https://api.momkidcare.com';
+import {config1} from '../../constants/config';
 
 async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const url = `${API_BASE}${path}`;
+  const url = `${config1.API_HOST}${path}`;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),

@@ -6,9 +6,7 @@
  *  - POST /api/v1/vendor/auth/verify-otp
  */
 
-import Config from 'react-native-config';
-
-const API_BASE = Config.API_BASE_URL || 'https://api.momkidcare.com';
+import {config1} from '../constants/config';
 
 interface ApiResponse<T = unknown> {
   success: boolean;
@@ -34,7 +32,7 @@ export interface LoginLocation {
 }
 
 async function request<T>(path: string, body: Record<string, unknown>): Promise<ApiResponse<T>> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${config1.API_HOST}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
