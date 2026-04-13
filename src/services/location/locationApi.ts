@@ -1,6 +1,9 @@
 /**
  * Location API Client
  *
+ * All endpoints here are authenticated — the Axios interceptor
+ * attaches the Bearer token automatically from AsyncStorage.
+ *
  * Handles communication with the backend for:
  * - Uploading location batches
  * - Fetching shift assignments
@@ -9,40 +12,14 @@
  */
 
 import type { LocationBatch, ShiftAssignment, FraudAlert, TrackingConfig } from './types';
+import Axios from '../Axios';
 import {config1} from '../../constants/config';
-
-async function request<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
-  const url = `${config1.API_HOST}${path}`;
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-
-  // Auth token should be injected by the caller or an interceptor
-  const res = await fetch(url, { ...options, headers });
-
-  if (!res.ok) {
-    throw new Error(`API ${res.status}: ${res.statusText}`);
-  }
-
-  return res.json();
-}
 
 // ─── Location Batch Upload ───────────────────────────────────────────────────
 
-export async function uploadLocationBatch(
-  batch: LocationBatch,
-  authToken: string,
-): Promise<boolean> {
+export async function uploadLocationBatch(batch: LocationBatch): Promise<boolean> {
   try {
-    await request('/api/v1/location/batch', {
-      method: 'POST',
-      body: JSON.stringify(batch),
-      headers: { Authorization: `Bearer ${authToken}` },
-    });
+    await Axios.post(`${config1.API_HOST}/api/v1/location/batch`, batch);
     return true;
   } catch {
     return false;
@@ -53,12 +30,11 @@ export async function uploadLocationBatch(
 
 export async function fetchActiveShift(
   nannyId: string,
-  authToken: string,
 ): Promise<ShiftAssignment | null> {
   try {
-    const data = await request<{ shift: ShiftAssignment | null }>(
-      `/api/v1/location/shifts/active?nannyId=${encodeURIComponent(nannyId)}`,
-      { headers: { Authorization: `Bearer ${authToken}` } },
+    const { data } = await Axios.get<{ shift: ShiftAssignment | null }>(
+      `${config1.API_HOST}/api/v1/location/shifts/active`,
+      { params: { nannyId } },
     );
     return data.shift;
   } catch {
@@ -70,25 +46,18 @@ export async function fetchActiveShift(
 
 export async function reportFraudAlert(
   alert: Omit<FraudAlert, 'id' | 'resolved'>,
-  authToken: string,
 ): Promise<void> {
-  await request('/api/v1/location/fraud/alert', {
-    method: 'POST',
-    body: JSON.stringify(alert),
-    headers: { Authorization: `Bearer ${authToken}` },
-  });
+  await Axios.post(`${config1.API_HOST}/api/v1/location/fraud/alert`, alert);
 }
 
 // ─── Server Config ───────────────────────────────────────────────────────────
 
-export async function fetchTrackingConfig(
-  authToken: string,
-): Promise<Partial<TrackingConfig> | null> {
+export async function fetchTrackingConfig(): Promise<Partial<TrackingConfig> | null> {
   try {
-    return await request<Partial<TrackingConfig>>(
-      '/api/v1/location/config',
-      { headers: { Authorization: `Bearer ${authToken}` } },
+    const { data } = await Axios.get<Partial<TrackingConfig>>(
+      `${config1.API_HOST}/api/v1/location/config`,
     );
+    return data;
   } catch {
     return null;
   }

@@ -1,11 +1,12 @@
 /**
- * Auth API Client
+ * Auth API Client (No auth token required)
  *
  * Communicates with the vendor-auth backend endpoints:
  *  - POST /api/v1/vendor/auth/send-otp
  *  - POST /api/v1/vendor/auth/verify-otp
  */
 
+import Axios from './Axios';
 import {config1} from '../constants/config';
 
 interface ApiResponse<T = unknown> {
@@ -32,16 +33,10 @@ export interface LoginLocation {
 }
 
 async function request<T>(path: string, body: Record<string, unknown>): Promise<ApiResponse<T>> {
-  const res = await fetch(`${config1.API_HOST}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  const { data } = await Axios.post<ApiResponse<T>>(`${config1.API_HOST}${path}`, body);
 
-  const data: ApiResponse<T> = await res.json();
-
-  if (!res.ok || !data.success) {
-    throw new Error(data.message || `API error ${res.status}`);
+  if (!data.success) {
+    throw new Error(data.message || 'API error');
   }
 
   return data;

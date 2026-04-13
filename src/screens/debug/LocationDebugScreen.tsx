@@ -25,6 +25,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useAuth, useTheme, useLocationTrackingContext} from '../../context';
+import Axios from '../../services/Axios';
 import {config1} from '../../constants/config';
 
 const AUTO_REFRESH_MS = 30_000;
@@ -106,8 +107,7 @@ export function LocationDebugScreen() {
   const fetchAllData = useCallback(async () => {
     // 1. Global counts
     try {
-      const res = await fetch(`${config1.API_HOST}/api/v1/location/test/status`);
-      const data = await res.json();
+      const {data} = await Axios.get(`${config1.API_HOST}/api/v1/location/test/status`);
       if (data.success) {
         setGlobalCounts(data.counts);
         setServerOk(true);
@@ -119,8 +119,7 @@ export function LocationDebugScreen() {
     // 2. Nanny-specific data
     if (vendorId) {
       try {
-        const res = await fetch(`${config1.API_HOST}/api/v1/location/test/nanny/${vendorId}`);
-        const data = await res.json();
+        const {data} = await Axios.get(`${config1.API_HOST}/api/v1/location/test/nanny/${vendorId}`);
         if (data.success) {
           setNannyData(data);
         }
@@ -167,17 +166,12 @@ export function LocationDebugScreen() {
       return;
     }
     try {
-      const res = await fetch(`${config1.API_HOST}/api/v1/location/test/seed-shift`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          nannyId: vendorId,
-          clientLatitude: 28.6353,
-          clientLongitude: 77.3029,
-          durationHours: 2,
-        }),
+      const {data} = await Axios.post(`${config1.API_HOST}/api/v1/location/test/seed-shift`, {
+        nannyId: vendorId,
+        clientLatitude: 28.6353,
+        clientLongitude: 77.3029,
+        durationHours: 2,
       });
-      const data = await res.json();
       if (data.success) {
         setTestShiftId(data.shift.shiftId);
         Alert.alert('Shift Created', `ID: ${data.shift.shiftId}\n2 hours`);
@@ -195,28 +189,23 @@ export function LocationDebugScreen() {
     }
     try {
       const now = Date.now();
-      const res = await fetch(`${config1.API_HOST}/api/v1/location/batch`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          nannyId: vendorId,
-          batchTimestamp: now,
-          deviceInfo: {platform: Platform.OS, batteryLevel: 80, isCharging: false},
-          points: [
-            {
-              latitude: 28.6353 + (Math.random() - 0.5) * 0.002,
-              longitude: 77.3029 + (Math.random() - 0.5) * 0.002,
-              accuracy: 12 + Math.random() * 10,
-              timestamp: now,
-              activityType: ['WALKING', 'STILL', 'IN_VEHICLE'][Math.floor(Math.random() * 3)],
-              provider: 'test',
-              isInsideGeofence: Math.random() > 0.5,
-              isMock: false,
-            },
-          ],
-        }),
+      const {data} = await Axios.post(`${config1.API_HOST}/api/v1/location/batch`, {
+        nannyId: vendorId,
+        batchTimestamp: now,
+        deviceInfo: {platform: Platform.OS, batteryLevel: 80, isCharging: false},
+        points: [
+          {
+            latitude: 28.6353 + (Math.random() - 0.5) * 0.002,
+            longitude: 77.3029 + (Math.random() - 0.5) * 0.002,
+            accuracy: 12 + Math.random() * 10,
+            timestamp: now,
+            activityType: ['WALKING', 'STILL', 'IN_VEHICLE'][Math.floor(Math.random() * 3)],
+            provider: 'test',
+            isInsideGeofence: Math.random() > 0.5,
+            isMock: false,
+          },
+        ],
       });
-      const data = await res.json();
       Alert.alert('Sent', `Saved: ${data.pointsSaved} | Fraud: ${data.fraudAlerts}`);
       fetchAllData();
     } catch (err: any) {
@@ -228,28 +217,23 @@ export function LocationDebugScreen() {
     if (!vendorId) return;
     try {
       const now = Date.now();
-      const res = await fetch(`${config1.API_HOST}/api/v1/location/batch`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          nannyId: vendorId,
-          batchTimestamp: now,
-          deviceInfo: {platform: Platform.OS, batteryLevel: 45, isCharging: false},
-          points: [
-            {
-              latitude: 28.6353,
-              longitude: 77.3029,
-              accuracy: 5.0,
-              timestamp: now,
-              activityType: 'STILL',
-              provider: 'gps',
-              isInsideGeofence: true,
-              isMock: true,
-            },
-          ],
-        }),
+      const {data} = await Axios.post(`${config1.API_HOST}/api/v1/location/batch`, {
+        nannyId: vendorId,
+        batchTimestamp: now,
+        deviceInfo: {platform: Platform.OS, batteryLevel: 45, isCharging: false},
+        points: [
+          {
+            latitude: 28.6353,
+            longitude: 77.3029,
+            accuracy: 5.0,
+            timestamp: now,
+            activityType: 'STILL',
+            provider: 'gps',
+            isInsideGeofence: true,
+            isMock: true,
+          },
+        ],
       });
-      const data = await res.json();
       Alert.alert(
         'Mock Sent',
         `Saved: ${data.pointsSaved} | Fraud alerts: ${data.fraudAlerts}`,
@@ -264,29 +248,24 @@ export function LocationDebugScreen() {
     if (!vendorId) return;
     try {
       const now = Date.now();
-      const res = await fetch(`${config1.API_HOST}/api/v1/location/batch`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          nannyId: vendorId,
-          batchTimestamp: now,
-          deviceInfo: {platform: Platform.OS, batteryLevel: 70, isCharging: false},
-          points: [
-            {
-              latitude: 28.6353 + (event === 'EXIT' ? 0.005 : 0),
-              longitude: 77.3029,
-              accuracy: 10,
-              timestamp: now,
-              activityType: 'WALKING',
-              provider: 'gps',
-              isInsideGeofence: event === 'ENTER',
-              geofenceEvent: event,
-              isMock: false,
-            },
-          ],
-        }),
+      const {data} = await Axios.post(`${config1.API_HOST}/api/v1/location/batch`, {
+        nannyId: vendorId,
+        batchTimestamp: now,
+        deviceInfo: {platform: Platform.OS, batteryLevel: 70, isCharging: false},
+        points: [
+          {
+            latitude: 28.6353 + (event === 'EXIT' ? 0.005 : 0),
+            longitude: 77.3029,
+            accuracy: 10,
+            timestamp: now,
+            activityType: 'WALKING',
+            provider: 'gps',
+            isInsideGeofence: event === 'ENTER',
+            geofenceEvent: event,
+            isMock: false,
+          },
+        ],
       });
-      const data = await res.json();
       Alert.alert(`Geofence ${event}`, `Saved: ${data.pointsSaved}`);
       fetchAllData();
     } catch (err: any) {

@@ -32,6 +32,7 @@ import Svg, {Path} from 'react-native-svg';
 import {useAuth, useTheme} from '../../context';
 import {useLocationTrackingContext} from '../../context/LocationTrackingContext';
 import {GOOGLE_MAPS_API_KEY, reverseGeocode, config1} from '../../constants/config';
+import Axios from '../../services/Axios';
 
 const {width: SW, height: SH} = Dimensions.get('window');
 
@@ -154,20 +155,14 @@ export function CreateShiftScreen() {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`${config1.API_HOST}/api/v1/location/shifts`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          nannyId: vendorId,
-          clientLatitude: selectedLocation.latitude,
-          clientLongitude: selectedLocation.longitude,
-          clientAddress: selectedLocation.address,
-          geofenceRadius,
-          durationHours,
-        }),
+      const {data} = await Axios.post(`${config1.API_HOST}/api/v1/location/shifts`, {
+        nannyId: vendorId,
+        clientLatitude: selectedLocation.latitude,
+        clientLongitude: selectedLocation.longitude,
+        clientAddress: selectedLocation.address,
+        geofenceRadius,
+        durationHours,
       });
-
-      const data = await res.json();
 
       if (!data.success) {
         throw new Error(data.message || 'Failed to create shift');

@@ -24,7 +24,6 @@ import {
   type LocationBatch,
 } from '../services/location';
 import {useAuth} from './AuthContext';
-
 import {config1} from '../constants/config';
 
 const AUTH_TOKEN_KEY = '@nannyapp_auth_token';
@@ -102,7 +101,6 @@ export function LocationTrackingProvider({children}: {children: React.ReactNode}
   const [sendCount, setSendCount] = useState(0);
   const initRef = useRef(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const tokenRef = useRef<string | null>(null);
   const hasNativeModule = !!NativeModules.NannyLocationModule;
 
   // ─── Try native engine init ────────────────────────────────────────────────
@@ -112,17 +110,17 @@ export function LocationTrackingProvider({children}: {children: React.ReactNode}
 
     (async () => {
       try {
-        const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
-        tokenRef.current = token;
-
         // Save config for Android foreground service
-        if (hasNativeModule && Platform.OS === 'android' && token) {
+        if (hasNativeModule && Platform.OS === 'android') {
           try {
-            await NativeModules.NannyLocationModule.saveTrackingConfig(
-              vendorId,
-              config1.API_HOST,
-              token,
-            );
+            const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+            if (token) {
+              await NativeModules.NannyLocationModule.saveTrackingConfig(
+                vendorId,
+                config1.API_HOST,
+                token,
+              );
+            }
             if (__DEV__) console.log('[LocationTracking] Saved config for foreground service');
           } catch (e) {
             if (__DEV__) console.warn('[LocationTracking] Failed to save config:', e);
@@ -133,35 +131,28 @@ export function LocationTrackingProvider({children}: {children: React.ReactNode}
           await locationTrackingEngine.init(
             vendorId,
             async (batch: LocationBatch) => {
-              if (!token) return false;
-              return uploadLocationBatch(batch, token);
+              return uploadLocationBatch(batch);
             },
             // Fraud alert callback — report to backend
             async (alert) => {
-              if (!token) return;
               try {
-                await reportFraudAlert(
-                  {
-                    nannyId: vendorId,
-                    type: alert.type as any,
-                    severity: alert.severity as any,
-                    details: alert.details,
-                    timestamp: Date.now(),
-                  },
-                  token,
-                );
+                await reportFraudAlert({
+                  nannyId: vendorId,
+                  type: alert.type as any,
+                  severity: alert.severity as any,
+                  details: alert.details,
+                  timestamp: Date.now(),
+                });
               } catch {
                 if (__DEV__) console.warn('[LocationTracking] Failed to report fraud alert');
               }
             },
           );
 
-          if (token) {
-            const shift = await fetchActiveShift(vendorId, token);
-            if (shift) {
-              await locationTrackingEngine.startShift(shift);
-              setActiveShift(shift);
-            }
+          const shift = await fetchActiveShift(vendorId);
+          if (shift) {
+            await locationTrackingEngine.startShift(shift);
+            setActiveShift(shift);
           }
 
           if (__DEV__) {
@@ -192,19 +183,16 @@ export function LocationTrackingProvider({children}: {children: React.ReactNode}
       try {
         const position = await getCurrentPosition(false, 15000);
         const batch = buildFallbackBatch(vendorId!, position, 'js-fallback');
-        const token = tokenRef.current;
 
-        if (token) {
-          const success = await uploadLocationBatch(batch, token);
-          if (success) {
-            setLastSentAt(new Date());
-            setSendCount(c => c + 1);
-            if (__DEV__) {
-              const {latitude, longitude, accuracy} = position.coords;
-              console.log(
-                `[LocationTracking] Sent (${latitude.toFixed(5)}, ${longitude.toFixed(5)}) acc=${accuracy.toFixed(0)}m`,
-              );
-            }
+        const success = await uploadLocationBatch(batch);
+        if (success) {
+          setLastSentAt(new Date());
+          setSendCount(c => c + 1);
+          if (__DEV__) {
+            const {latitude, longitude, accuracy} = position.coords;
+            console.log(
+              `[LocationTracking] Sent (${latitude.toFixed(5)}, ${longitude.toFixed(5)}) acc=${accuracy.toFixed(0)}m`,
+            );
           }
         }
       } catch (err) {
@@ -236,11 +224,8 @@ export function LocationTrackingProvider({children}: {children: React.ReactNode}
         getCurrentPosition(false, 5000)
           .then(pos => {
             const batch = buildFallbackBatch(vendorId!, pos, 'app-background');
-            const token = tokenRef.current;
-            if (token) {
-              // Fire-and-forget — app may suspend soon
-              uploadLocationBatch(batch, token).catch(() => {});
-            }
+            // Fire-and-forget — app may suspend soon
+            uploadLocationBatch(batch).catch(() => {});
             if (__DEV__) {
               console.log(`[LocationTracking] Sent background snapshot (${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)})`);
             }
