@@ -122,8 +122,15 @@ export function LocationTrackingProvider({children}: {children: React.ReactNode}
               );
             }
             if (__DEV__) console.log('[LocationTracking] Saved config for foreground service');
+
+            // Start foreground service immediately so location is sent even if app is killed
+            await NativeModules.NannyLocationModule.startForegroundService(
+              'MomKidCare',
+              'लोकेशन ट्रैकिंग चालू है',
+            );
+            if (__DEV__) console.log('[LocationTracking] Foreground service started at init');
           } catch (e) {
-            if (__DEV__) console.warn('[LocationTracking] Failed to save config:', e);
+            if (__DEV__) console.warn('[LocationTracking] Failed to save config / start service:', e);
           }
         }
 

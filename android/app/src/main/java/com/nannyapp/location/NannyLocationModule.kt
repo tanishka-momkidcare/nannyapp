@@ -236,6 +236,8 @@ class NannyLocationModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun stopForegroundService(promise: Promise) {
+        // Clear config so keepalive worker doesn't restart the service
+        LocationForegroundService.clearConfig(reactContext)
         val intent = Intent(reactContext, LocationForegroundService::class.java)
         reactContext.stopService(intent)
         promise.resolve(null)

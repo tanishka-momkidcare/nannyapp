@@ -122,6 +122,21 @@ function LogoutIcon({color}: {color: string}) {
   );
 }
 
+function PlusCircleIcon({color}: {color: string}) {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={12} r={10} stroke={color} strokeWidth={2} />
+      <Path
+        d="M12 8v8M8 12h8"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 function ChevronRightIcon({color}: {color: string}) {
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
@@ -164,6 +179,12 @@ export function ProfileSettingsScreen() {
       key: 'notifications',
       label: 'नोटिफिकेशन सेटिंग्स',
       icon: c => <BellIcon color={c} />,
+    },
+    {
+      key: 'createShift',
+      label: 'नई शिफ्ट बनाएं (Create Shift)',
+      icon: c => <PlusCircleIcon color={c} />,
+      onPress: () => navigation.navigate('CreateShift'),
     },
     {
       key: 'help',

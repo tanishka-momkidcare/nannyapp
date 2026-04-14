@@ -13,9 +13,10 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
 
-        // Re-register significant location changes on boot.
-        // The React Native engine will re-initialize geofences on app launch,
-        // but we use WorkManager as a fallback to ensure we re-register.
+        // Restart foreground service if config exists
+        LocationForegroundService.startIfConfigured(context)
+
+        // Also re-register significant location changes via WorkManager
         try {
             androidx.work.OneTimeWorkRequest.Builder(LocationBootWorker::class.java)
                 .build()

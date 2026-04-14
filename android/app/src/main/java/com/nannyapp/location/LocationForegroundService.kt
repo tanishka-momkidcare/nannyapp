@@ -12,22 +12,23 @@ import android.os.Looper
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import androidx.work.*
 import com.google.android.gms.location.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.TimeUnit
 
 /**
- * Foreground service that keeps location tracking alive during active shifts.
+ * Foreground service that keeps location tracking alive.
  *
  * Self-sufficient: when the JS bridge is dead (app killed), this service
  * collects location via FusedLocationProvider and POSTs batches directly
  * to the backend over HTTP.
  *
- * When the JS bridge IS alive, duplicate uploads are harmless — the backend
- * deduplicates by timestamp.
+ * Uses WorkManager periodic keepalive to restart itself if killed by OEM.
  */
 class LocationForegroundService : Service() {
 
@@ -39,6 +40,8 @@ class LocationForegroundService : Service() {
         private const val KEY_VENDOR_ID = "vendorId"
         private const val KEY_API_BASE = "apiBaseUrl"
         private const val KEY_AUTH_TOKEN = "authToken"
+        private const val KEY_SERVICE_ACTIVE = "serviceActive"
+        private const val KEEPALIVE_WORK_NAME = "location_keepalive"
 
         /** Call from JS bridge to persist config for the service. */
         fun saveConfig(context: Context, vendorId: String, apiBase: String, authToken: String) {
@@ -47,12 +50,40 @@ class LocationForegroundService : Service() {
                 .putString(KEY_VENDOR_ID, vendorId)
                 .putString(KEY_API_BASE, apiBase)
                 .putString(KEY_AUTH_TOKEN, authToken)
+                .putBoolean(KEY_SERVICE_ACTIVE, true)
                 .apply()
         }
 
         fun clearConfig(context: Context) {
             context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 .edit().clear().apply()
+            // Cancel keepalive worker
+            WorkManager.getInstance(context).cancelUniqueWork(KEEPALIVE_WORK_NAME)
+        }
+
+        /** Check if service should be running. */
+        fun isConfigured(context: Context): Boolean {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            return prefs.getBoolean(KEY_SERVICE_ACTIVE, false) &&
+                   prefs.getString(KEY_VENDOR_ID, null) != null
+        }
+
+        /** Start the service from any context (WorkManager, BroadcastReceiver, etc.) */
+        fun startIfConfigured(context: Context) {
+            if (!isConfigured(context)) return
+            val intent = Intent(context, LocationForegroundService::class.java).apply {
+                putExtra("title", "MomKidCare")
+                putExtra("body", "लोकेशन ट्रैकिंग चालू है")
+            }
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                } else {
+                    context.startService(intent)
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not start service: ${e.message}")
+            }
         }
     }
 
@@ -61,10 +92,14 @@ class LocationForegroundService : Service() {
     private var vendorId: String? = null
     private var apiBase: String? = null
     private var authToken: String? = null
+    private var isExplicitStop = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.i(TAG, "onStartCommand called")
+        isExplicitStop = false
+
         val title = intent?.getStringExtra("title") ?: "MomKidCare"
         val body = intent?.getStringExtra("body") ?: "Location tracking active"
 
@@ -74,8 +109,9 @@ class LocationForegroundService : Service() {
             .setContentTitle(title)
             .setContentText(body)
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setOngoing(true)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .build()
 
         startForeground(NOTIFICATION_ID, notification)
@@ -89,12 +125,55 @@ class LocationForegroundService : Service() {
         // Start self-sufficient location tracking
         startSelfSufficientTracking()
 
+        // Schedule WorkManager keepalive to restart service if OEM kills it
+        scheduleKeepalive()
+
         return START_STICKY
     }
 
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        Log.i(TAG, "App removed from recents — service continues running")
+        // Don't stop tracking — let the service keep running independently
+        // WorkManager keepalive will restart if OEM kills us
+        super.onTaskRemoved(rootIntent)
+    }
+
     override fun onDestroy() {
-        stopSelfSufficientTracking()
+        Log.i(TAG, "onDestroy called, explicitStop=$isExplicitStop")
+        if (isExplicitStop) {
+            // Only clean up if explicitly stopped (e.g. user logged out)
+            stopSelfSufficientTracking()
+            WorkManager.getInstance(this).cancelUniqueWork(KEEPALIVE_WORK_NAME)
+        }
+        // If NOT explicit stop (killed by system/OEM), WorkManager will restart us
         super.onDestroy()
+    }
+
+    /** Called by NannyLocationModule.stopForegroundService() */
+    fun markExplicitStop() {
+        isExplicitStop = true
+    }
+
+    // ─── WorkManager keepalive ──────────────────────────────────────────────
+
+    private fun scheduleKeepalive() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+            .build()
+
+        val keepaliveWork = PeriodicWorkRequestBuilder<LocationKeepaliveWorker>(
+            15, TimeUnit.MINUTES // Minimum interval for periodic work
+        )
+            .setConstraints(constraints)
+            .setBackoffCriteria(BackoffPolicy.LINEAR, 1, TimeUnit.MINUTES)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            KEEPALIVE_WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            keepaliveWork
+        )
+        Log.i(TAG, "Keepalive worker scheduled")
     }
 
     // ─── Self-sufficient location tracking ──────────────────────────────────
@@ -112,20 +191,24 @@ class LocationForegroundService : Service() {
             return
         }
 
+        // Stop existing callbacks before re-registering
+        stopSelfSufficientTracking()
+
         fusedClient = LocationServices.getFusedLocationProviderClient(this)
 
         val request = LocationRequest.Builder(
             Priority.PRIORITY_BALANCED_POWER_ACCURACY,
-            5 * 60 * 1000L // 5 minutes
+            1 * 60 * 1000L // 1 minute — send even if stationary
         ).apply {
-            setMinUpdateDistanceMeters(100f)
+            setMinUpdateDistanceMeters(0f) // No displacement filter — always send
             setWaitForAccurateLocation(false)
-            setMaxUpdateDelayMillis(10 * 60 * 1000L) // batch for 10 min
+            setMaxUpdateDelayMillis(2 * 60 * 1000L) // batch for 2 min max
         }.build()
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 result.lastLocation?.let { loc ->
+                    Log.d(TAG, "Location received: (${loc.latitude}, ${loc.longitude}) acc=${loc.accuracy}m")
                     postLocationBatch(loc.latitude, loc.longitude, loc.accuracy.toDouble(), loc.time)
                 }
             }
@@ -198,9 +281,9 @@ class LocationForegroundService : Service() {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "Location Tracking",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Shows when location tracking is active during your shift"
+                description = "Shows when location tracking is active"
                 setShowBadge(false)
             }
             val manager = getSystemService(NotificationManager::class.java)

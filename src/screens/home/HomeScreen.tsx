@@ -375,14 +375,6 @@ export function HomeScreen() {
           )}
         />
 
-        {/* ── Create Shift Button ── */}
-        <TouchableOpacity
-          style={[styles.createShiftButton, {backgroundColor: colors.primary}]}
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate('CreateShift')}>
-          <Text style={styles.createShiftText}>+ नई शिफ्ट बनाएं (Create Shift)</Text>
-        </TouchableOpacity>
-
         {/* ── Job Categories ── */}
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>काम के प्रकार (Job categories)</Text>
@@ -721,18 +713,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     marginBottom: Spacing.lg,
   },
-  createShiftButton: {
-    marginHorizontal: Spacing.md,
-    marginBottom: Spacing.lg,
-    paddingVertical: 14,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
-  },
-  createShiftText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+
   jobCategoryCard: {
     width: (SW - Spacing.md * 2 - Spacing.md * 2) / 4,
     alignItems: 'center',

@@ -43,6 +43,7 @@
       <service
         android:name=".location.LocationForegroundService"
         android:foregroundServiceType="location"
+        android:stopWithTask="false"
         android:exported="false" />
 
       <!-- Geofence Broadcast Receiver -->
