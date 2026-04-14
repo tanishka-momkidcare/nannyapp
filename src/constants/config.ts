@@ -5,7 +5,7 @@ import Config from 'react-native-config';
 // Mix and match per API call as needed.
 
 export const config1 = {
-  API_HOST: 'http://192.168.1.31:3000',
+  API_HOST: 'https://d467-106-215-86-236.ngrok-free.app',
 };
 
 export const config2 = {
