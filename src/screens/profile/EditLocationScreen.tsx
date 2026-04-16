@@ -20,6 +20,7 @@ import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useAuth, useTheme} from '../../context';
 import {BorderRadius, FontSizes, GOOGLE_MAPS_API_KEY, reverseGeocode} from '../../constants';
 import type {AppStackParamList} from '../../navigation/types';
+import {addJobLocation} from '../../services/jobLocationApi';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'EditLocation'>;
 
@@ -110,7 +111,7 @@ async function clearRecents() {
 
 export function EditLocationScreen({navigation}: Props) {
   const {colors, isDark} = useTheme();
-  const {updateVendorLocation} = useAuth();
+  const {updateVendorLocation, vendorId} = useAuth();
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<PlacePrediction[]>([]);
@@ -147,10 +148,26 @@ export function EditLocationScreen({navigation}: Props) {
     } catch {}
   }, []);
 
-  const applySelectedLocation = useCallback(async (label: string) => {
+  const applySelectedLocation = useCallback(async (label: string, lat: number, lng: number) => {
+    // Persist location label locally
     await updateVendorLocation(label);
+
+    // Sync with backend job-location API
+    try {
+      if (vendorId) {
+        await addJobLocation({
+          vendorId,
+          latitude: lat,
+          longitude: lng,
+          address: label,
+        });
+      }
+    } catch (err) {
+      if (__DEV__) console.warn('[EditLocation] job-location API error:', err);
+    }
+
     navigation.goBack();
-  }, [navigation, updateVendorLocation]);
+  }, [navigation, updateVendorLocation, vendorId]);
 
   const handleSearch = useCallback((text: string) => {
     setQuery(text);
@@ -188,15 +205,16 @@ export function EditLocationScreen({navigation}: Props) {
         lng: details.lng,
         timestamp: Date.now(),
       });
+      await applySelectedLocation(areaName, details.lat, details.lng);
+    } else {
+      await applySelectedLocation(areaName, anchor.lat, anchor.lng);
     }
-
-    await applySelectedLocation(areaName);
   }, [applySelectedLocation]);
 
   const handleSelectRecent = useCallback(async (recent: RecentSearch) => {
     const areaName = recent.main + (recent.secondary ? `, ${recent.secondary}` : '');
     await saveRecent(recent);
-    await applySelectedLocation(areaName);
+    await applySelectedLocation(areaName, recent.lat, recent.lng);
   }, [applySelectedLocation]);
 
   const handleUseCurrentLocation = useCallback(async () => {
@@ -219,7 +237,7 @@ export function EditLocationScreen({navigation}: Props) {
       });
 
       const label = await reverseGeocode(current.lat, current.lng);
-      await applySelectedLocation(label);
+      await applySelectedLocation(label, current.lat, current.lng);
     } finally {
       setGpsLoading(false);
     }
