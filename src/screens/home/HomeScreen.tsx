@@ -438,10 +438,10 @@ export function HomeScreen() {
         </View>
 
         {/* ── Help Card ── */}
-        <LinearGradient
-          colors={isDark ? ['#2A1F3D', '#1F2A3D', '#1B2838', '#243447'] : ['#CB9785', '#C4888F', '#A983B9', '#8B7FBF']}
-          start={{ x: 0, y: 0.8 }}
-          end={{ x: 1, y: 0.2 }}
+        <View
+          // colors={isDark ? ['#2A1F3D', '#1F2A3D', '#1B2838', '#243447'] : ['#CB9785', '#C4888F', '#A983B9', '#8B7FBF']}
+          // start={{ x: 0, y: 0.8 }}
+          // end={{ x: 1, y: 0.2 }}
           style={styles.helpCard}
         >
           {/* LEFT CONTENT */}
@@ -478,11 +478,71 @@ export function HomeScreen() {
           {/* RIGHT IMAGE */}
           <Image source={HelpWoman} style={styles.helpImage} resizeMode="contain" />
 
+        </View>
+
+        {/* ── Benefits & Services Block (as provided design) ── */}
+        <LinearGradient
+          colors={isDark ? ['#222', '#111'] : ['#F2F7FF', '#FCF2F0', '#FDF4F0', '#FCF4EA', '#FBEDDA']}
+          locations={[0, 0.4, 0.5, 0.6, 1]}
+          style={[styles.benefitsBlock]}>
+          <View style={styles.sectionHeaderMini}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>आपके लिए खास फायदे और सुविधाएं</Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.text }]}> (Benefits & Services, Just for You)</Text>
+          </View>
+
+          <View style={[styles.benefitOfferCard, { backgroundColor: '#E3EDFC' }]}>
+            <View style={styles.benefitOfferLeft}>
+              <Text style={[styles.benefitOfferTitle, { color: colors.text }]}>महिलाओं का बीमा कवरेज</Text>
+              <Text style={[styles.benefitOfferSubtitle, { color: colors.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
+                इंश्योरेंस लाभ अभी एक्टिव करें और तुरंत कवर पाएं
+              </Text>
+              <TouchableOpacity style={[styles.benefitOfferBtn, { backgroundColor: colors.primary }]} activeOpacity={0.8}>
+                <Text style={[styles.benefitOfferBtnText, { color: colors.textInverse }]}>अभी देखें</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.benefitOfferPrice, { color: colors.text }]}>₹100</Text>
+
+            <Image source={HelpWoman} style={styles.benefitOfferImage} resizeMode="contain" />
+          </View>
+          <View style={[styles.noticeCard, { backgroundColor: '#FFEAEA' }]}>
+            <View style={styles.noticeIconCircle}>
+              <Svg width={13} height={13} viewBox="0 0 24 24" fill="none">
+                <Path d="M12 8v4m0 4h.01M10.29 3.86l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.71-3.14l-8-14a2 2 0 0 0-3.42 0z" stroke="#FF6B6B" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+              </Svg>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.noticeTitle, { color: colors.text }]}>सुरक्षित और समय पर भुगतान</Text>
+              <Text style={[styles.noticeText, { color: colors.textMuted }]}>हर महीने बिना किसी देरी के सीधे आपके बैंक खाते में आपकी मेहनत की कमाई सुरक्षित रूप से प्राप्त करें।</Text>
+            </View>
+            <ChevronRight color={colors.textMuted} />
+          </View>
+
+          <View style={[styles.jobsGivenCard, { backgroundColor: 'transparent' }]}>
+            <Text style={[styles.jobsGivenPrefix, { color: colors.textSecondary }]}>MomKidCare क्यों चुनें?</Text>
+            <Text style={[styles.jobsGivenNumber, { color: isDark ? '#F4F4F4' : '#7E8A98' }]}>5000+</Text>
+            <Text style={[styles.jobsGivenSuffix, { color: colors.textMuted }]}>Jobs given</Text>
+            <Image source={HelpWoman} style={styles.jobsGivenImage} resizeMode="contain" />
+            <View style={[styles.jobsGivenStats, { backgroundColor: isDark ? 'rgba(18, 22, 34, 0.75)' : 'rgba(94, 83, 71, 0.72)' }]}>
+              <View style={styles.jobsStatRow}>
+                <Text style={styles.jobsStatIcon}>👥</Text>
+                <Text style={styles.jobsStatText}>महिलाओं ने किए • महिलाओं द्वारा चुने</Text>
+              </View>
+              <View style={styles.jobsStatRow}>
+                <Text style={styles.jobsStatIcon}>★</Text>
+                <Text style={styles.jobsStatText}>100% सुरक्षित व वेरिफाइड जॉब्स</Text>
+              </View>
+              <View style={styles.jobsStatRow}>
+                <Text style={styles.jobsStatIcon}>◎</Text>
+                <Text style={styles.jobsStatText}>10000+ Client Served in NCR</Text>
+              </View>
+            </View>
+          </View>
         </LinearGradient>
         {/* ── Decorative Icon Left (flipped) ── */}
-        <View style={styles.bottomIconContainerLeft}>
+        {/* <View style={styles.bottomIconContainerLeft}>
           <LoginScreenBottomIcon width={250} height={320} />
-        </View>
+        </View> */}
 
       </ScrollView>
 
@@ -817,6 +877,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   helpCard: {
+    backgroundColor: '#0F182B',
     marginHorizontal: Spacing.md,
     borderRadius: BorderRadius.xxl,
     paddingLeft: Spacing.lg,
@@ -882,5 +943,181 @@ const styles = StyleSheet.create({
     marginTop: -180,
     marginBottom: 20,
     zIndex: 1
+  },
+
+  benefitsBlock: {
+    marginTop: 12,
+    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+  },
+  sectionHeaderMini: {
+    marginTop: 50,
+    marginBottom: 10,
+    textAlign: 'center',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  benefitOfferCard: {
+    borderRadius: BorderRadius.lg,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    minHeight: 88,
+    overflow: 'hidden',
+  },
+  benefitOfferLeft: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  benefitOfferTitle: {
+    fontSize: FontSizes.sm,
+    fontFamily: 'NotoSansDevanagari-SemiBold',
+    fontWeight: '600',
+  },
+  benefitOfferSubtitle: {
+    marginTop: 2,
+    fontSize: 11,
+    fontFamily: 'NotoSansDevanagari-Regular',
+  },
+  benefitOfferBtn: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: BorderRadius.sm,
+  },
+  benefitOfferBtnText: {
+    fontSize: 11,
+    fontFamily: 'GolosText-SemiBold',
+    fontWeight: '600',
+  },
+  benefitOfferPrice: {
+    fontSize: FontSizes.body,
+    fontWeight: '700',
+    marginTop: 2,
+    marginRight: 54,
+  },
+  benefitOfferImage: {
+    width: 70,
+    height: 70,
+    position: 'absolute',
+    right: 2,
+    bottom: 0,
+  },
+  badge67Wrap: {
+    alignItems: 'flex-end',
+    marginTop: -8,
+    marginBottom: -4,
+    zIndex: 3,
+  },
+  badge67: {
+    width: 34,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#E169FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noticeCard: {
+    marginTop: 10,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: 10,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  noticeIconCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noticeTitle: {
+    fontSize: FontSizes.body,
+    fontFamily: 'NotoSansDevanagari-SemiBold',
+    fontWeight: '700',
+  },
+  noticeText: {
+    fontSize: FontSizes.sm,
+    marginTop: 2,
+    lineHeight: 15,
+    fontFamily: 'NotoSansDevanagari-Regular',
+  },
+  jobsGivenCard: {
+    marginTop: 10,
+    borderRadius: BorderRadius.xl,
+    padding: 12,
+    minHeight: 260,
+    overflow: 'hidden',
+  },
+  jobsGivenPrefix: {
+    fontSize: FontSizes.caption,
+    fontFamily: 'GolosText-SemiBold',
+    fontWeight: '600',
+  },
+  jobsGivenNumber: {
+    marginTop: 6,
+    fontSize: 52,
+    lineHeight: 56,
+    fontFamily: 'GolosText-Bold',
+    fontWeight: '800',
+  },
+  jobsGivenSuffix: {
+    fontSize: 34,
+    lineHeight: 34,
+    fontFamily: 'GolosText-SemiBold',
+    fontWeight: '700',
+  },
+  jobsGivenImage: {
+    width: 210,
+    height: 190,
+    position: 'absolute',
+    right: -12,
+    bottom: 45,
+  },
+  badge644Wrap: {
+    position: 'absolute',
+    right: 72,
+    top: 126,
+    zIndex: 5,
+  },
+  badge644: {
+    width: 40,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#E169FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  jobsGivenStats: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    bottom: 12,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    gap: 7,
+  },
+  jobsStatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  jobsStatIcon: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    width: 14,
+    textAlign: 'center',
+  },
+  jobsStatText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontFamily: 'GolosText-Medium',
+    flex: 1,
   },
 });

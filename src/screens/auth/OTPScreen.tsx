@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Dimensions,
   Modal,
+  PermissionsAndroid,
+  Platform,
   StatusBar,
   StyleSheet,
   Text,
@@ -11,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import RNOtpVerify from 'react-native-otp-verify';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -42,9 +45,59 @@ export function OTPScreen({ route, navigation }: Props) {
   const [verifying, setVerifying] = useState(false);
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
+  // Extract OTP digits from an SMS message
+  const extractOtp = useCallback((message: string) => {
+    const match = message.match(/(\d{6})/);
+    if (match) {
+      const digits = match[1].split('');
+      setOtp(digits);
+      inputRefs.current[OTP_LENGTH - 1]?.focus();
+    }
+  }, []);
+
   useEffect(() => {
     inputRefs.current[0]?.focus();
-  }, []);
+
+    // Android: request SMS permission, then start SMS listener for auto-read
+    if (Platform.OS === 'android') {
+      (async () => {
+        try {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
+            {
+              title: 'SMS Permission',
+              message: 'OTP ऑटो-फिल के लिए SMS पढ़ने की अनुमति दें',
+              buttonPositive: 'अनुमति दें',
+              buttonNegative: 'रद्द करें',
+            },
+          );
+
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            RNOtpVerify.getHash()
+              .then((hash: string[]) => console.log('SMS Hash:', hash))
+              .catch(console.log);
+
+            RNOtpVerify.getOtp()
+              .then(() => {
+                RNOtpVerify.addListener((message: string) => {
+                  extractOtp(message);
+                  RNOtpVerify.removeListener();
+                });
+              })
+              .catch(console.log);
+          }
+        } catch (err) {
+          console.log('SMS permission error:', err);
+        }
+      })();
+    }
+
+    return () => {
+      if (Platform.OS === 'android') {
+        RNOtpVerify.removeListener();
+      }
+    };
+  }, [extractOtp]);
 
   useEffect(() => {
     if (timer <= 0) {
@@ -204,6 +257,8 @@ export function OTPScreen({ route, navigation }: Props) {
               maxLength={1}
               textAlign="center"
               selectTextOnFocus
+              textContentType={i === 0 ? 'oneTimeCode' : 'none'}
+              autoComplete={i === 0 ? 'sms-otp' : 'off'}
             />
           ))}
         </View>
