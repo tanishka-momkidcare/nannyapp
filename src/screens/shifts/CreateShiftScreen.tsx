@@ -33,6 +33,7 @@ import {useAuth, useTheme} from '../../context';
 import {useLocationTrackingContext} from '../../context/LocationTrackingContext';
 import {GOOGLE_MAPS_API_KEY, reverseGeocode, config1} from '../../constants/config';
 import Axios from '../../services/Axios';
+import {addJobLocation} from '../../services/jobLocationApi';
 
 const {width: SW, height: SH} = Dimensions.get('window');
 
@@ -155,11 +156,21 @@ export function CreateShiftScreen() {
 
     setSubmitting(true);
     try {
+      // Save job location record
+      const [jobLocation] = await addJobLocation({
+        vendorId,
+        latitude: selectedLocation.latitude,
+        longitude: selectedLocation.longitude,
+        address: selectedLocation.address,
+        locationType: 'HOME',
+      });
+
       const {data} = await Axios.post(`${config1.API_HOST}/api/v1/location/shifts`, {
         nannyId: vendorId,
         clientLatitude: selectedLocation.latitude,
         clientLongitude: selectedLocation.longitude,
         clientAddress: selectedLocation.address,
+        jobLocationId: jobLocation._id,
         geofenceRadius,
         durationHours,
       });
