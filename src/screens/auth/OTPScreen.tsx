@@ -16,10 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BottomRightDecoration } from '../../components/BottomRightDecoration';
 import Svg, { Path } from 'react-native-svg';
-import { useTheme } from '../../context';
+import { useAuth, useTheme } from '../../context';
 import { FontSizes, BorderRadius } from '../../constants';
 import type { AuthStackParamList } from '../../navigation/types';
-import { sendOtp } from '../../services/authApi';
+import { sendOtp, verifyOtp } from '../../services/authApi';
 import { LoginScreenMomWithBaby } from '../../assets/images/LoginScreenMomWithBaby';
 import { MKCLogo } from '../../assets/images/MKCLogo';
 import { MKCLogoIconBlue } from '../../assets/images/MKCLogoIconBlue';
@@ -34,6 +34,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'OTPVerification'>;
 
 export function OTPScreen({ route, navigation }: Props) {
   const { phone } = route.params;
+  const { signIn } = useAuth();
   const { colors, isDark } = useTheme();
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
@@ -79,8 +80,19 @@ export function OTPScreen({ route, navigation }: Props) {
     }
     setVerifying(true);
     try {
-      // Pass phone + otp to LocationPermission; actual verification happens after location is captured
-      navigation.navigate('LocationPermission', { phone, otp: code });
+      const result = await verifyOtp(phone, code);
+      const vendorName = [result.vendor.firstName, result.vendor.lastName]
+        .filter(Boolean)
+        .join(' ');
+
+      // Login should happen right after OTP verification.
+      // Preferred job location can be saved later via separate API flow.
+      await signIn(
+        result.token,
+        result.vendor.id,
+        result.vendor.mobile,
+        vendorName,
+      );
     } catch (e: any) {
       Alert.alert('त्रुटि', e.message || 'OTP सत्यापन में समस्या हुई।');
     } finally {
