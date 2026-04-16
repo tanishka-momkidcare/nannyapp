@@ -1,4 +1,4 @@
-import React, {createContext, useCallback, useContext, useRef} from 'react';
+import React, {createContext, useCallback, useContext, useRef, useState} from 'react';
 import {Animated, NativeScrollEvent, NativeSyntheticEvent} from 'react-native';
 
 type TabBarVisibilityContextType = {
@@ -6,6 +6,10 @@ type TabBarVisibilityContextType = {
   translateAnim: Animated.Value;
   /** Attach this to your ScrollView's onScroll */
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  /** Enable/disable hide-on-scroll behavior */
+  setAutoHideOnScroll: (enabled: boolean) => void;
+  /** Current hide-on-scroll behavior */
+  isAutoHideOnScrollEnabled: boolean;
   /** Instantly hide the tab bar (no animation) */
   hide: () => void;
   /** Instantly show the tab bar (no animation) */
@@ -15,6 +19,8 @@ type TabBarVisibilityContextType = {
 const TabBarVisibilityContext = createContext<TabBarVisibilityContextType>({
   translateAnim: new Animated.Value(0),
   handleScroll: () => {},
+  setAutoHideOnScroll: () => {},
+  isAutoHideOnScrollEnabled: false,
   hide: () => {},
   show: () => {},
 });
@@ -25,10 +31,17 @@ export function TabBarVisibilityProvider({children}: {children: React.ReactNode}
   const translateAnim = useRef(new Animated.Value(0)).current;
   const lastOffsetY = useRef(0);
   const isHidden = useRef(false);
+  const [isAutoHideOnScrollEnabled, setIsAutoHideOnScrollEnabled] = useState(false);
+  const isAutoHideOnScrollEnabledRef = useRef(false);
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       const currentY = e.nativeEvent.contentOffset.y;
+      if (!isAutoHideOnScrollEnabledRef.current) {
+        lastOffsetY.current = currentY;
+        return;
+      }
+
       const diff = currentY - lastOffsetY.current;
 
       if (diff > SCROLL_THRESHOLD && currentY > 50 && !isHidden.current) {
@@ -58,6 +71,22 @@ export function TabBarVisibilityProvider({children}: {children: React.ReactNode}
     [translateAnim],
   );
 
+  const setAutoHideOnScroll = useCallback((enabled: boolean) => {
+    setIsAutoHideOnScrollEnabled(enabled);
+    isAutoHideOnScrollEnabledRef.current = enabled;
+    // When auto-hide is turned off, force bar visible.
+    if (!enabled) {
+      isHidden.current = false;
+      Animated.spring(translateAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        damping: 20,
+        stiffness: 200,
+        mass: 0.8,
+      }).start();
+    }
+  }, [translateAnim]);
+
   const hide = useCallback(() => {
     isHidden.current = true;
     translateAnim.setValue(1);
@@ -69,7 +98,15 @@ export function TabBarVisibilityProvider({children}: {children: React.ReactNode}
   }, [translateAnim]);
 
   return (
-    <TabBarVisibilityContext.Provider value={{translateAnim, handleScroll, hide, show}}>
+    <TabBarVisibilityContext.Provider
+      value={{
+        translateAnim,
+        handleScroll,
+        setAutoHideOnScroll,
+        isAutoHideOnScrollEnabled,
+        hide,
+        show,
+      }}>
       {children}
     </TabBarVisibilityContext.Provider>
   );

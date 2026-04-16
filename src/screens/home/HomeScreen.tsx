@@ -261,7 +261,7 @@ export function HomeScreen() {
           <View style={[styles.header, { backgroundColor: colors.background }]}>
             <MKCLogo width={90} height={40} />
             <View style={styles.headerRight}>
-              <Switch
+              {/* <Switch
                 value={isDark}
                 onValueChange={toggleTheme}
                 trackColor={{ false: colors.switchTrackOff, true: colors.switchTrackOn }}
@@ -271,7 +271,7 @@ export function HomeScreen() {
               <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
                 <BellIcon color={colors.text} />
                 <View style={[styles.bellBadge, { backgroundColor: colors.danger }]} />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
               <TouchableOpacity style={styles.iconButton} activeOpacity={0.7} onPress={() => { hide(); navigation.navigate('ProfileSettings'); }}>
                 <MenuIcon color={colors.text} />
               </TouchableOpacity>
@@ -310,7 +310,7 @@ export function HomeScreen() {
                 </View>
               </View>
             </View>
-            <View style={styles.userRight}>
+            {/* <View style={styles.userRight}>
               <Text style={[styles.scoreLabel, { color: colors.textSecondary }]}>
                 अंक: --
               </Text>
@@ -320,13 +320,27 @@ export function HomeScreen() {
                   --
                 </Text>
               </View>
-            </View>
+            </View> */}
           </View>
-          <View style={styles.locationRow}>
-            <LocationIcon color={colors.textBlue} strokeColor={colors.card} />
-            <Text style={[styles.locationText, { color: colors.textMuted }]}>
-              {vendorLocation || 'Location not set'}
-            </Text>
+          <View style={styles.locationBlock}>
+            <View style={styles.locationRow}>
+              <Text style={[styles.locationLabel, { color: colors.textSecondary }]}>Job Location</Text>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                onPress={() => navigation.navigate('EditLocation')}>
+                <Svg width={15} height={15} viewBox="0 0 24 24" fill="none">
+                  <Path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke={colors.primary} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                  <Path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z" stroke={colors.primary} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                </Svg>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.locationAddressRow}>
+              <LocationIcon color={colors.textBlue} strokeColor={colors.card} />
+              <Text style={[styles.locationText, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
+                {vendorLocation || 'Location not set'}
+              </Text>
+            </View>
           </View>
         </View>
         <View style={{ position: 'relative', }}>
@@ -632,15 +646,31 @@ const styles = StyleSheet.create({
     fontFamily: 'GolosText-SemiBold',
     fontWeight: '600',
   },
+  locationBlock: {
+    marginTop: 12,
+    gap: 4,
+  },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
-    gap: 6,
+    justifyContent: 'space-between',
+  },
+  locationLabel: {
+    fontSize: FontSizes.caption,
+    fontFamily: 'GolosText-SemiBold',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+  },
+  locationAddressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
   locationText: {
     fontSize: FontSizes.body,
     fontFamily: 'GolosText-Medium',
+    flex: 1,
   },
 
   /* ── Section ── */

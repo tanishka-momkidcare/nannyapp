@@ -10,6 +10,7 @@ type AuthContextType = {
   vendorName: string | null;
   vendorLocation: string | null;
   signIn: (token: string, vendorId: string, mobile: string, name?: string, location?: string) => Promise<void>;
+  updateVendorLocation: (location: string) => Promise<void>;
   signOut: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
 };
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
   vendorName: null,
   vendorLocation: null,
   signIn: async () => {},
+  updateVendorLocation: async () => {},
   signOut: async () => {},
   completeOnboarding: async () => {},
 });
@@ -87,6 +89,11 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
     setIsLoggedIn(true);
   }
 
+  async function updateVendorLocation(location: string) {
+    await AsyncStorage.setItem(STORAGE_KEYS.VENDOR_LOCATION, location);
+    setVendorLocation(location);
+  }
+
   async function signOut() {
     await Promise.all([
       AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN),
@@ -118,6 +125,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
         vendorName,
         vendorLocation,
         signIn,
+        updateVendorLocation,
         signOut,
         completeOnboarding,
       }}>

@@ -5,6 +5,7 @@ import {
   HomeScreen,
   ProfileSettingsScreen,
   ProfileScreen,
+  EditLocationScreen,
   JobsScreen,
   CourseScreen,
   IDCardScreen,
@@ -48,6 +49,11 @@ export function AppStack() {
           name="ProfileSettings"
           component={ProfileSettingsScreen}
           options={{animation: 'fade'}}
+        />
+        <Stack.Screen
+          name="EditLocation"
+          component={EditLocationScreen}
+          options={{animation: 'slide_from_right'}}
         />
         <Stack.Screen
           name="LocationDebug"
