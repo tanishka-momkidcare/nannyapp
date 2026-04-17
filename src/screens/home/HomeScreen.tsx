@@ -30,7 +30,7 @@ import { fetchVendorHome } from '../../services/authApi';
 import type { VendorHomeLocation } from '../../services/authApi';
 import { MKCLogo } from '../../assets/images/MKCLogo';
 import { MKCLogoIconBlue } from '../../assets/images/MKCLogoIconBlue';
-import { BlurEllipse } from '../../components';
+import { BlurEllipse, SoftCircle } from '../../components';
 import { LoginScreenBottomIcon } from '../../assets/images/LoginScreenBottomIcon';
 import HelpWoman from '../../assets/helpCardWomen.png';
 import japaIcon from '../../assets/JapaIcon.png';
@@ -147,6 +147,41 @@ const JOB_CATEGORIES_DARK = [
   { id: '2', title: 'नैनी', subtitle: 'Nanny', icon: nannyIcon, bgColor: '#2A1B1E' },
   { id: '3', title: 'बेबीसिटर', subtitle: 'Babysitter', icon: babySitterIcon, bgColor: '#2A2418' },
   { id: '4', title: 'बेबी मेड', subtitle: 'BabyMaid', icon: babyMaidIcon, bgColor: '#1A2830' },
+];
+
+function ReferralIcon() {
+  return (
+    <Svg width={64} height={64} viewBox="0 0 24 24" fill="none">
+      <Path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#4A90D9" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+      <Circle cx={8.5} cy={7} r={4} stroke="#4A90D9" strokeWidth={1.5} />
+      <Path d="M20 8v6M17 11h6" stroke="#4A90D9" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+const BENEFIT_SLIDES = [
+  {
+    id: '1',
+    title: 'चिकित्सा बीमा सुविधा',
+    subtitle: 'आपकी सुरक्षा हमारे लिए महत्वपूर्ण है',
+    desc: 'बीमा से जुड़े सभी दस्तावेज़ यहाँ देखें और डाउनलोड करें',
+    cta: 'डाउनलोड करें',
+    bgColor: '#E3EDFC',
+    btnColor: '#E07A2F',
+    image: HelpWoman,
+    icon: null,
+  },
+  {
+    id: '2',
+    title: '₹1000 तक बोनस कमाएं!',
+    subtitle: 'अपनी सहेली को हमारे साथ काम दिलवाएं और बोनस पाएं।',
+    desc: null,
+    cta: 'रेफर करें',
+    bgColor: '#E3EDFC',
+    btnColor: '#1B7FF6',
+    image: null,
+    icon: <ReferralIcon />,
+  },
 ];
 
 /* ── Icons ── */
@@ -583,22 +618,54 @@ export function HomeScreen() {
             <Text style={[styles.sectionSubtitle, { color: colors.text }]}> (Benefits & Services, Just for You)</Text>
           </View>
 
-          <View style={[styles.benefitOfferCard, { backgroundColor: '#E3EDFC' }]}>
-            <View style={styles.benefitOfferLeft}>
-              <Text style={[styles.benefitOfferTitle, { color: colors.text }]}>चिकित्सा बीमा सुविधा</Text>
-              <Text style={[styles.benefitOfferSubtitle, { color: colors.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
-                आपकी सुरक्षा हमारे लिए महत्वपूर्ण है
-              </Text>
+          <FlatList
+            data={BENEFIT_SLIDES}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={item => item.id}
+            snapToInterval={SW - 32 + 12}
+            decelerationRate="fast"
+            contentContainerStyle={styles.benefitSliderContainer}
+            style={{ marginHorizontal: -16 }}
+            renderItem={({ item }) => {
+              const content = (
+                <>
+                  {item.id === '1' && <SoftCircle size={300} style={styles.benefitOfferCircle} />}
+                  {item.image ? (
+                    <Image source={item.image} style={styles.benefitOfferImage} resizeMode="contain" />
+                  ) : (
+                    <View style={styles.benefitOfferIconWrap}>
+                      {item.icon}
+                    </View>
+                  )}
+                  <View style={styles.benefitOfferLeft}>
+                    <Text style={[styles.benefitOfferTitle, { color: colors.text }]}>{item.title}</Text>
+                    <Text style={[styles.benefitOfferSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
+                    {item.desc ? (
+                      <Text style={[styles.benefitOfferDesc, { color: colors.textSecondary }]}>{item.desc}</Text>
+                    ) : null}
+                    <TouchableOpacity style={[styles.benefitOfferBtn, item.btnColor ? { backgroundColor: item.btnColor } : {}]} activeOpacity={0.8}>
+                      <Text style={styles.benefitOfferBtnText}>{item.cta}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              );
 
-              <Text style={[styles.benefitOfferSubtitle, { color: colors.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
-                बीमा से जुड़े सभी दस्तावेज़ यहाँ देखें और डाउनलोड करें
-              </Text>
-              <TouchableOpacity style={[styles.benefitOfferBtn, { backgroundColor: colors.primary }]} activeOpacity={0.8}>
-                <Text style={[styles.benefitOfferBtnText, { color: colors.textInverse }]}>डाउनलोड करें</Text>
-              </TouchableOpacity>
-            </View>
-            <Image source={HelpWoman} style={styles.benefitOfferImage} resizeMode="contain" />
-          </View>
+              if (item.id === '2') {
+                return (
+                  <LinearGradient colors={['#DAE4F9', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.benefitOfferCard}>
+                    {content}
+                  </LinearGradient>
+                );
+              }
+
+              return (
+                <View style={[styles.benefitOfferCard, { backgroundColor: item.bgColor }]}>
+                  {content}
+                </View>
+              );
+            }}
+          />
           <View style={[styles.noticeCard, { backgroundColor: '#FFEAEA' }]}>
             <View style={styles.noticeIconCircle}>
               <Svg width={13} height={13} viewBox="0 0 24 24" fill="none">
@@ -714,12 +781,6 @@ export function HomeScreen() {
             <LoginScreenBottomIcon width={180} height={230} />
           </View>
         </View>
-
-        {/* ── Decorative Icon Left (flipped) ── */}
-        {/* <View style={styles.bottomIconContainerLeft}>
-          <LoginScreenBottomIcon width={250} height={320} />
-        </View> */}
-
       </ScrollView>
 
       {Platform.OS === 'ios' && (
@@ -773,7 +834,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
+    paddingHorizontal: Spacing.md,
     paddingTop: 12,
     paddingBottom: 12,
   },
@@ -809,7 +870,7 @@ const styles = StyleSheet.create({
 
   /* ── User Card ── */
   userCard: {
-    paddingHorizontal: 14,
+    paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.xl,
   },
   userCardTop: {
@@ -911,7 +972,7 @@ const styles = StyleSheet.create({
 
   /* ── Section ── */
   sectionHeader: {
-    paddingHorizontal: 14,
+    paddingHorizontal: Spacing.md,
     marginTop: SECTION_GAP,
     marginBottom: SECTION_CONTENT_GAP,
   },
@@ -1122,60 +1183,85 @@ const styles = StyleSheet.create({
   },
 
   benefitsBlock: {
-    marginTop: 12,
-    paddingTop: 16,
-    paddingHorizontal: 16,
+    marginTop: SECTION_GAP,
+    paddingTop: Spacing.md,
+    paddingHorizontal: Spacing.md,
     paddingBottom: 260,
   },
   sectionHeaderMini: {
-    marginTop: 50,
-    marginBottom: 10,
+    marginTop: SECTION_GAP,
+    marginBottom: Spacing.md,
     textAlign: 'center',
     flexDirection: 'column',
     alignItems: 'center',
   },
+  benefitSliderContainer: {
+    gap: 12,
+    paddingHorizontal: 16,
+  },
   benefitOfferCard: {
-    borderRadius: BorderRadius.lg,
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    minHeight: 88,
+    borderRadius: BorderRadius.xl,
+    padding: 16,
+    minHeight: 180,
+    width: SW - 32,
     overflow: 'hidden',
-    marginTop: 30,
-    marginBottom: 48
+    position: 'relative',
+  },
+  benefitOfferCircle: {
+    position: 'absolute',
+    right: -160,
+    top: -60,
   },
   benefitOfferLeft: {
     flex: 1,
-    paddingRight: 10,
+    zIndex: 2,
+    paddingRight: 80,
+  },
+  benefitOfferIconWrap: {
+    position: 'absolute',
+    right: 16,
+    bottom: 20,
+    zIndex: 1,
   },
   benefitOfferTitle: {
-    fontSize: FontSizes.sm,
-    fontFamily: 'NotoSansDevanagari-SemiBold',
-    fontWeight: '600',
+    fontSize: 20,
+    fontFamily: 'NotoSansDevanagari-Bold',
+    fontWeight: '700',
+    lineHeight: 28,
   },
   benefitOfferSubtitle: {
-    marginTop: 2,
-    fontSize: 11,
+    marginTop: 4,
+    fontSize: 13,
     fontFamily: 'NotoSansDevanagari-Regular',
+    lineHeight: 18,
+  },
+  benefitOfferDesc: {
+    marginTop: 8,
+    fontSize: 13,
+    fontFamily: 'NotoSansDevanagari-Regular',
+    lineHeight: 18,
   },
   benefitOfferBtn: {
-    marginTop: 8,
+    marginTop: 14,
     alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: BorderRadius.sm,
+    backgroundColor: '#E07A2F',
   },
   benefitOfferBtnText: {
-    fontSize: 11,
+    fontSize: 13,
     fontFamily: 'GolosText-SemiBold',
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   benefitOfferImage: {
-    width: 70,
-    height: 70,
+    width: 140,
+    height: 160,
     position: 'absolute',
-    right: 2,
+    right: 0,
     bottom: 0,
+    zIndex: 1,
   },
   badge67Wrap: {
     alignItems: 'flex-end',
@@ -1192,14 +1278,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   noticeCard: {
-    marginTop: 10,
+    marginTop: Spacing.md,
     borderRadius: BorderRadius.md,
-    paddingHorizontal: 10,
+    paddingHorizontal: Spacing.md,
     paddingVertical: 14,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 48,
+    marginBottom: SECTION_GAP,
   },
   noticeIconCircle: {
     width: 26,
@@ -1226,7 +1312,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   jobsGivenOverlay: {
-    marginHorizontal: 16,
+    marginHorizontal: Spacing.md,
     marginTop: -294,
     height: 500,
     borderRadius: BorderRadius.xl,
@@ -1304,6 +1390,7 @@ const styles = StyleSheet.create({
   faqSection: {
     paddingHorizontal: Spacing.md,
     marginTop: SECTION_GAP + 80,
+    marginBottom: Spacing.md,
   },
   faqBgImage: {
     position: 'absolute',
