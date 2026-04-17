@@ -37,6 +37,8 @@ import japaIcon from '../../assets/JapaIcon.png';
 import nannyIcon from '../../assets/nannyIcon.png';
 import babySitterIcon from '../../assets/babySitterIcon.png';
 import babyMaidIcon from '../../assets/babyMaidIcon.png';
+import momWithBabyBg from '../../assets/joyful-mother-with-baby.png';
+import pencilImage from '../../assets/pencilImage.png';
 
 const { width: SW } = Dimensions.get('window');
 const SECTION_GAP = 32;
@@ -89,7 +91,7 @@ function FaqItem({
         <Text style={[styles.faqQuestion, { color: colors.textMuted }]}>{item.q}</Text>
         <Animated.View style={{ transform: [{ rotate }] }}>
           <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-            <Path d="M6 9l6 6 6-6" stroke={colors.textMuted} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+            <Path d="M6 9l6 6 6-6" stroke={colors.textBlue} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
           </Svg>
         </Animated.View>
       </TouchableOpacity>
@@ -311,6 +313,7 @@ export function HomeScreen() {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       show();
+      setExpandedFaq(0);
       void loadHomeData();
     });
     return unsubscribe;
@@ -608,84 +611,102 @@ export function HomeScreen() {
             </View>
             <ChevronRight color={colors.textMuted} />
           </View>
-
-          <View style={[styles.jobsGivenCard, { backgroundColor: 'transparent' }]}>
-            <Text style={[styles.jobsGivenPrefix, { color: colors.text }]}>MomKidCare क्यों चुनें?</Text>
-            <Text style={[styles.jobsGivenNumber, { color: '#D6D6D6' }]}>5000+</Text>
-            <Text style={[styles.jobsGivenSuffix, { color: '#D6D6D6' }]}>Jobs given</Text>
-            <Image source={HelpWoman} style={styles.jobsGivenImage} resizeMode="contain" />
-            <LinearGradient
-              colors={['rgba(91, 74, 58, 0.25)', 'rgba(26, 26, 26, 0.25)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.jobsGivenStats}>
-              <BlurView
-                blurType="dark"
-                blurAmount={30}
-                reducedTransparencyFallbackColor="rgba(26, 26, 26, 0)"
-                style={StyleSheet.absoluteFill}
-              />
-              <View style={styles.jobsStatRow}>
-                <Text style={styles.jobsStatIcon}>👥</Text>
-                <Text style={styles.jobsStatText}>महिलाओं ने किए • महिलाओं द्वारा चुने</Text>
-              </View>
-              <View style={styles.jobsStatRow}>
-                <Text style={styles.jobsStatIcon}>★</Text>
-                <Text style={styles.jobsStatText}>100% सुरक्षित व वेरिफाइड जॉब्स</Text>
-              </View>
-              <View style={styles.jobsStatRow}>
-                <Text style={styles.jobsStatIcon}>◎</Text>
-                <Text style={styles.jobsStatText}>10000+ Client Served in NCR</Text>
-              </View>
-              <View style={styles.jobsStatRow}>
-                <Text style={styles.jobsStatIcon}>💰</Text>
-                <Text style={styles.jobsStatText}>समय पर भुगतान • सीधे बैंक खाते में</Text>
-              </View>
-              <View style={styles.jobsStatRow}>
-                <Text style={styles.jobsStatIcon}>🛡️</Text>
-                <Text style={styles.jobsStatText}>बीमा कवरेज • आपकी सुरक्षा हमारी जिम्मेदारी</Text>
-              </View>
-              <View style={styles.jobsStatRow}>
-                <Text style={styles.jobsStatIcon}>🎓</Text>
-                <Text style={styles.jobsStatText}>फ्री ट्रेनिंग और सर्टिफिकेशन</Text>
-              </View>
-            </LinearGradient>
+          <View style={[styles.jobsGivenCard]}>
+            <Text style={styles.jobsGivenPrefix}>MomKidCare क्यों चुनें?</Text>
+            <Text style={styles.jobsGivenNumber}>5000+</Text>
+            <Text style={styles.jobsGivenSuffix}>Jobs given</Text>
           </View>
         </LinearGradient>
 
+        {/* ── "Why MomKidCare" card — image + stats ── */}
+        <View style={styles.jobsGivenOverlay}>
+          <Image source={momWithBabyBg} style={styles.jobsGivenBgImage} resizeMode="contain" />
+          <View style={styles.jobsGivenStats}>
+            {/* Layer 1: Blur */}
+            <BlurView
+              blurType="light"
+              blurAmount={30}
+              reducedTransparencyFallbackColor="rgba(26, 26, 26, 0.8)"
+              style={StyleSheet.absoluteFill}
+            />
+            {/* Layer 2: Gradient overlay */}
+            <LinearGradient
+              colors={['rgba(91,74,58,0.5)', 'rgba(26,26,26,0.7)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+            {/* Layer 3: Content */}
+            <View style={styles.jobsStatRow}>
+              <View style={styles.jobsStatIconCircle}>
+                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                  <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#FFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                  <Circle cx={9} cy={7} r={4} stroke="#FFF" strokeWidth={2} />
+                  <Path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="#FFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                  <Path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="#FFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                </Svg>
+              </View>
+              <Text style={styles.jobsStatText}>महिलाओं के लिए, महिलाओं द्वारा</Text>
+            </View>
+            <View style={styles.jobsStatRow}>
+              <View style={styles.jobsStatIconCircle}>
+                <Svg width={14} height={14} viewBox="0 0 24 24" fill="#FFF">
+                  <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2Z" />
+                </Svg>
+              </View>
+              <Text style={styles.jobsStatText}>100% सुरक्षित व वेरीफाइड जॉब्स</Text>
+            </View>
+            <View style={styles.jobsStatRow}>
+              <View style={styles.jobsStatIconCircle}>
+                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                  <Circle cx={12} cy={12} r={10} stroke="#FFF" strokeWidth={2} />
+                  <Circle cx={12} cy={12} r={3} fill="#FFF" />
+                </Svg>
+              </View>
+              <Text style={styles.jobsStatText}>10000+ Client Served in NCR</Text>
+            </View>
+            {/* Description */}
+            <Text style={styles.jobsStatDescription}>
+              हमारा अत्याधुनिक प्लेटफॉर्म बेहद सुरक्षित और प्रमाणित केयरगिविंग सेवाएं प्रदान करता है। यह बेहतरीन पेशेवर मानकों के साथ काम करता है, जिससे एक ऐसा संतुलित और सुरक्षित माहौल बनता है जहाँ हर परिवार बेफिक्र रह सके।
+            </Text>
+          </View>
+        </View>
+
         {/* ── FAQ Section ── */}
         <View style={styles.faqSection}>
-          <Text style={[styles.sectionTitle, { color: colors.textBlue }]}>अक्सर पूछे जाने वाले प्रश्न</Text>
-
           <View style={[styles.faqCard, { backgroundColor: '#ECF4FB' }]}>
-            {[
-              {
-                q: 'मुझे सैलरी कैसे और कब मिलेगी?',
-                a: 'आपकी सैलरी 1 महीने का काम पूरा होने पर आपके बैंक खाते में जमा कर दी जाएगी।',
-              },
-              {
-                q: 'क्या मुझे अपने आसपास काम मिलेगा?',
-                a: 'हाँ, हम आपके लोकेशन के आसपास उपलब्ध जॉब्स दिखाते हैं।',
-              },
-              {
-                q: 'क्या मुझे सिर्फ एक ही प्रकार का काम करना होगा या अन्य काम भी करने होंगे?',
-                a: 'आप अपनी पसंद के अनुसार काम चुन सकती हैं — जापा, नैनी, बेबीसिटर या बेबी मेड।',
-              },
-              {
-                q: 'अगर मुझे जॉब पसंद न आए तो क्या करूँ?',
-                a: 'आप हमारी टीम से संपर्क कर सकती हैं और दूसरी जॉब के लिए रिक्वेस्ट कर सकती हैं।',
-              },
-            ].map((item, index, arr) => (
-              <FaqItem
-                key={index}
-                item={item}
-                index={index}
-                isLast={index === arr.length - 1}
-                isExpanded={expandedFaq === index}
-                onToggle={() => toggleFaq(index)}
-                colors={colors}
-              />
-            ))}
+            <Image source={pencilImage} style={styles.faqBgImage} resizeMode="contain" />
+            <View style={styles.faqContent}>
+              <Text style={[styles.sectionTitle, styles.faqTitle, { color: colors.textBlue }]}>अक्सर पूछे जाने वाले प्रश्न</Text>
+              {[
+                {
+                  q: 'मुझे सैलरी कैसे और कब मिलेगी?',
+                  a: 'पहले महीने की सैलरी आपको हमारे माध्यम से आपके बैंक अकाउंट में ट्रांसफर की जाएगी। इसके बाद, दूसरे महीने से आपकी सैलरी सीधे क्लाइंट द्वारा दी जाएगी, जो बैंक ट्रांसफर या कैश के रूप में हो सकती है।',
+                },
+                {
+                  q: 'क्या मैं पार्ट-टाइम काम कर सकती हूँ?',
+                  a: 'हाँ, आप पार्ट-टाइम काम कर सकती हैं। हमारे पास 8 घंटे, 10 घंटे और 24 घंटे (फुल-टाइम/लाइव-इन) काम के विकल्प उपलब्ध हैं। इसके अलावा, मदर-बेबी मसाज के लिए 2 घंटे का काम भी उपलब्ध है। आप अपनी सुविधा और अनुभव के अनुसार इनमें से कोई भी विकल्प चुन सकती हैं।',
+                },
+                {
+                  q: 'क्या मुझे अपने आसपास काम मिलेगा?',
+                  a: 'हाँ, आपको अपने आसपास काम मिल सकता है। यदि आप 24 घंटे (लाइव-इन) काम चाहती हैं, तो 1–2 दिनों में काम मिल सकता है। यदि आप 10 घंटे का काम 5–6 किमी के अंदर करना चाहती हैं, तो 2–3 दिनों में काम दिलाने की कोशिश की जाती है। बेहतर रिजल्ट के लिए लोकेशन और उपलब्धता थोड़ी फ्लेक्सिबल रखें।',
+                },
+                {
+                  q: 'अगर मुझे जॉब पसंद न आए या कोई इमरजेंसी की स्थिति बन जाए तो मुझे क्या करना चाहिए?',
+                  a: 'अगर जॉब पसंद न आए या क्लाइंट के साथ कोई समस्या हो, तो चिंता न करें। जॉब शुरू होने से पहले इंटरव्यू कराया जाता है ताकि दोनों एक-दूसरे को समझ सकें। जॉब के दौरान कोई समस्या आने पर आप तुरंत MomKidCare टीम से संपर्क कर सकती हैं। किसी भी इमरजेंसी या पारिवारिक स्थिति में हम आपकी पूरी मदद करते हैं और सुरक्षित व सही काम दिलाने की कोशिश करते हैं।',
+                },
+              ].map((item, index, arr) => (
+                <FaqItem
+                  key={index}
+                  item={item}
+                  index={index}
+                  isLast={index === arr.length - 1}
+                  isExpanded={expandedFaq === index}
+                  onToggle={() => toggleFaq(index)}
+                  colors={colors}
+                />
+              ))}
+            </View>
           </View>
 
           {/* Decorative icon */}
@@ -1104,7 +1125,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 16,
     paddingHorizontal: 16,
-    paddingBottom: 54,
+    paddingBottom: 260,
   },
   sectionHeaderMini: {
     marginTop: 50,
@@ -1200,75 +1221,112 @@ const styles = StyleSheet.create({
     fontFamily: 'NotoSansDevanagari-Regular',
   },
   jobsGivenCard: {
-    marginTop: 10,
     borderRadius: BorderRadius.xl,
     padding: 12,
-    minHeight: 260,
+    zIndex: 1,
+  },
+  jobsGivenOverlay: {
+    marginHorizontal: 16,
+    marginTop: -294,
+    height: 500,
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+    zIndex: 999
+  },
+  jobsGivenBgImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: SW - 1,
+    height: (SW - 1) * 0.85,
   },
   jobsGivenPrefix: {
     fontSize: FontSizes.subtitle,
     fontFamily: 'GolosText-SemiBold',
     fontWeight: '700',
+    color: '#333',
   },
   jobsGivenNumber: {
     marginTop: 6,
     fontSize: 70,
-    lineHeight: 56,
+    lineHeight: 60,
     fontFamily: 'GolosText-Bold',
     fontWeight: '800',
+    color: '#D6D6D6',
   },
   jobsGivenSuffix: {
     fontSize: 40,
-    lineHeight: 34,
+    lineHeight: 36,
     fontFamily: 'GolosText-SemiBold',
     fontWeight: '700',
-  },
-  jobsGivenImage: {
-    width: 210,
-    height: 190,
-    position: 'absolute',
-    right: -12,
-    bottom: -30,
+    color: '#D6D6D6',
   },
   jobsGivenStats: {
     position: 'absolute',
-    left: 12,
-    right: 12,
-    bottom: -40,
+    left: 10,
+    right: 10,
+    bottom: 10,
     borderRadius: BorderRadius.lg,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    gap: 7,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    gap: 10,
     overflow: 'hidden',
   },
   jobsStatRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
+    gap: 10,
   },
-  jobsStatIcon: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    width: 14,
-    textAlign: 'center',
+  jobsStatIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   jobsStatText: {
     color: '#FFFFFF',
-    fontSize: 11,
-    fontFamily: 'GolosText-Medium',
+    fontSize: 14,
+    fontFamily: 'NotoSansDevanagari-Medium',
     flex: 1,
+    lineHeight: 20,
+  },
+  jobsStatDescription: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 14,
+    fontFamily: 'NotoSansDevanagari-Regular',
+    lineHeight: 19,
+    textAlign: 'center',
   },
 
   /* ── FAQ Section ── */
   faqSection: {
     paddingHorizontal: Spacing.md,
-    marginTop: SECTION_GAP + 20,
+    marginTop: SECTION_GAP + 80,
+  },
+  faqBgImage: {
+    position: 'absolute',
+    right: 6,
+    top: '60%',
+    width: SW * 0.75,
+    height: SW * 0.4,
+    transform: [{ translateY: -(SW * 0.4) / 2 }],
+    opacity: 1,
+    zIndex: 1,
   },
   faqCard: {
     marginTop: 14,
     borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 20,
+  },
+  faqContent: {
+    zIndex: 2,
+  },
+  faqTitle: {
+    marginBottom: 8,
   },
   faqItem: {
     flexDirection: 'row',
