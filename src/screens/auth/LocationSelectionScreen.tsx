@@ -76,7 +76,7 @@ export function LocationSelectionScreen({route, navigation}: Props) {
         area: selectedArea,
       });
       const vendorName = [result.vendor.firstName, result.vendor.lastName].filter(Boolean).join(' ');
-      await signIn(result.token, result.vendor.id, result.vendor.mobile, vendorName, selectedArea);
+      await signIn(result.accessToken, result.refreshToken, result.vendor.id, result.vendor.mobile, vendorName, selectedArea);
     } catch (err: any) {
       Alert.alert('त्रुटि', err.message || 'लॉगिन में समस्या हुई। कृपया पुनः प्रयास करें।');
       setSubmitting(false);

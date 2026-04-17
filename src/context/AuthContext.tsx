@@ -1,5 +1,8 @@
 import React, {createContext, useContext, useEffect, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {DeviceEventEmitter} from 'react-native';
+import {logoutVendor} from '../services/authApi';
+import {ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, FORCE_SIGN_OUT_EVENT} from '../services/Axios';
 
 type AuthContextType = {
   isLoggedIn: boolean;
@@ -9,7 +12,7 @@ type AuthContextType = {
   vendorMobile: string | null;
   vendorName: string | null;
   vendorLocation: string | null;
-  signIn: (token: string, vendorId: string, mobile: string, name?: string, location?: string) => Promise<void>;
+  signIn: (accessToken: string, refreshToken: string, vendorId: string, mobile: string, name?: string, location?: string) => Promise<void>;
   updateVendorLocation: (location: string) => Promise<void>;
   signOut: () => Promise<void>;
   completeOnboarding: () => Promise<void>;
@@ -30,7 +33,6 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 const STORAGE_KEYS = {
-  AUTH_TOKEN: '@nannyapp_auth_token',
   VENDOR_ID: '@nannyapp_vendor_id',
   VENDOR_MOBILE: '@nannyapp_vendor_mobile',
   VENDOR_NAME: '@nannyapp_vendor_name',
@@ -51,31 +53,39 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
     bootstrapAuth();
   }, []);
 
+  // Force sign-out when Axios refresh token fails
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener(FORCE_SIGN_OUT_EVENT, () => {
+      void clearLocalState();
+    });
+    return () => sub.remove();
+  }, []);
+
   async function bootstrapAuth() {
     try {
-      const [token, onboarding, storedVendorId, storedMobile, storedName, storedLocation] = await Promise.all([
-        AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN),
+      const [accessToken, onboarding, storedVendorId, storedMobile, storedName, storedLocation] = await Promise.all([
+        AsyncStorage.getItem(ACCESS_TOKEN_KEY),
         AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING),
         AsyncStorage.getItem(STORAGE_KEYS.VENDOR_ID),
         AsyncStorage.getItem(STORAGE_KEYS.VENDOR_MOBILE),
         AsyncStorage.getItem(STORAGE_KEYS.VENDOR_NAME),
         AsyncStorage.getItem(STORAGE_KEYS.VENDOR_LOCATION),
       ]);
-      setIsLoggedIn(!!token);
+      setIsLoggedIn(!!accessToken);
       setVendorId(storedVendorId);
       setVendorMobile(storedMobile);
       setVendorName(storedName);
       setVendorLocation(storedLocation);
-      // In dev mode, always show onboarding; in production, respect stored value
       setHasSeenOnboarding(__DEV__ ? false : onboarding === 'true');
     } finally {
       setIsLoading(false);
     }
   }
 
-  async function signIn(token: string, newVendorId: string, mobile: string, name?: string, location?: string) {
+  async function signIn(accessToken: string, refreshToken: string, newVendorId: string, mobile: string, name?: string, location?: string) {
     const pairs: [string, string][] = [
-      [STORAGE_KEYS.AUTH_TOKEN, token],
+      [ACCESS_TOKEN_KEY, accessToken],
+      [REFRESH_TOKEN_KEY, refreshToken],
       [STORAGE_KEYS.VENDOR_ID, newVendorId],
       [STORAGE_KEYS.VENDOR_MOBILE, mobile],
     ];
@@ -95,12 +105,21 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
   }
 
   async function signOut() {
-    await Promise.all([
-      AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN),
-      AsyncStorage.removeItem(STORAGE_KEYS.VENDOR_ID),
-      AsyncStorage.removeItem(STORAGE_KEYS.VENDOR_MOBILE),
-      AsyncStorage.removeItem(STORAGE_KEYS.VENDOR_NAME),
-      AsyncStorage.removeItem(STORAGE_KEYS.VENDOR_LOCATION),
+    const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+    if (refreshToken) {
+      await logoutVendor(refreshToken);
+    }
+    await clearLocalState();
+  }
+
+  async function clearLocalState() {
+    await AsyncStorage.multiRemove([
+      ACCESS_TOKEN_KEY,
+      REFRESH_TOKEN_KEY,
+      STORAGE_KEYS.VENDOR_ID,
+      STORAGE_KEYS.VENDOR_MOBILE,
+      STORAGE_KEYS.VENDOR_NAME,
+      STORAGE_KEYS.VENDOR_LOCATION,
     ]);
     setVendorId(null);
     setVendorMobile(null);

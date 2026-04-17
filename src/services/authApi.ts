@@ -39,7 +39,9 @@ interface ApiResponse<T = unknown> {
 }
 
 interface VerifyOtpResponse {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
   vendor: {
     id: string;
     mobile: string;
@@ -102,4 +104,24 @@ export async function fetchVendorHome(): Promise<VendorHomeData> {
   }
 
   return data.data;
+}
+
+// ─── Logout ──────────────────────────────────────────────────────────────────
+
+/** Invalidate the refresh token on the server (single device). */
+export async function logoutVendor(refreshToken: string): Promise<void> {
+  try {
+    await Axios.post(`${config1.API_HOST}/api/v1/vendor/auth/logout`, {refreshToken});
+  } catch {
+    // Best-effort — always clear local state even if request fails
+  }
+}
+
+/** Invalidate all refresh tokens for this vendor (all devices). Requires valid access token. */
+export async function logoutAllVendor(): Promise<void> {
+  try {
+    await Axios.post(`${config1.API_HOST}/api/v1/vendor/auth/logout-all`);
+  } catch {
+    // Best-effort
+  }
 }
