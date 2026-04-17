@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Animated,
   Dimensions,
   FlatList,
   Image,
+  LayoutAnimation,
   Platform,
   ScrollView,
   StatusBar,
@@ -10,6 +12,7 @@ import {
   Switch,
   Text,
   TouchableOpacity,
+  UIManager,
   View,
   ViewToken,
 } from 'react-native';
@@ -36,6 +39,65 @@ import babyMaidIcon from '../../assets/babyMaidIcon.png';
 const { width: SW } = Dimensions.get('window');
 const SECTION_GAP = 32;
 const SECTION_CONTENT_GAP = 8;
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const FAQ_ANIM_CONFIG = {
+  duration: 280,
+  create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+  update: { type: LayoutAnimation.Types.easeInEaseOut },
+  delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+} as const;
+
+function FaqItem({
+  item,
+  index,
+  isLast,
+  isExpanded,
+  onToggle,
+  colors,
+}: {
+  item: { q: string; a: string };
+  index: number;
+  isLast: boolean;
+  isExpanded: boolean;
+  onToggle: () => void;
+  colors: any;
+}) {
+  const rotation = useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(rotation, {
+      toValue: isExpanded ? 1 : 0,
+      duration: 280,
+      useNativeDriver: true,
+    }).start();
+  }, [isExpanded, rotation]);
+
+  const rotate = rotation.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  return (
+    <>
+      <TouchableOpacity style={styles.faqItem} activeOpacity={0.7} onPress={onToggle}>
+        <Text style={[styles.faqQuestion, { color: colors.textMuted }]}>{item.q}</Text>
+        <Animated.View style={{ transform: [{ rotate }] }}>
+          <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+            <Path d="M6 9l6 6 6-6" stroke={colors.textMuted} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+          </Svg>
+        </Animated.View>
+      </TouchableOpacity>
+      {isExpanded && (
+        <Text style={[styles.faqAnswer, { color: colors.textMuted }]}>{item.a}</Text>
+      )}
+      {!isLast && <View style={[styles.faqDivider, { backgroundColor: colors.inputBorder }]} />}
+    </>
+  );
+}
 
 type ActionCard = {
   id: string;
@@ -222,6 +284,12 @@ export function HomeScreen() {
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
+
+  const toggleFaq = useCallback((index: number) => {
+    LayoutAnimation.configureNext(FAQ_ANIM_CONFIG);
+    setExpandedFaq(prev => (prev === index ? null : index));
+  }, []);
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -492,17 +560,18 @@ export function HomeScreen() {
 
           <View style={[styles.benefitOfferCard, { backgroundColor: '#E3EDFC' }]}>
             <View style={styles.benefitOfferLeft}>
-              <Text style={[styles.benefitOfferTitle, { color: colors.text }]}>महिलाओं का बीमा कवरेज</Text>
+              <Text style={[styles.benefitOfferTitle, { color: colors.text }]}>चिकित्सा बीमा सुविधा</Text>
               <Text style={[styles.benefitOfferSubtitle, { color: colors.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
-                इंश्योरेंस लाभ अभी एक्टिव करें और तुरंत कवर पाएं
+                आपकी सुरक्षा हमारे लिए महत्वपूर्ण है
+              </Text>
+
+              <Text style={[styles.benefitOfferSubtitle, { color: colors.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
+                बीमा से जुड़े सभी दस्तावेज़ यहाँ देखें और डाउनलोड करें
               </Text>
               <TouchableOpacity style={[styles.benefitOfferBtn, { backgroundColor: colors.primary }]} activeOpacity={0.8}>
-                <Text style={[styles.benefitOfferBtnText, { color: colors.textInverse }]}>अभी देखें</Text>
+                <Text style={[styles.benefitOfferBtnText, { color: colors.textInverse }]}>डाउनलोड करें</Text>
               </TouchableOpacity>
             </View>
-
-            <Text style={[styles.benefitOfferPrice, { color: colors.text }]}>₹100</Text>
-
             <Image source={HelpWoman} style={styles.benefitOfferImage} resizeMode="contain" />
           </View>
           <View style={[styles.noticeCard, { backgroundColor: '#FFEAEA' }]}>
@@ -519,11 +588,21 @@ export function HomeScreen() {
           </View>
 
           <View style={[styles.jobsGivenCard, { backgroundColor: 'transparent' }]}>
-            <Text style={[styles.jobsGivenPrefix, { color: colors.textSecondary }]}>MomKidCare क्यों चुनें?</Text>
-            <Text style={[styles.jobsGivenNumber, { color: isDark ? '#F4F4F4' : '#7E8A98' }]}>5000+</Text>
-            <Text style={[styles.jobsGivenSuffix, { color: colors.textMuted }]}>Jobs given</Text>
+            <Text style={[styles.jobsGivenPrefix, { color: colors.text }]}>MomKidCare क्यों चुनें?</Text>
+            <Text style={[styles.jobsGivenNumber, { color: '#D6D6D6' }]}>5000+</Text>
+            <Text style={[styles.jobsGivenSuffix, { color: '#D6D6D6' }]}>Jobs given</Text>
             <Image source={HelpWoman} style={styles.jobsGivenImage} resizeMode="contain" />
-            <View style={[styles.jobsGivenStats, { backgroundColor: isDark ? 'rgba(18, 22, 34, 0.75)' : 'rgba(94, 83, 71, 0.72)' }]}>
+            <LinearGradient
+              colors={['rgba(91, 74, 58, 0.25)', 'rgba(26, 26, 26, 0.25)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.jobsGivenStats}>
+              <BlurView
+                blurType="dark"
+                blurAmount={30}
+                reducedTransparencyFallbackColor="rgba(26, 26, 26, 0)"
+                style={StyleSheet.absoluteFill}
+              />
               <View style={styles.jobsStatRow}>
                 <Text style={styles.jobsStatIcon}>👥</Text>
                 <Text style={styles.jobsStatText}>महिलाओं ने किए • महिलाओं द्वारा चुने</Text>
@@ -536,9 +615,63 @@ export function HomeScreen() {
                 <Text style={styles.jobsStatIcon}>◎</Text>
                 <Text style={styles.jobsStatText}>10000+ Client Served in NCR</Text>
               </View>
-            </View>
+              <View style={styles.jobsStatRow}>
+                <Text style={styles.jobsStatIcon}>💰</Text>
+                <Text style={styles.jobsStatText}>समय पर भुगतान • सीधे बैंक खाते में</Text>
+              </View>
+              <View style={styles.jobsStatRow}>
+                <Text style={styles.jobsStatIcon}>🛡️</Text>
+                <Text style={styles.jobsStatText}>बीमा कवरेज • आपकी सुरक्षा हमारी जिम्मेदारी</Text>
+              </View>
+              <View style={styles.jobsStatRow}>
+                <Text style={styles.jobsStatIcon}>🎓</Text>
+                <Text style={styles.jobsStatText}>फ्री ट्रेनिंग और सर्टिफिकेशन</Text>
+              </View>
+            </LinearGradient>
           </View>
         </LinearGradient>
+
+        {/* ── FAQ Section ── */}
+        <View style={styles.faqSection}>
+          <Text style={[styles.sectionTitle, { color: colors.textBlue }]}>अक्सर पूछे जाने वाले प्रश्न</Text>
+
+          <View style={[styles.faqCard, { backgroundColor: '#ECF4FB' }]}>
+            {[
+              {
+                q: 'मुझे सैलरी कैसे और कब मिलेगी?',
+                a: 'आपकी सैलरी 1 महीने का काम पूरा होने पर आपके बैंक खाते में जमा कर दी जाएगी।',
+              },
+              {
+                q: 'क्या मुझे अपने आसपास काम मिलेगा?',
+                a: 'हाँ, हम आपके लोकेशन के आसपास उपलब्ध जॉब्स दिखाते हैं।',
+              },
+              {
+                q: 'क्या मुझे सिर्फ एक ही प्रकार का काम करना होगा या अन्य काम भी करने होंगे?',
+                a: 'आप अपनी पसंद के अनुसार काम चुन सकती हैं — जापा, नैनी, बेबीसिटर या बेबी मेड।',
+              },
+              {
+                q: 'अगर मुझे जॉब पसंद न आए तो क्या करूँ?',
+                a: 'आप हमारी टीम से संपर्क कर सकती हैं और दूसरी जॉब के लिए रिक्वेस्ट कर सकती हैं।',
+              },
+            ].map((item, index, arr) => (
+              <FaqItem
+                key={index}
+                item={item}
+                index={index}
+                isLast={index === arr.length - 1}
+                isExpanded={expandedFaq === index}
+                onToggle={() => toggleFaq(index)}
+                colors={colors}
+              />
+            ))}
+          </View>
+
+          {/* Decorative icon */}
+          <View style={styles.faqDecorIcon}>
+            <LoginScreenBottomIcon width={180} height={230} />
+          </View>
+        </View>
+
         {/* ── Decorative Icon Left (flipped) ── */}
         {/* <View style={styles.bottomIconContainerLeft}>
           <LoginScreenBottomIcon width={250} height={320} />
@@ -949,7 +1082,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 16,
     paddingHorizontal: 16,
-    paddingBottom: 14,
+    paddingBottom: 54,
   },
   sectionHeaderMini: {
     marginTop: 50,
@@ -965,6 +1098,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     minHeight: 88,
     overflow: 'hidden',
+    marginTop: 30,
+    marginBottom: 48
   },
   benefitOfferLeft: {
     flex: 1,
@@ -991,12 +1126,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'GolosText-SemiBold',
     fontWeight: '600',
-  },
-  benefitOfferPrice: {
-    fontSize: FontSizes.body,
-    fontWeight: '700',
-    marginTop: 2,
-    marginRight: 54,
   },
   benefitOfferImage: {
     width: 70,
@@ -1027,6 +1156,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    marginBottom: 48,
   },
   noticeIconCircle: {
     width: 26,
@@ -1052,22 +1182,21 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xl,
     padding: 12,
     minHeight: 260,
-    overflow: 'hidden',
   },
   jobsGivenPrefix: {
-    fontSize: FontSizes.caption,
+    fontSize: FontSizes.subtitle,
     fontFamily: 'GolosText-SemiBold',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   jobsGivenNumber: {
     marginTop: 6,
-    fontSize: 52,
+    fontSize: 70,
     lineHeight: 56,
     fontFamily: 'GolosText-Bold',
     fontWeight: '800',
   },
   jobsGivenSuffix: {
-    fontSize: 34,
+    fontSize: 40,
     lineHeight: 34,
     fontFamily: 'GolosText-SemiBold',
     fontWeight: '700',
@@ -1077,31 +1206,18 @@ const styles = StyleSheet.create({
     height: 190,
     position: 'absolute',
     right: -12,
-    bottom: 45,
-  },
-  badge644Wrap: {
-    position: 'absolute',
-    right: 72,
-    top: 126,
-    zIndex: 5,
-  },
-  badge644: {
-    width: 40,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#E169FF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    bottom: -30,
   },
   jobsGivenStats: {
     position: 'absolute',
     left: 12,
     right: 12,
-    bottom: 12,
+    bottom: -40,
     borderRadius: BorderRadius.lg,
     paddingVertical: 10,
     paddingHorizontal: 10,
     gap: 7,
+    overflow: 'hidden',
   },
   jobsStatRow: {
     flexDirection: 'row',
@@ -1119,5 +1235,46 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'GolosText-Medium',
     flex: 1,
+  },
+
+  /* ── FAQ Section ── */
+  faqSection: {
+    paddingHorizontal: Spacing.md,
+    marginTop: SECTION_GAP + 20,
+  },
+  faqCard: {
+    marginTop: 14,
+    borderRadius: BorderRadius.xl,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  faqItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    gap: 12,
+  },
+  faqQuestion: {
+    flex: 1,
+    fontSize: FontSizes.body,
+    fontFamily: 'NotoSansDevanagari-SemiBold',
+    fontWeight: '700',
+    lineHeight: 22,
+  },
+  faqAnswer: {
+    fontSize: FontSizes.sm,
+    fontFamily: 'NotoSansDevanagari-Regular',
+    lineHeight: 20,
+    paddingBottom: 12,
+  },
+  faqDivider: {
+    height: StyleSheet.hairlineWidth,
+  },
+  faqDecorIcon: {
+    alignSelf: 'flex-end',
+    marginRight: -Spacing.md,
+    marginTop: -60,
+    opacity: 0.15,
   },
 });

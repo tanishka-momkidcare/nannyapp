@@ -83,11 +83,15 @@ class LocationTrackingEngine {
   /** Begin a shift — sets up geofences and activates tracking. */
   async startShift(shift: ShiftAssignment) {
     const { ready, missing } = await checkShiftReadiness();
+    let activityPermissionGranted = true;
     if (!ready) {
       if (missing.length === 1 && missing[0] === 'activityRecognition') {
         const status = await requestActivityRecognitionPermission();
-        if (status !== 'GRANTED' && __DEV__) {
-          console.warn('[LocationEngine] Activity recognition denied, continuing without it');
+        if (status !== 'GRANTED') {
+          activityPermissionGranted = false;
+          if (__DEV__) {
+            console.warn('[LocationEngine] Activity recognition denied, continuing without it');
+          }
         }
       } else {
         throw new Error(`Missing permissions: ${missing.join(', ')}. Grant location permissions first.`);
@@ -106,7 +110,10 @@ class LocationTrackingEngine {
     };
 
     await NativeTracking.addGeofence(geofence);
-    await NativeTracking.startActivityRecognition();
+
+    if (activityPermissionGranted) {
+      await NativeTracking.startActivityRecognition();
+    }
 
     this.startShiftBurstTimer();
     this.resetSilenceTimer();
@@ -144,7 +151,7 @@ class LocationTrackingEngine {
     this.stopShiftBurstTimer();
     this.clearSilenceTimer();
 
-    await NativeTracking.stopActivityRecognition();
+    await NativeTracking.stopActivityRecognition().catch(() => {});
 
     if (Platform.OS === 'android' && NativeTracking.stopForegroundService) {
       await NativeTracking.stopForegroundService();
