@@ -26,6 +26,8 @@ import { useAuth, useTheme } from '../../context';
 import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
 import type { AppStackParamList } from '../../navigation/types';
 import { FontSizes, Spacing, BorderRadius } from '../../constants';
+import { fetchVendorHome } from '../../services/authApi';
+import type { VendorHomeLocation } from '../../services/authApi';
 import { MKCLogo } from '../../assets/images/MKCLogo';
 import { MKCLogoIconBlue } from '../../assets/images/MKCLogoIconBlue';
 import { BlurEllipse } from '../../components';
@@ -278,7 +280,7 @@ function JobTypeCard({
 
 export function HomeScreen() {
   const { colors, isDark, themeMode, setThemeMode } = useTheme();
-  const { signOut, vendorName, vendorMobile, vendorLocation } = useAuth();
+  const { signOut, vendorName, vendorMobile, vendorLocation, updateVendorLocation, signIn } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const { handleScroll, hide, show } = useTabBarVisibility();
   const insets = useSafeAreaInsets();
@@ -290,6 +292,9 @@ export function HomeScreen() {
     LayoutAnimation.configureNext(FAQ_ANIM_CONFIG);
     setExpandedFaq(prev => (prev === index ? null : index));
   }, []);
+  const [homeVendorName, setHomeVendorName] = useState<string | null>(null);
+  const [primaryLocation, setPrimaryLocation] = useState<VendorHomeLocation | null>(null);
+  const [secondaryLocations, setSecondaryLocations] = useState<VendorHomeLocation[]>([]);
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -306,9 +311,26 @@ export function HomeScreen() {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       show();
+      void loadHomeData();
     });
     return unsubscribe;
   }, [navigation, show]);
+
+  async function loadHomeData() {
+    try {
+      const home = await fetchVendorHome();
+      const fullName = [home.vendor.firstName, home.vendor.lastName].filter(Boolean).join(' ');
+      setHomeVendorName(fullName || null);
+      setPrimaryLocation(home.primaryLocation);
+      setSecondaryLocations(home.secondaryLocations);
+      // Keep local auth context in sync
+      if (home.primaryLocation) {
+        await updateVendorLocation(home.primaryLocation.address);
+      }
+    } catch (err: any) {
+      if (__DEV__) console.warn('[HomeScreen] fetchVendorHome error:', err?.message);
+    }
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -369,7 +391,7 @@ export function HomeScreen() {
               </View>
               <View style={styles.userInfo}>
                 <Text style={[styles.greeting, { color: colors.text }]}>
-                  नमस्ते, {vendorName || vendorMobile || 'User'}!
+                  नमस्ते, {homeVendorName || vendorName || vendorMobile || 'User'}!
                 </Text>
                 <View style={styles.statusRow}>
                   <Text style={[styles.statusText, { color: colors.textMuted }]}>
@@ -406,7 +428,7 @@ export function HomeScreen() {
             <View style={styles.locationAddressRow}>
               <LocationIcon color={colors.textBlue} strokeColor={colors.card} />
               <Text style={[styles.locationText, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
-                {vendorLocation || 'Location not set'}
+                {primaryLocation?.address || vendorLocation || 'Location not set'}
               </Text>
             </View>
           </View>
