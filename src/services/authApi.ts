@@ -9,6 +9,29 @@
 import Axios from './Axios';
 import {config1} from '../constants/config';
 
+// ─── Vendor Home ─────────────────────────────────────────────────────────────
+
+export interface VendorHomeLocation {
+  id: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+  locationType: string;
+  isActive: boolean;
+}
+
+export interface VendorHomeData {
+  vendor: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    mobile: string;
+    email?: string;
+  };
+  primaryLocation: VendorHomeLocation | null;
+  secondaryLocations: VendorHomeLocation[];
+}
+
 interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
@@ -65,4 +88,18 @@ export async function verifyOtp(
   }
 
   return res.data;
+}
+
+// ─── Vendor Home ──────────────────────────────────────────────────────────────
+
+export async function fetchVendorHome(): Promise<VendorHomeData> {
+  const { data } = await Axios.get<ApiResponse<VendorHomeData>>(
+    `${config1.API_HOST}/api/v1/vendor/home`,
+  );
+
+  if (!data.success || !data.data) {
+    throw new Error(data.message || 'Failed to load home data');
+  }
+
+  return data.data;
 }
