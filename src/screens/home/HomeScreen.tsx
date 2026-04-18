@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
+  Easing,
   FlatList,
   Image,
   LayoutAnimation,
@@ -30,7 +31,7 @@ import { fetchVendorHome } from '../../services/authApi';
 import type { VendorHomeLocation } from '../../services/authApi';
 import { MKCLogo } from '../../assets/images/MKCLogo';
 import { MKCLogoIconBlue } from '../../assets/images/MKCLogoIconBlue';
-import { BlurEllipse } from '../../components';
+import { BlurEllipse, SoftCircle } from '../../components';
 import { JobApplicationSheet } from '../../components/JobApplicationSheet';
 import { LoginScreenBottomIcon } from '../../assets/images/LoginScreenBottomIcon';
 import HelpWoman from '../../assets/helpCardWomen.png';
@@ -38,10 +39,13 @@ import japaIcon from '../../assets/JapaIcon.png';
 import nannyIcon from '../../assets/nannyIcon.png';
 import babySitterIcon from '../../assets/babySitterIcon.png';
 import babyMaidIcon from '../../assets/babyMaidIcon.png';
+import momWithBabyBg from '../../assets/joyful-mother-with-baby.png';
+import pencilImage from '../../assets/pencilImage.png';
 
 const { width: SW } = Dimensions.get('window');
 const SECTION_GAP = 32;
 const SECTION_CONTENT_GAP = 8;
+const HP = 20; // horizontal padding for all sections
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -70,18 +74,41 @@ function FaqItem({
   colors: any;
 }) {
   const rotation = useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
+  const animHeight = useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
+  const [contentHeight, setContentHeight] = useState(0);
 
   useEffect(() => {
-    Animated.timing(rotation, {
-      toValue: isExpanded ? 1 : 0,
-      duration: 280,
-      useNativeDriver: true,
-    }).start();
-  }, [isExpanded, rotation]);
+    const easing = Easing.bezier(0.4, 0.0, 0.2, 1);
+    Animated.parallel([
+      Animated.timing(rotation, {
+        toValue: isExpanded ? 1 : 0,
+        duration: 350,
+        easing,
+        useNativeDriver: false,
+      }),
+      Animated.spring(animHeight, {
+        toValue: isExpanded ? 1 : 0,
+        damping: 20,
+        stiffness: 180,
+        mass: 0.8,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [isExpanded, rotation, animHeight]);
 
   const rotate = rotation.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '180deg'],
+  });
+
+  const height = animHeight.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, contentHeight],
+  });
+
+  const opacity = animHeight.interpolate({
+    inputRange: [0, 0.3, 1],
+    outputRange: [0, 0.2, 1],
   });
 
   return (
@@ -90,13 +117,20 @@ function FaqItem({
         <Text style={[styles.faqQuestion, { color: colors.textMuted }]}>{item.q}</Text>
         <Animated.View style={{ transform: [{ rotate }] }}>
           <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
-            <Path d="M6 9l6 6 6-6" stroke={colors.textMuted} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+            <Path d="M6 9l6 6 6-6" stroke={colors.textBlue} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
           </Svg>
         </Animated.View>
       </TouchableOpacity>
-      {isExpanded && (
-        <Text style={[styles.faqAnswer, { color: colors.textMuted }]}>{item.a}</Text>
-      )}
+      <Animated.View style={{ height, opacity, overflow: 'hidden' }}>
+        <View
+          style={{ position: 'absolute', width: '100%' }}
+          onLayout={e => {
+            const h = e.nativeEvent.layout.height;
+            if (h > 0 && h !== contentHeight) setContentHeight(h);
+          }}>
+          <Text style={[styles.faqAnswer, { color: colors.textMuted }]}>{item.a}</Text>
+        </View>
+      </Animated.View>
       {!isLast && <View style={[styles.faqDivider, { backgroundColor: colors.inputBorder }]} />}
     </>
   );
@@ -146,6 +180,41 @@ const JOB_CATEGORIES_DARK = [
   { id: '2', title: 'नैनी', subtitle: 'Nanny', icon: nannyIcon, bgColor: '#2A1B1E' },
   { id: '3', title: 'बेबीसिटर', subtitle: 'Babysitter', icon: babySitterIcon, bgColor: '#2A2418' },
   { id: '4', title: 'बेबी मेड', subtitle: 'BabyMaid', icon: babyMaidIcon, bgColor: '#1A2830' },
+];
+
+function ReferralIcon() {
+  return (
+    <Svg width={64} height={64} viewBox="0 0 24 24" fill="none">
+      <Path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#4A90D9" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+      <Circle cx={8.5} cy={7} r={4} stroke="#4A90D9" strokeWidth={1.5} />
+      <Path d="M20 8v6M17 11h6" stroke="#4A90D9" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+const BENEFIT_SLIDES = [
+  {
+    id: '1',
+    title: 'चिकित्सा बीमा सुविधा',
+    subtitle: 'आपकी सुरक्षा हमारे लिए महत्वपूर्ण है',
+    desc: 'बीमा से जुड़े सभी दस्तावेज़ यहाँ देखें और डाउनलोड करें',
+    cta: 'डाउनलोड करें',
+    bgColor: '#E3EDFC',
+    btnColor: '#E07A2F',
+    image: HelpWoman,
+    icon: null,
+  },
+  {
+    id: '2',
+    title: '₹1000 तक बोनस कमाएं!',
+    subtitle: 'अपनी सहेली को हमारे साथ काम दिलवाएं और बोनस पाएं।',
+    desc: null,
+    cta: 'रेफर करें',
+    bgColor: '#E3EDFC',
+    btnColor: '#1B7FF6',
+    image: null,
+    icon: <ReferralIcon />,
+  },
 ];
 
 /* ── Icons ── */
@@ -316,6 +385,7 @@ export function HomeScreen() {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       show();
+      setExpandedFaq(0);
       void loadHomeData();
     });
     return unsubscribe;
@@ -324,8 +394,8 @@ export function HomeScreen() {
   async function loadHomeData() {
     try {
       const home = await fetchVendorHome();
-      const fullName = [home.vendor.firstName, home.vendor.lastName].filter(Boolean).join(' ');
-      setHomeVendorName(fullName || null);
+      // const fullName = [home.vendor.firstName, home.vendor.lastName].filter(Boolean).join(' ');
+      setHomeVendorName(home.vendor.firstName || null);
       setPrimaryLocation(home.primaryLocation);
       setSecondaryLocations(home.secondaryLocations);
       // Keep local auth context in sync
@@ -488,7 +558,7 @@ export function HomeScreen() {
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>काम के प्रकार (Job categories)</Text>
         </View>
-        <Text style={[styles.sectionDescription, { color: colors.textMuted, marginLeft: Spacing.md, marginBottom: Spacing.sm }]}>अपनी सुविधा के अनुसार काम चुनें, अप्लाई करें</Text>
+        <Text style={[styles.sectionDescription, { color: colors.textMuted, marginLeft: HP, marginBottom: Spacing.sm }]}>अपनी सुविधा के अनुसार काम चुनें,, अप्लाई करें</Text>
 
         <View style={styles.jobCategoriesContainer}>
           {(isDark ? JOB_CATEGORIES_DARK : JOB_CATEGORIES_LIGHT).map(category => (
@@ -587,22 +657,54 @@ export function HomeScreen() {
             <Text style={[styles.sectionSubtitle, { color: colors.text }]}> (Benefits & Services, Just for You)</Text>
           </View>
 
-          <View style={[styles.benefitOfferCard, { backgroundColor: '#E3EDFC' }]}>
-            <View style={styles.benefitOfferLeft}>
-              <Text style={[styles.benefitOfferTitle, { color: colors.text }]}>चिकित्सा बीमा सुविधा</Text>
-              <Text style={[styles.benefitOfferSubtitle, { color: colors.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
-                आपकी सुरक्षा हमारे लिए महत्वपूर्ण है
-              </Text>
+          <FlatList
+            data={BENEFIT_SLIDES}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={item => item.id}
+            snapToInterval={SW - HP * 2 + 12}
+            decelerationRate="fast"
+            contentContainerStyle={styles.benefitSliderContainer}
+            style={{ marginHorizontal: -HP }}
+            renderItem={({ item }) => {
+              const content = (
+                <>
+                  {item.id === '1' && <SoftCircle size={300} style={styles.benefitOfferCircle} />}
+                  {item.image ? (
+                    <Image source={item.image} style={styles.benefitOfferImage} resizeMode="contain" />
+                  ) : (
+                    <View style={styles.benefitOfferIconWrap}>
+                      {item.icon}
+                    </View>
+                  )}
+                  <View style={styles.benefitOfferLeft}>
+                    <Text style={[styles.benefitOfferTitle, { color: colors.text }]}>{item.title}</Text>
+                    <Text style={[styles.benefitOfferSubtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
+                    {item.desc ? (
+                      <Text style={[styles.benefitOfferDesc, { color: colors.textSecondary }]}>{item.desc}</Text>
+                    ) : null}
+                    <TouchableOpacity style={[styles.benefitOfferBtn, item.btnColor ? { backgroundColor: item.btnColor } : {}]} activeOpacity={0.8}>
+                      <Text style={styles.benefitOfferBtnText}>{item.cta}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              );
 
-              <Text style={[styles.benefitOfferSubtitle, { color: colors.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
-                बीमा से जुड़े सभी दस्तावेज़ यहाँ देखें और डाउनलोड करें
-              </Text>
-              <TouchableOpacity style={[styles.benefitOfferBtn, { backgroundColor: colors.primary }]} activeOpacity={0.8}>
-                <Text style={[styles.benefitOfferBtnText, { color: colors.textInverse }]}>डाउनलोड करें</Text>
-              </TouchableOpacity>
-            </View>
-            <Image source={HelpWoman} style={styles.benefitOfferImage} resizeMode="contain" />
-          </View>
+              if (item.id === '2') {
+                return (
+                  <LinearGradient colors={['#DAE4F9', '#FFFFFF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.benefitOfferCard}>
+                    {content}
+                  </LinearGradient>
+                );
+              }
+
+              return (
+                <View style={[styles.benefitOfferCard, { backgroundColor: item.bgColor }]}>
+                  {content}
+                </View>
+              );
+            }}
+          />
           <View style={[styles.noticeCard, { backgroundColor: '#FFEAEA' }]}>
             <View style={styles.noticeIconCircle}>
               <Svg width={13} height={13} viewBox="0 0 24 24" fill="none">
@@ -615,84 +717,102 @@ export function HomeScreen() {
             </View>
             <ChevronRight color={colors.textMuted} />
           </View>
-
-          <View style={[styles.jobsGivenCard, { backgroundColor: 'transparent' }]}>
-            <Text style={[styles.jobsGivenPrefix, { color: colors.text }]}>MomKidCare क्यों चुनें?</Text>
-            <Text style={[styles.jobsGivenNumber, { color: '#D6D6D6' }]}>5000+</Text>
-            <Text style={[styles.jobsGivenSuffix, { color: '#D6D6D6' }]}>Jobs given</Text>
-            <Image source={HelpWoman} style={styles.jobsGivenImage} resizeMode="contain" />
-            <LinearGradient
-              colors={['rgba(91, 74, 58, 0.25)', 'rgba(26, 26, 26, 0.25)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.jobsGivenStats}>
-              <BlurView
-                blurType="dark"
-                blurAmount={30}
-                reducedTransparencyFallbackColor="rgba(26, 26, 26, 0)"
-                style={StyleSheet.absoluteFill}
-              />
-              <View style={styles.jobsStatRow}>
-                <Text style={styles.jobsStatIcon}>👥</Text>
-                <Text style={styles.jobsStatText}>महिलाओं ने किए • महिलाओं द्वारा चुने</Text>
-              </View>
-              <View style={styles.jobsStatRow}>
-                <Text style={styles.jobsStatIcon}>★</Text>
-                <Text style={styles.jobsStatText}>100% सुरक्षित व वेरिफाइड जॉब्स</Text>
-              </View>
-              <View style={styles.jobsStatRow}>
-                <Text style={styles.jobsStatIcon}>◎</Text>
-                <Text style={styles.jobsStatText}>10000+ Client Served in NCR</Text>
-              </View>
-              <View style={styles.jobsStatRow}>
-                <Text style={styles.jobsStatIcon}>💰</Text>
-                <Text style={styles.jobsStatText}>समय पर भुगतान • सीधे बैंक खाते में</Text>
-              </View>
-              <View style={styles.jobsStatRow}>
-                <Text style={styles.jobsStatIcon}>🛡️</Text>
-                <Text style={styles.jobsStatText}>बीमा कवरेज • आपकी सुरक्षा हमारी जिम्मेदारी</Text>
-              </View>
-              <View style={styles.jobsStatRow}>
-                <Text style={styles.jobsStatIcon}>🎓</Text>
-                <Text style={styles.jobsStatText}>फ्री ट्रेनिंग और सर्टिफिकेशन</Text>
-              </View>
-            </LinearGradient>
+          <View style={[styles.jobsGivenCard]}>
+            <Text style={styles.jobsGivenPrefix}>MomKidCare क्यों चुनें?</Text>
+            <Text style={styles.jobsGivenNumber}>5000+</Text>
+            <Text style={styles.jobsGivenSuffix}>Jobs given</Text>
           </View>
         </LinearGradient>
 
+        {/* ── "Why MomKidCare" card — image + stats ── */}
+        <View style={styles.jobsGivenOverlay}>
+          <Image source={momWithBabyBg} style={styles.jobsGivenBgImage} resizeMode="contain" />
+          <View style={styles.jobsGivenStats}>
+            {/* Layer 1: Blur */}
+            <BlurView
+              blurType="light"
+              blurAmount={30}
+              reducedTransparencyFallbackColor="rgba(26, 26, 26, 0.8)"
+              style={StyleSheet.absoluteFill}
+            />
+            {/* Layer 2: Gradient overlay */}
+            <LinearGradient
+              colors={['rgba(91,74,58,0.5)', 'rgba(26,26,26,0.7)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+            {/* Layer 3: Content */}
+            <View style={styles.jobsStatRow}>
+              <View style={styles.jobsStatIconCircle}>
+                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                  <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#FFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                  <Circle cx={9} cy={7} r={4} stroke="#FFF" strokeWidth={2} />
+                  <Path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="#FFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                  <Path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="#FFF" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                </Svg>
+              </View>
+              <Text style={styles.jobsStatText}>महिलाओं के लिए, महिलाओं द्वारा</Text>
+            </View>
+            <View style={styles.jobsStatRow}>
+              <View style={styles.jobsStatIconCircle}>
+                <Svg width={14} height={14} viewBox="0 0 24 24" fill="#FFF">
+                  <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2Z" />
+                </Svg>
+              </View>
+              <Text style={styles.jobsStatText}>100% सुरक्षित व वेरीफाइड जॉब्स</Text>
+            </View>
+            <View style={styles.jobsStatRow}>
+              <View style={styles.jobsStatIconCircle}>
+                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                  <Circle cx={12} cy={12} r={10} stroke="#FFF" strokeWidth={2} />
+                  <Circle cx={12} cy={12} r={3} fill="#FFF" />
+                </Svg>
+              </View>
+              <Text style={styles.jobsStatText}>10000+ Client Served in NCR</Text>
+            </View>
+            {/* Description */}
+            <Text style={styles.jobsStatDescription}>
+              हमारा अत्याधुनिक प्लेटफॉर्म बेहद सुरक्षित और प्रमाणित केयरगिविंग सेवाएं प्रदान करता है। यह बेहतरीन पेशेवर मानकों के साथ काम करता है, जिससे एक ऐसा संतुलित और सुरक्षित माहौल बनता है जहाँ हर परिवार बेफिक्र रह सके।
+            </Text>
+          </View>
+        </View>
+
         {/* ── FAQ Section ── */}
         <View style={styles.faqSection}>
-          <Text style={[styles.sectionTitle, { color: colors.textBlue }]}>अक्सर पूछे जाने वाले प्रश्न</Text>
-
           <View style={[styles.faqCard, { backgroundColor: '#ECF4FB' }]}>
-            {[
-              {
-                q: 'मुझे सैलरी कैसे और कब मिलेगी?',
-                a: 'आपकी सैलरी 1 महीने का काम पूरा होने पर आपके बैंक खाते में जमा कर दी जाएगी।',
-              },
-              {
-                q: 'क्या मुझे अपने आसपास काम मिलेगा?',
-                a: 'हाँ, हम आपके लोकेशन के आसपास उपलब्ध जॉब्स दिखाते हैं।',
-              },
-              {
-                q: 'क्या मुझे सिर्फ एक ही प्रकार का काम करना होगा या अन्य काम भी करने होंगे?',
-                a: 'आप अपनी पसंद के अनुसार काम चुन सकती हैं — जापा, नैनी, बेबीसिटर या बेबी मेड।',
-              },
-              {
-                q: 'अगर मुझे जॉब पसंद न आए तो क्या करूँ?',
-                a: 'आप हमारी टीम से संपर्क कर सकती हैं और दूसरी जॉब के लिए रिक्वेस्ट कर सकती हैं।',
-              },
-            ].map((item, index, arr) => (
-              <FaqItem
-                key={index}
-                item={item}
-                index={index}
-                isLast={index === arr.length - 1}
-                isExpanded={expandedFaq === index}
-                onToggle={() => toggleFaq(index)}
-                colors={colors}
-              />
-            ))}
+            <Image source={pencilImage} style={styles.faqBgImage} resizeMode="contain" />
+            <View style={styles.faqContent}>
+              <Text style={[styles.sectionTitle, styles.faqTitle, { color: colors.textBlue }]}>अक्सर पूछे जाने वाले प्रश्न</Text>
+              {[
+                {
+                  q: 'मुझे सैलरी कैसे और कब मिलेगी?',
+                  a: 'पहले महीने की सैलरी आपको हमारे माध्यम से आपके बैंक अकाउंट में ट्रांसफर की जाएगी। इसके बाद, दूसरे महीने से आपकी सैलरी सीधे क्लाइंट द्वारा दी जाएगी, जो बैंक ट्रांसफर या कैश के रूप में हो सकती है।',
+                },
+                {
+                  q: 'क्या मैं पार्ट-टाइम काम कर सकती हूँ?',
+                  a: 'हाँ, आप पार्ट-टाइम काम कर सकती हैं। हमारे पास 8 घंटे, 10 घंटे और 24 घंटे (फुल-टाइम/लाइव-इन) काम के विकल्प उपलब्ध हैं। इसके अलावा, मदर-बेबी मसाज के लिए 2 घंटे का काम भी उपलब्ध है। आप अपनी सुविधा और अनुभव के अनुसार इनमें से कोई भी विकल्प चुन सकती हैं।',
+                },
+                {
+                  q: 'क्या मुझे अपने आसपास काम मिलेगा?',
+                  a: 'हाँ, आपको अपने आसपास काम मिल सकता है। यदि आप 24 घंटे (लाइव-इन) काम चाहती हैं, तो 1–2 दिनों में काम मिल सकता है। यदि आप 10 घंटे का काम 5–6 किमी के अंदर करना चाहती हैं, तो 2–3 दिनों में काम दिलाने की कोशिश की जाती है। बेहतर रिजल्ट के लिए लोकेशन और उपलब्धता थोड़ी फ्लेक्सिबल रखें।',
+                },
+                {
+                  q: 'अगर मुझे जॉब पसंद न आए या कोई इमरजेंसी की स्थिति बन जाए तो मुझे क्या करना चाहिए?',
+                  a: 'अगर जॉब पसंद न आए या क्लाइंट के साथ कोई समस्या हो, तो चिंता न करें। जॉब शुरू होने से पहले इंटरव्यू कराया जाता है ताकि दोनों एक-दूसरे को समझ सकें। जॉब के दौरान कोई समस्या आने पर आप तुरंत MomKidCare टीम से संपर्क कर सकती हैं। किसी भी इमरजेंसी या पारिवारिक स्थिति में हम आपकी पूरी मदद करते हैं और सुरक्षित व सही काम दिलाने की कोशिश करते हैं।',
+                },
+              ].map((item, index, arr) => (
+                <FaqItem
+                  key={index}
+                  item={item}
+                  index={index}
+                  isLast={index === arr.length - 1}
+                  isExpanded={expandedFaq === index}
+                  onToggle={() => toggleFaq(index)}
+                  colors={colors}
+                />
+              ))}
+            </View>
           </View>
 
           {/* Decorative icon */}
@@ -700,12 +820,6 @@ export function HomeScreen() {
             <LoginScreenBottomIcon width={180} height={230} />
           </View>
         </View>
-
-        {/* ── Decorative Icon Left (flipped) ── */}
-        {/* <View style={styles.bottomIconContainerLeft}>
-          <LoginScreenBottomIcon width={250} height={320} />
-        </View> */}
-
       </ScrollView>
 
       {Platform.OS === 'ios' && (
@@ -765,7 +879,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
+    paddingHorizontal: HP,
     paddingTop: 12,
     paddingBottom: 12,
   },
@@ -801,7 +915,7 @@ const styles = StyleSheet.create({
 
   /* ── User Card ── */
   userCard: {
-    paddingHorizontal: 14,
+    paddingHorizontal: HP,
     borderRadius: BorderRadius.xl,
   },
   userCardTop: {
@@ -903,7 +1017,7 @@ const styles = StyleSheet.create({
 
   /* ── Section ── */
   sectionHeader: {
-    paddingHorizontal: 14,
+    paddingHorizontal: HP,
     marginTop: SECTION_GAP,
     marginBottom: SECTION_CONTENT_GAP,
   },
@@ -921,13 +1035,13 @@ const styles = StyleSheet.create({
 
   /* ── Action Cards ── */
   carouselContainer: {
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: HP,
     gap: Spacing.md,
   },
   actionCard: {
     padding: Spacing.md,
     borderRadius: BorderRadius.xl,
-    width: SW - Spacing.md * 2,
+    width: SW - HP * 2,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -968,15 +1082,14 @@ const styles = StyleSheet.create({
   jobCategoriesContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: HP,
     marginBottom: Spacing.lg,
   },
 
   jobCategoryCard: {
-    width: (SW - Spacing.md * 2 - Spacing.md * 2) / 4,
+    width: (SW - HP * 2 - HP * 2) / 4,
     alignItems: 'center',
-    padding: Spacing.sm,
-    paddingVertical: Spacing.md,
+    paddingVertical: 3,
     borderRadius: BorderRadius.md,
   },
   jobCategoryIcon: {
@@ -995,7 +1108,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   jobTypeCard: {
-    marginHorizontal: Spacing.md,
+    marginHorizontal: HP,
     marginBottom: Spacing.md,
     padding: 6,
     borderRadius: BorderRadius.xl,
@@ -1046,7 +1159,7 @@ const styles = StyleSheet.create({
   },
   helpCard: {
     backgroundColor: '#0F182B',
-    marginHorizontal: Spacing.md,
+    marginHorizontal: HP,
     borderRadius: BorderRadius.xxl,
     paddingLeft: Spacing.lg,
     paddingTop: Spacing.lg,
@@ -1114,60 +1227,85 @@ const styles = StyleSheet.create({
   },
 
   benefitsBlock: {
-    marginTop: 12,
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    paddingBottom: 54,
+    marginTop: SECTION_GAP + 28,
+    paddingTop: Spacing.md,
+    paddingHorizontal: HP,
+    paddingBottom: 260,
   },
   sectionHeaderMini: {
-    marginTop: 50,
-    marginBottom: 10,
+    marginTop: SECTION_GAP,
+    marginBottom: Spacing.xxl,
     textAlign: 'center',
     flexDirection: 'column',
     alignItems: 'center',
   },
+  benefitSliderContainer: {
+    gap: 12,
+    paddingHorizontal: HP,
+  },
   benefitOfferCard: {
-    borderRadius: BorderRadius.lg,
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    minHeight: 88,
+    borderRadius: BorderRadius.xl,
+    padding: 16,
+    minHeight: 180,
+    width: SW - HP * 2,
     overflow: 'hidden',
-    marginTop: 30,
-    marginBottom: 48
+    position: 'relative',
+  },
+  benefitOfferCircle: {
+    position: 'absolute',
+    right: -160,
+    top: -60,
   },
   benefitOfferLeft: {
     flex: 1,
-    paddingRight: 10,
+    zIndex: 2,
+    paddingRight: 80,
+  },
+  benefitOfferIconWrap: {
+    position: 'absolute',
+    right: 16,
+    bottom: 20,
+    zIndex: 1,
   },
   benefitOfferTitle: {
-    fontSize: FontSizes.sm,
-    fontFamily: 'NotoSansDevanagari-SemiBold',
-    fontWeight: '600',
+    fontSize: 20,
+    fontFamily: 'NotoSansDevanagari-Bold',
+    fontWeight: '700',
+    lineHeight: 28,
   },
   benefitOfferSubtitle: {
-    marginTop: 2,
-    fontSize: 11,
+    marginTop: 4,
+    fontSize: 13,
     fontFamily: 'NotoSansDevanagari-Regular',
+    lineHeight: 18,
+  },
+  benefitOfferDesc: {
+    marginTop: 8,
+    fontSize: 13,
+    fontFamily: 'NotoSansDevanagari-Regular',
+    lineHeight: 18,
   },
   benefitOfferBtn: {
-    marginTop: 8,
+    marginTop: 14,
     alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: BorderRadius.sm,
+    backgroundColor: '#E07A2F',
   },
   benefitOfferBtnText: {
-    fontSize: 11,
+    fontSize: 13,
     fontFamily: 'GolosText-SemiBold',
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   benefitOfferImage: {
-    width: 70,
-    height: 70,
+    width: 140,
+    height: 160,
     position: 'absolute',
-    right: 2,
+    right: 0,
     bottom: 0,
+    zIndex: 1,
   },
   badge67Wrap: {
     alignItems: 'flex-end',
@@ -1184,14 +1322,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   noticeCard: {
-    marginTop: 10,
+    marginTop: Spacing.xxl,
     borderRadius: BorderRadius.md,
-    paddingHorizontal: 10,
+    paddingHorizontal: Spacing.md,
     paddingVertical: 14,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 48,
+    marginBottom: SECTION_GAP + 28,
   },
   noticeIconCircle: {
     width: 26,
@@ -1213,75 +1351,112 @@ const styles = StyleSheet.create({
     fontFamily: 'NotoSansDevanagari-Regular',
   },
   jobsGivenCard: {
-    marginTop: 10,
     borderRadius: BorderRadius.xl,
     padding: 12,
-    minHeight: 260,
+    zIndex: 1,
+  },
+  jobsGivenOverlay: {
+    marginHorizontal: HP,
+    marginTop: -294,
+    height: 500,
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+    zIndex: 999
+  },
+  jobsGivenBgImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: SW - 1,
+    height: (SW - 1) * 0.85,
   },
   jobsGivenPrefix: {
     fontSize: FontSizes.subtitle,
     fontFamily: 'GolosText-SemiBold',
     fontWeight: '700',
+    color: '#333',
   },
   jobsGivenNumber: {
     marginTop: 6,
     fontSize: 70,
-    lineHeight: 56,
+    lineHeight: 60,
     fontFamily: 'GolosText-Bold',
     fontWeight: '800',
+    color: '#D6D6D6',
   },
   jobsGivenSuffix: {
     fontSize: 40,
-    lineHeight: 34,
+    lineHeight: 36,
     fontFamily: 'GolosText-SemiBold',
     fontWeight: '700',
-  },
-  jobsGivenImage: {
-    width: 210,
-    height: 190,
-    position: 'absolute',
-    right: -12,
-    bottom: -30,
+    color: '#D6D6D6',
   },
   jobsGivenStats: {
     position: 'absolute',
-    left: 12,
-    right: 12,
-    bottom: -40,
+    left: 10,
+    right: 10,
+    bottom: 10,
     borderRadius: BorderRadius.lg,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    gap: 7,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    gap: 10,
     overflow: 'hidden',
   },
   jobsStatRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
+    gap: 10,
   },
-  jobsStatIcon: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    width: 14,
-    textAlign: 'center',
+  jobsStatIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   jobsStatText: {
     color: '#FFFFFF',
-    fontSize: 11,
-    fontFamily: 'GolosText-Medium',
+    fontSize: 14,
+    fontFamily: 'NotoSansDevanagari-Medium',
     flex: 1,
+    lineHeight: 20,
+  },
+  jobsStatDescription: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 14,
+    fontFamily: 'NotoSansDevanagari-Regular',
+    lineHeight: 19,
+    textAlign: 'center',
   },
 
   /* ── FAQ Section ── */
   faqSection: {
-    paddingHorizontal: Spacing.md,
-    marginTop: SECTION_GAP + 20,
+    paddingHorizontal: HP,
+    marginTop: SECTION_GAP + 80,
+    marginBottom: HP,
+  },
+  faqBgImage: {
+    position: 'absolute',
+    right: 6,
+    bottom: 10,
+    width: SW * 0.75,
+    height: SW * 0.4,
+    opacity: 1,
+    zIndex: 1,
   },
   faqCard: {
     marginTop: 14,
     borderRadius: BorderRadius.xl,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    overflow: 'hidden',
+    paddingHorizontal: HP,
+    paddingVertical: 20,
+  },
+  faqContent: {
+    zIndex: 2,
+  },
+  faqTitle: {
+    marginBottom: 8,
   },
   faqItem: {
     flexDirection: 'row',
@@ -1308,7 +1483,7 @@ const styles = StyleSheet.create({
   },
   faqDecorIcon: {
     alignSelf: 'flex-end',
-    marginRight: -Spacing.md,
+    marginRight: -HP,
     marginTop: -60,
     opacity: 0.15,
   },

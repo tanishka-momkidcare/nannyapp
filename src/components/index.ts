@@ -5,3 +5,4 @@ export {BottomRightDecoration} from './BottomRightDecoration';
 export {GlassPillTabBar} from './GlassPillTabBar';
 export {BlurEllipse} from './BlurEllipse';
 export {JobApplicationSheet} from './JobApplicationSheet';
+export {SoftCircle} from './SoftCircle';
