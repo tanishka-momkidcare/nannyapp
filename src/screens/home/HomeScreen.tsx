@@ -31,6 +31,7 @@ import type { VendorHomeLocation } from '../../services/authApi';
 import { MKCLogo } from '../../assets/images/MKCLogo';
 import { MKCLogoIconBlue } from '../../assets/images/MKCLogoIconBlue';
 import { BlurEllipse } from '../../components';
+import { JobApplicationSheet } from '../../components/JobApplicationSheet';
 import { LoginScreenBottomIcon } from '../../assets/images/LoginScreenBottomIcon';
 import HelpWoman from '../../assets/helpCardWomen.png';
 import japaIcon from '../../assets/JapaIcon.png';
@@ -241,6 +242,7 @@ function JobTypeCard({
   subtitle,
   isDark,
   colors,
+  onPress,
 }: {
   badgeText: string;
   badgeSubText?: string;
@@ -248,9 +250,10 @@ function JobTypeCard({
   subtitle?: string;
   isDark: boolean;
   colors: any;
+  onPress: () => void;
 }) {
   return (
-    <TouchableOpacity style={[styles.jobTypeCard, { backgroundColor: colors.card, borderColor: colors.textBlue }]} activeOpacity={0.8}>
+    <TouchableOpacity style={[styles.jobTypeCard, { backgroundColor: colors.card, borderColor: colors.textBlue }]} activeOpacity={0.8} onPress={onPress}>
       <View style={[styles.jobTypeInner, { backgroundColor: colors.cardInner }]}>
         <View style={styles.jobTypeLeft}>
           <View style={[styles.jobTypeBadge, { backgroundColor: colors.card }]}>
@@ -295,6 +298,8 @@ export function HomeScreen() {
   const [homeVendorName, setHomeVendorName] = useState<string | null>(null);
   const [primaryLocation, setPrimaryLocation] = useState<VendorHomeLocation | null>(null);
   const [secondaryLocations, setSecondaryLocations] = useState<VendorHomeLocation[]>([]);
+  const [jobSheetVisible, setJobSheetVisible] = useState(false);
+  const [jobSheetHours, setJobSheetHours] = useState<'24-hours' | '10-hours'>('24-hours');
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -512,6 +517,7 @@ export function HomeScreen() {
           subtitle="जापा / नैनी / बेबीसिटर"
           isDark={isDark}
           colors={colors}
+          onPress={() => { setJobSheetHours('24-hours'); setJobSheetVisible(true); }}
         />
         <JobTypeCard
           badgeText="10"
@@ -520,6 +526,7 @@ export function HomeScreen() {
           subtitle="जापा / नैनी / बेबीसिटर"
           isDark={isDark}
           colors={colors}
+          onPress={() => { setJobSheetHours('10-hours'); setJobSheetVisible(true); }}
         />
 
         {/* ── Decorative Icon ── */}
@@ -723,6 +730,12 @@ export function HomeScreen() {
           />
         </View>
       )}
+
+      <JobApplicationSheet
+        visible={jobSheetVisible}
+        hoursType={jobSheetHours}
+        onClose={() => setJobSheetVisible(false)}
+      />
 
     </View>
   );
