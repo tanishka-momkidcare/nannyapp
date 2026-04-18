@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
+  Easing,
   FlatList,
   Image,
   LayoutAnimation,
@@ -43,6 +44,7 @@ import pencilImage from '../../assets/pencilImage.png';
 const { width: SW } = Dimensions.get('window');
 const SECTION_GAP = 32;
 const SECTION_CONTENT_GAP = 8;
+const HP = 20; // horizontal padding for all sections
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -71,18 +73,41 @@ function FaqItem({
   colors: any;
 }) {
   const rotation = useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
+  const animHeight = useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
+  const [contentHeight, setContentHeight] = useState(0);
 
   useEffect(() => {
-    Animated.timing(rotation, {
-      toValue: isExpanded ? 1 : 0,
-      duration: 280,
-      useNativeDriver: true,
-    }).start();
-  }, [isExpanded, rotation]);
+    const easing = Easing.bezier(0.4, 0.0, 0.2, 1);
+    Animated.parallel([
+      Animated.timing(rotation, {
+        toValue: isExpanded ? 1 : 0,
+        duration: 350,
+        easing,
+        useNativeDriver: false,
+      }),
+      Animated.spring(animHeight, {
+        toValue: isExpanded ? 1 : 0,
+        damping: 20,
+        stiffness: 180,
+        mass: 0.8,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [isExpanded, rotation, animHeight]);
 
   const rotate = rotation.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '180deg'],
+  });
+
+  const height = animHeight.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, contentHeight],
+  });
+
+  const opacity = animHeight.interpolate({
+    inputRange: [0, 0.3, 1],
+    outputRange: [0, 0.2, 1],
   });
 
   return (
@@ -95,9 +120,16 @@ function FaqItem({
           </Svg>
         </Animated.View>
       </TouchableOpacity>
-      {isExpanded && (
-        <Text style={[styles.faqAnswer, { color: colors.textMuted }]}>{item.a}</Text>
-      )}
+      <Animated.View style={{ height, opacity, overflow: 'hidden' }}>
+        <View
+          style={{ position: 'absolute', width: '100%' }}
+          onLayout={e => {
+            const h = e.nativeEvent.layout.height;
+            if (h > 0 && h !== contentHeight) setContentHeight(h);
+          }}>
+          <Text style={[styles.faqAnswer, { color: colors.textMuted }]}>{item.a}</Text>
+        </View>
+      </Animated.View>
       {!isLast && <View style={[styles.faqDivider, { backgroundColor: colors.inputBorder }]} />}
     </>
   );
@@ -357,8 +389,8 @@ export function HomeScreen() {
   async function loadHomeData() {
     try {
       const home = await fetchVendorHome();
-      const fullName = [home.vendor.firstName, home.vendor.lastName].filter(Boolean).join(' ');
-      setHomeVendorName(fullName || null);
+      // const fullName = [home.vendor.firstName, home.vendor.lastName].filter(Boolean).join(' ');
+      setHomeVendorName(home.vendor.firstName || null);
       setPrimaryLocation(home.primaryLocation);
       setSecondaryLocations(home.secondaryLocations);
       // Keep local auth context in sync
@@ -521,7 +553,7 @@ export function HomeScreen() {
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>काम के प्रकार (Job categories)</Text>
         </View>
-        <Text style={[styles.sectionDescription, { color: colors.textMuted, marginLeft: Spacing.md, marginBottom: Spacing.sm }]}>अपनी सुविधा के अनुसार काम चुनें, अप्लाई करें</Text>
+        <Text style={[styles.sectionDescription, { color: colors.textMuted, marginLeft: HP, marginBottom: Spacing.sm }]}>अपनी सुविधा के अनुसार काम चुनें,, अप्लाई करें</Text>
 
         <View style={styles.jobCategoriesContainer}>
           {(isDark ? JOB_CATEGORIES_DARK : JOB_CATEGORIES_LIGHT).map(category => (
@@ -623,10 +655,10 @@ export function HomeScreen() {
             horizontal
             showsHorizontalScrollIndicator={false}
             keyExtractor={item => item.id}
-            snapToInterval={SW - 32 + 12}
+            snapToInterval={SW - HP * 2 + 12}
             decelerationRate="fast"
             contentContainerStyle={styles.benefitSliderContainer}
-            style={{ marginHorizontal: -16 }}
+            style={{ marginHorizontal: -HP }}
             renderItem={({ item }) => {
               const content = (
                 <>
@@ -834,7 +866,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: HP,
     paddingTop: 12,
     paddingBottom: 12,
   },
@@ -870,7 +902,7 @@ const styles = StyleSheet.create({
 
   /* ── User Card ── */
   userCard: {
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: HP,
     borderRadius: BorderRadius.xl,
   },
   userCardTop: {
@@ -972,7 +1004,7 @@ const styles = StyleSheet.create({
 
   /* ── Section ── */
   sectionHeader: {
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: HP,
     marginTop: SECTION_GAP,
     marginBottom: SECTION_CONTENT_GAP,
   },
@@ -990,13 +1022,13 @@ const styles = StyleSheet.create({
 
   /* ── Action Cards ── */
   carouselContainer: {
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: HP,
     gap: Spacing.md,
   },
   actionCard: {
     padding: Spacing.md,
     borderRadius: BorderRadius.xl,
-    width: SW - Spacing.md * 2,
+    width: SW - HP * 2,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -1037,15 +1069,14 @@ const styles = StyleSheet.create({
   jobCategoriesContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: HP,
     marginBottom: Spacing.lg,
   },
 
   jobCategoryCard: {
-    width: (SW - Spacing.md * 2 - Spacing.md * 2) / 4,
+    width: (SW - HP * 2 - HP * 2) / 4,
     alignItems: 'center',
-    padding: Spacing.sm,
-    paddingVertical: Spacing.md,
+    paddingVertical: 3,
     borderRadius: BorderRadius.md,
   },
   jobCategoryIcon: {
@@ -1064,7 +1095,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   jobTypeCard: {
-    marginHorizontal: Spacing.md,
+    marginHorizontal: HP,
     marginBottom: Spacing.md,
     padding: 6,
     borderRadius: BorderRadius.xl,
@@ -1115,7 +1146,7 @@ const styles = StyleSheet.create({
   },
   helpCard: {
     backgroundColor: '#0F182B',
-    marginHorizontal: Spacing.md,
+    marginHorizontal: HP,
     borderRadius: BorderRadius.xxl,
     paddingLeft: Spacing.lg,
     paddingTop: Spacing.lg,
@@ -1183,27 +1214,27 @@ const styles = StyleSheet.create({
   },
 
   benefitsBlock: {
-    marginTop: SECTION_GAP,
+    marginTop: SECTION_GAP + 28,
     paddingTop: Spacing.md,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: HP,
     paddingBottom: 260,
   },
   sectionHeaderMini: {
     marginTop: SECTION_GAP,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.xxl,
     textAlign: 'center',
     flexDirection: 'column',
     alignItems: 'center',
   },
   benefitSliderContainer: {
     gap: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: HP,
   },
   benefitOfferCard: {
     borderRadius: BorderRadius.xl,
     padding: 16,
     minHeight: 180,
-    width: SW - 32,
+    width: SW - HP * 2,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -1278,14 +1309,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   noticeCard: {
-    marginTop: Spacing.md,
+    marginTop: Spacing.xxl,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: 14,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: SECTION_GAP,
+    marginBottom: SECTION_GAP + 28,
   },
   noticeIconCircle: {
     width: 26,
@@ -1312,7 +1343,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   jobsGivenOverlay: {
-    marginHorizontal: Spacing.md,
+    marginHorizontal: HP,
     marginTop: -294,
     height: 500,
     borderRadius: BorderRadius.xl,
@@ -1388,17 +1419,16 @@ const styles = StyleSheet.create({
 
   /* ── FAQ Section ── */
   faqSection: {
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: HP,
     marginTop: SECTION_GAP + 80,
-    marginBottom: Spacing.md,
+    marginBottom: HP,
   },
   faqBgImage: {
     position: 'absolute',
     right: 6,
-    top: '60%',
+    bottom: 10,
     width: SW * 0.75,
     height: SW * 0.4,
-    transform: [{ translateY: -(SW * 0.4) / 2 }],
     opacity: 1,
     zIndex: 1,
   },
@@ -1406,7 +1436,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     borderRadius: BorderRadius.xl,
     overflow: 'hidden',
-    paddingHorizontal: 16,
+    paddingHorizontal: HP,
     paddingVertical: 20,
   },
   faqContent: {
@@ -1440,7 +1470,7 @@ const styles = StyleSheet.create({
   },
   faqDecorIcon: {
     alignSelf: 'flex-end',
-    marginRight: -Spacing.md,
+    marginRight: -HP,
     marginTop: -60,
     opacity: 0.15,
   },
