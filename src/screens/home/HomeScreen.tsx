@@ -33,6 +33,7 @@ import { MKCLogo } from '../../assets/images/MKCLogo';
 import { MKCLogoIconBlue } from '../../assets/images/MKCLogoIconBlue';
 import { BlurEllipse, SoftCircle } from '../../components';
 import { JobApplicationSheet } from '../../components/JobApplicationSheet';
+import type { JobCategoryInfo } from '../../components/JobApplicationSheet';
 import { LoginScreenBottomIcon } from '../../assets/images/LoginScreenBottomIcon';
 import HelpWoman from '../../assets/helpCardWomen.png';
 import japaIcon from '../../assets/JapaIcon.png';
@@ -45,7 +46,7 @@ import pencilImage from '../../assets/pencilImage.png';
 const { width: SW } = Dimensions.get('window');
 const SECTION_GAP = 32;
 const SECTION_CONTENT_GAP = 8;
-const HP = 20; // horizontal padding for all sections
+const HP = Spacing.hp; // horizontal padding for all sections
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -169,17 +170,17 @@ const ACTION_CARDS: ActionCard[] = [
 ];
 
 const JOB_CATEGORIES_LIGHT = [
-  { id: '1', title: 'जापा', subtitle: 'Japa', icon: japaIcon, bgColor: '#F3F4F9' },
-  { id: '2', title: 'नैनी', subtitle: 'Nanny', icon: nannyIcon, bgColor: '#FEF5F6' },
-  { id: '3', title: 'बेबीसिटर', subtitle: 'Babysitter', icon: babySitterIcon, bgColor: '#FDF9F0' },
-  { id: '4', title: 'बेबी मेड', subtitle: 'BabyMaid', icon: babyMaidIcon, bgColor: '#E7F0F4' },
+  { id: '1', title: 'जापा', subtitle: 'Japa', icon: japaIcon, bgColor: '#F3F4F9', categoryKey: 'japa' as const },
+  { id: '2', title: 'नैनी', subtitle: 'Nanny', icon: nannyIcon, bgColor: '#FEF5F6', categoryKey: 'nanny' as const },
+  { id: '3', title: 'बेबीसिटर', subtitle: 'Babysitter', icon: babySitterIcon, bgColor: '#FDF9F0', categoryKey: 'babysitter' as const },
+  { id: '4', title: 'बेबी मेड', subtitle: 'BabyMaid', icon: babyMaidIcon, bgColor: '#E7F0F4', categoryKey: 'baby-maid' as const },
 ];
 
 const JOB_CATEGORIES_DARK = [
-  { id: '1', title: 'जापा', subtitle: 'Japa', icon: japaIcon, bgColor: '#1B2838' },
-  { id: '2', title: 'नैनी', subtitle: 'Nanny', icon: nannyIcon, bgColor: '#2A1B1E' },
-  { id: '3', title: 'बेबीसिटर', subtitle: 'Babysitter', icon: babySitterIcon, bgColor: '#2A2418' },
-  { id: '4', title: 'बेबी मेड', subtitle: 'BabyMaid', icon: babyMaidIcon, bgColor: '#1A2830' },
+  { id: '1', title: 'जापा', subtitle: 'Japa', icon: japaIcon, bgColor: '#1B2838', categoryKey: 'japa' as const },
+  { id: '2', title: 'नैनी', subtitle: 'Nanny', icon: nannyIcon, bgColor: '#2A1B1E', categoryKey: 'nanny' as const },
+  { id: '3', title: 'बेबीसिटर', subtitle: 'Babysitter', icon: babySitterIcon, bgColor: '#2A2418', categoryKey: 'babysitter' as const },
+  { id: '4', title: 'बेबी मेड', subtitle: 'BabyMaid', icon: babyMaidIcon, bgColor: '#1A2830', categoryKey: 'baby-maid' as const },
 ];
 
 function ReferralIcon() {
@@ -326,15 +327,15 @@ function JobTypeCard({
       <View style={[styles.jobTypeInner, { backgroundColor: colors.cardInner }]}>
         <View style={styles.jobTypeLeft}>
           <View style={[styles.jobTypeBadge, { backgroundColor: colors.card }]}>
-            <Text style={[styles.jobTypeBadgeText, { color: colors.textDark }]}>{badgeText}</Text>
+            <Text style={[styles.jobTypeBadgeText, { color: colors.textMuted }]}>{badgeText}</Text>
             {badgeSubText && (
-              <Text style={[styles.jobTypeBadgeSubText, { color: colors.textSecondary }]}>{badgeSubText}</Text>
+              <Text style={[styles.jobTypeBadgeSubText, { color: colors.textMuted }]}>{badgeSubText}</Text>
             )}
           </View>
           <View>
-            <Text style={[styles.jobTypeTitle, { color: colors.textDark }]}>{title}</Text>
+            <Text style={[styles.jobTypeTitle, { color: colors.textMuted }]}>{title}</Text>
             {subtitle && (
-              <Text style={[styles.jobTypeSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
+              <Text style={[styles.jobTypeSubtitle, { color: colors.textMuted }]}>{subtitle}</Text>
             )}
           </View>
         </View>
@@ -369,6 +370,7 @@ export function HomeScreen() {
   const [secondaryLocations, setSecondaryLocations] = useState<VendorHomeLocation[]>([]);
   const [jobSheetVisible, setJobSheetVisible] = useState(false);
   const [jobSheetHours, setJobSheetHours] = useState<'24-hours' | '10-hours'>('24-hours');
+  const [jobSheetCategory, setJobSheetCategory] = useState<JobCategoryInfo | undefined>(undefined);
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -562,7 +564,11 @@ export function HomeScreen() {
 
         <View style={styles.jobCategoriesContainer}>
           {(isDark ? JOB_CATEGORIES_DARK : JOB_CATEGORIES_LIGHT).map(category => (
-            <TouchableOpacity key={category.id} style={[styles.jobCategoryCard, { backgroundColor: category.bgColor }]} activeOpacity={0.8}>
+            <TouchableOpacity key={category.id} style={[styles.jobCategoryCard, { backgroundColor: category.bgColor }]} activeOpacity={0.8}
+              onPress={() => {
+                setJobSheetCategory({ title: category.title, subtitle: category.subtitle, categoryKey: category.categoryKey });
+                setJobSheetVisible(true);
+              }}>
               <View style={[styles.jobCategoryIcon,]}>
                 <Image
                   source={category.icon}
@@ -587,7 +593,7 @@ export function HomeScreen() {
           subtitle="जापा / नैनी / बेबीसिटर"
           isDark={isDark}
           colors={colors}
-          onPress={() => { setJobSheetHours('24-hours'); setJobSheetVisible(true); }}
+          onPress={() => { setJobSheetCategory(undefined); setJobSheetHours('24-hours'); setJobSheetVisible(true); }}
         />
         <JobTypeCard
           badgeText="10"
@@ -596,11 +602,11 @@ export function HomeScreen() {
           subtitle="जापा / नैनी / बेबीसिटर"
           isDark={isDark}
           colors={colors}
-          onPress={() => { setJobSheetHours('10-hours'); setJobSheetVisible(true); }}
+          onPress={() => { setJobSheetCategory(undefined); setJobSheetHours('10-hours'); setJobSheetVisible(true); }}
         />
 
         {/* ── Decorative Icon ── */}
-        <View style={styles.bottomIconContainer}>
+        <View style={styles.bottomIconContainer} pointerEvents="none">
           <LoginScreenBottomIcon width={250} height={320} />
         </View>
 
@@ -848,7 +854,9 @@ export function HomeScreen() {
       <JobApplicationSheet
         visible={jobSheetVisible}
         hoursType={jobSheetHours}
-        onClose={() => setJobSheetVisible(false)}
+        jobCategory={jobSheetCategory}
+        vendorAddress={primaryLocation?.address || vendorLocation || ''}
+        onClose={() => { setJobSheetVisible(false); setJobSheetCategory(undefined); }}
       />
 
     </View>
@@ -1089,7 +1097,7 @@ const styles = StyleSheet.create({
   jobCategoryCard: {
     width: (SW - HP * 2 - HP * 2) / 4,
     alignItems: 'center',
-    paddingVertical: 3,
+    paddingBottom:3,
     borderRadius: BorderRadius.md,
   },
   jobCategoryIcon: {
@@ -1098,7 +1106,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: 0,
   },
   jobCategoryTitle: {
     fontSize: FontSizes.sm,
@@ -1118,7 +1126,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: Spacing.md,
+    padding: Spacing.sm,
     borderRadius: BorderRadius.lg,
     overflow: 'hidden',
   },
@@ -1134,27 +1142,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   jobTypeBadge: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     borderRadius: BorderRadius.lg,
     marginRight: Spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
   jobTypeBadgeText: {
-    fontSize: FontSizes.h1,
-    fontWeight: 'bold',
+    fontSize: FontSizes.subtitle,
+    fontWeight: '700',
   },
   jobTypeBadgeSubText: {
-    fontSize: FontSizes.xs,
+    fontSize: FontSizes.subtitle,
     marginTop: -4,
+    fontWeight: '700',
   },
   jobTypeTitle: {
-    fontSize: FontSizes.body,
+    fontSize: FontSizes.subtitle,
     fontWeight: '600',
   },
   jobTypeSubtitle: {
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.body,
     marginTop: 2,
   },
   helpCard: {

@@ -7,7 +7,7 @@
  * Shows a success screen on submit.
  */
 
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -23,38 +23,75 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import Svg, {Circle, Path} from 'react-native-svg';
-import {useTheme} from '../context/ThemeContext';
-import {BorderRadius, FontSizes, Spacing} from '../constants';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
+import Svg, { Circle, Path } from 'react-native-svg';
+import { useTheme } from '../context/ThemeContext';
+
+// ─── Decorative SVGs ──────────────────────────────────────────────────────────
+
+function WavyCircle() {
+  return (
+    <Svg width={125} height={100} viewBox="0 0 124.613 99.561" fill="none">
+      <Path
+        d="M62.307,0c34.411,0,62.307,22.233,62.307,49.658s-3.3,49.9-37.71,49.9S0,77.084,0,49.658,27.9,0,62.307,0Z"
+        fill="#98c4f7"
+        opacity={0.25}
+      />
+    </Svg>
+  );
+}
+
+function ParallelogramIcon() {
+  return (
+    <Svg width={120} height={93} viewBox="0 0 167.463 129.588" fill="none">
+      <Path
+        d="M-3.056,51.316l47.5-53.361L148.5,36.865l-20.178,65.953Z"
+        transform="translate(3.365 27.801) rotate(-10)"
+        fill="#b3d3f9"
+        opacity={0.56}
+      />
+    </Svg>
+  );
+}
+import { useAuth } from '../context/AuthContext';
+import { BorderRadius, FontSizes, Spacing } from '../constants';
 import {
-  getFormTemplate,
-  submitApplication,
+  submitJobApplication,
 } from '../services/jobApplicationApi';
-import {getStaticForm} from '../services/staticFormTemplates';
+import { getStaticForm, getStaticCategoryForm, isInDelhiNCR } from '../services/staticFormTemplates';
 import type {
   FormQuestion,
   FormTemplateResponse,
   HoursType,
   JobCategory,
-  QuestionAnswer,
+  JobApplicationPayload,
   SubmitApplicationResponse,
+  WorkLocationType,
 } from '../services/jobApplicationApi';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
+export interface JobCategoryInfo {
+  title: string;
+  subtitle: string;
+  categoryKey: JobCategory;
+}
+
 interface Props {
   visible: boolean;
   hoursType: HoursType;
+  jobCategory?: JobCategoryInfo;
+  vendorAddress?: string;
   onClose: () => void;
 }
 
-const {height: SH} = Dimensions.get('window');
+const { height: SH } = Dimensions.get('window');
 const SHEET_MAX_HEIGHT = SH * 0.88;
 
 // ─── Small Icons ─────────────────────────────────────────────────────────────
 
-function CloseIcon({color}: {color: string}) {
+function CloseIcon({ color }: { color: string }) {
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
       <Path
@@ -67,7 +104,7 @@ function CloseIcon({color}: {color: string}) {
   );
 }
 
-function CheckIcon({color}: {color: string}) {
+function CheckIcon({ color }: { color: string }) {
   return (
     <Svg width={12} height={12} viewBox="0 0 16 16" fill="none">
       <Path
@@ -90,7 +127,7 @@ interface QuestionFieldProps {
   colors: any;
 }
 
-function QuestionField({question, value, onChange, colors}: QuestionFieldProps) {
+function QuestionField({ question, value, onChange, colors }: QuestionFieldProps) {
   const selected = value;
   const selectedArr = (value as string[]) || [];
 
@@ -106,8 +143,8 @@ function QuestionField({question, value, onChange, colors}: QuestionFieldProps) 
                 style={[
                   s.optionCard,
                   isSelected
-                    ? {backgroundColor: colors.primaryLight, borderColor: colors.primary, borderWidth: 1.5}
-                    : {backgroundColor: colors.iconCircleBackground, borderColor: 'transparent', borderWidth: 1.5},
+                    ? { backgroundColor: colors.primaryLight, borderColor: 'transparent', borderWidth: 1.5 }
+                    : { backgroundColor: colors.iconCircleBackground, borderColor: 'transparent', borderWidth: 1.5 },
                 ]}
                 activeOpacity={0.75}
                 onPress={() => onChange(opt.id)}>
@@ -124,7 +161,7 @@ function QuestionField({question, value, onChange, colors}: QuestionFieldProps) 
                 <Text
                   style={[
                     s.optionLabel,
-                    {color: isSelected ? colors.primary : colors.textSecondary},
+                    { color: isSelected ? colors.textBlue : '#535151' },
                   ]}>
                   {opt.label}
                 </Text>
@@ -145,8 +182,8 @@ function QuestionField({question, value, onChange, colors}: QuestionFieldProps) 
                 style={[
                   s.optionCard,
                   isSelected
-                    ? {backgroundColor: colors.primaryLight, borderColor: colors.primary, borderWidth: 1.5}
-                    : {backgroundColor: colors.iconCircleBackground, borderColor: 'transparent', borderWidth: 1.5},
+                    ? { backgroundColor: colors.primaryLight, borderColor: colors.primary, borderWidth: 1.5 }
+                    : { backgroundColor: colors.iconCircleBackground, borderColor: 'transparent', borderWidth: 1.5 },
                 ]}
                 activeOpacity={0.75}
                 onPress={() => {
@@ -169,7 +206,7 @@ function QuestionField({question, value, onChange, colors}: QuestionFieldProps) 
                 <Text
                   style={[
                     s.optionLabel,
-                    {color: isSelected ? colors.primary : colors.textSecondary},
+                    { color: isSelected ? colors.textBlue : '#535151' },
                   ]}>
                   {opt.label}
                 </Text>
@@ -233,7 +270,7 @@ function SuccessView({
   colors: any;
 }) {
   return (
-    <View style={[s.successContainer, {backgroundColor: colors.card}]}>
+    <View style={[s.successContainer, { backgroundColor: colors.card }]}>
       <View style={s.successIconWrap}>
         <Svg width={72} height={72} viewBox="0 0 80 80" fill="none">
           <Circle cx={40} cy={40} r={38} stroke={colors.success} strokeWidth={4} />
@@ -246,15 +283,15 @@ function SuccessView({
           />
         </Svg>
       </View>
-      <Text style={[s.successTitle, {color: colors.text}]}>आवेदन सफल!</Text>
-      <Text style={[s.successMessage, {color: colors.textSecondary}]}>
+      <Text style={[s.successTitle, { color: colors.text }]}>आवेदन सफल!</Text>
+      <Text style={[s.successMessage, { color: colors.textSecondary }]}>
         {result.message.hi}
       </Text>
       <TouchableOpacity
-        style={[s.submitBtn, {backgroundColor: colors.primary}]}
+        style={[s.submitBtn, { backgroundColor: colors.primary }]}
         onPress={onClose}
         activeOpacity={0.85}>
-        <Text style={[s.submitBtnText, {color: '#fff'}]}>डैशबोर्ड पर लौटें</Text>
+        <Text style={[s.submitBtnText, { color: '#fff' }]}>डैशबोर्ड पर लौटें</Text>
       </TouchableOpacity>
     </View>
   );
@@ -262,8 +299,10 @@ function SuccessView({
 
 // ─── Main Sheet ───────────────────────────────────────────────────────────────
 
-export function JobApplicationSheet({visible, hoursType, onClose}: Props) {
-  const {colors, isDark} = useTheme();
+export function JobApplicationSheet({ visible, hoursType, jobCategory, vendorAddress = '', onClose }: Props) {
+  const { colors, isDark } = useTheme();
+  const { vendorName, vendorMobile } = useAuth();
+  const isNCR = isInDelhiNCR(vendorAddress);
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(SH)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -280,6 +319,11 @@ export function JobApplicationSheet({visible, hoursType, onClose}: Props) {
 
   useEffect(() => {
     if (visible) {
+      if (__DEV__) console.log('[JobSheet] OPEN', { hoursType, jobCategory, vendorAddress, isNCR });
+      // Reset to off-screen so the slide-up animation always plays
+      slideAnim.setValue(SH);
+      backdropAnim.setValue(0);
+      ReactNativeHapticFeedback.trigger('contextClick');
       setStep('form');
       setAnswers({});
       setSubmitResult(null);
@@ -311,30 +355,35 @@ export function JobApplicationSheet({visible, hoursType, onClose}: Props) {
         }),
       ]).start();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   // ── Load form ───────────────────────────────────────────────────────────────
 
   const loadForm = useCallback(async () => {
-    setLoadingForm(true);
     setLoadError(null);
-    try {
-      const template = await getFormTemplate('japa', hoursType);
-      setForm(template);
-    } catch {
-      // API unavailable — fall back to static template so the sheet always works
-      setForm(getStaticForm(hoursType));
-    } finally {
-      setLoadingForm(false);
-    }
-  }, [hoursType]);
+    // Show static form instantly so there's no loading spinner
+    const staticForm = jobCategory
+      ? getStaticCategoryForm(jobCategory.categoryKey, isNCR)
+      : getStaticForm(hoursType, isNCR);
+    if (__DEV__) console.log('[JobSheet] staticForm', { formId: staticForm.formId, questionCount: staticForm.questions.length, questionIds: staticForm.questions.map(q => q.id) });
+    setForm(staticForm);
+    setLoadingForm(false);
+  }, [hoursType, jobCategory]);
 
   // ── Answer helpers ──────────────────────────────────────────────────────────
 
   const handleAnswer = useCallback(
     (questionId: string, value: string | string[]) => {
-      setAnswers(prev => ({...prev, [questionId]: value}));
+      setAnswers(prev => {
+        const next = { ...prev, [questionId]: value };
+        // Clear location answer when hours change (options differ per scenario)
+        if (questionId === 'work_hours') {
+          delete next.work_location;
+        }
+        if (__DEV__) console.log('[JobSheet] answers', next);
+        return next;
+      });
     },
     [],
   );
@@ -344,7 +393,7 @@ export function JobApplicationSheet({visible, hoursType, onClose}: Props) {
       if (!q.showWhen) return true;
       const dep = answers[q.showWhen.questionId];
       if (!dep) return false;
-      const {hasValue} = q.showWhen;
+      const { hasValue } = q.showWhen;
       return Array.isArray(hasValue)
         ? hasValue.includes(dep as string)
         : dep === hasValue;
@@ -354,6 +403,18 @@ export function JobApplicationSheet({visible, hoursType, onClose}: Props) {
 
   // ── Submit ──────────────────────────────────────────────────────────────────
 
+  /** Convert start_time answer to ISO date string */
+  const getPreferredStartDate = useCallback((startTimeId: string): string => {
+    const now = new Date();
+    switch (startTimeId) {
+      case 'immediate': return now.toISOString().slice(0, 10);
+      case '1-week': { now.setDate(now.getDate() + 7); return now.toISOString().slice(0, 10); }
+      case '15-days': { now.setDate(now.getDate() + 15); return now.toISOString().slice(0, 10); }
+      case '1-month': { now.setMonth(now.getMonth() + 1); return now.toISOString().slice(0, 10); }
+      default: return now.toISOString().slice(0, 10);
+    }
+  }, []);
+
   const handleSubmit = useCallback(async () => {
     if (!form) return;
 
@@ -362,35 +423,54 @@ export function JobApplicationSheet({visible, hoursType, onClose}: Props) {
       const ans = answers[q.id];
       const empty = !ans || (Array.isArray(ans) && ans.length === 0);
       if (q.required && empty) {
-        // Scroll intent handled by native keyboard avoidance
         return;
       }
     }
 
+    // Determine jobConcern — from category flow or form answer
+    const jobConcern = (jobCategory?.categoryKey || answers.job_type) as JobCategory;
+
+    // Determine workingHourType — from hours flow or form answer
+    const workingHourType = (jobCategory ? answers.work_hours : hoursType) as HoursType;
+
+    // Determine workLocationType
+    const workLocationType = (answers.work_location || 'myCity') as WorkLocationType;
+
+    // Determine preferredWorkStartDate
+    const startTime = answers.start_time as string | undefined;
+
+    // Always send vendor address as myCity
+    // Send workLocation only when user chose their own area (myCity)
+    const payload: JobApplicationPayload = {
+      name: vendorName || '',
+      phone: vendorMobile || '',
+      jobConcern,
+      workingHourType,
+      workLocationType,
+      myCity: vendorAddress || undefined,
+      ...(workLocationType === 'myCity' && vendorAddress ? { workLocation: vendorAddress } : {}),
+      ...(startTime ? { preferredWorkStartDate: getPreferredStartDate(startTime) } : {}),
+    };
+
+    if (__DEV__) console.log('[JobSheet] SUBMIT payload', JSON.stringify(payload, null, 2));
+
     setSubmitting(true);
     try {
-      const payload: QuestionAnswer[] = Object.entries(answers).map(
-        ([questionId, value]) => ({questionId, value}),
-      );
-      const result = await submitApplication(
-        form.formId,
-        form.category,
-        payload,
-        form.hoursType,
-      );
+      const result = await submitJobApplication(payload);
       setSubmitResult(result);
       setStep('success');
     } catch (err: any) {
-      // Surface error inline — don't crash the sheet
       setLoadError(err?.message || 'Submission failed');
     } finally {
       setSubmitting(false);
     }
-  }, [form, answers, shouldShow]);
+  }, [form, answers, shouldShow, jobCategory, hoursType, vendorName, vendorMobile, getPreferredStartDate]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
-  const hoursLabel = hoursType === '24-hours' ? '24 घंटे के लिए' : '10 घंटे के लिए';
+  const hoursLabel = jobCategory
+    ? `${jobCategory.title} (${jobCategory.subtitle})`
+    : hoursType === '24-hours' ? '24 घंटे के लिए' : '10 घंटे के लिए';
 
   return (
     <Modal
@@ -402,38 +482,50 @@ export function JobApplicationSheet({visible, hoursType, onClose}: Props) {
       {/* Backdrop */}
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View
-          style={[s.backdrop, {opacity: backdropAnim}]}
+          style={[s.backdrop, { opacity: backdropAnim }]}
           pointerEvents={visible ? 'auto' : 'none'}
         />
       </TouchableWithoutFeedback>
 
       {/* Sheet */}
       <Animated.View
-        style={[s.sheet, {transform: [{translateY: slideAnim}]}]}
+        style={[s.sheet, { transform: [{ translateY: slideAnim }] }]}
         pointerEvents="box-none">
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{flex: 1}}>
+          style={{ flex: 1 }}>
           <View
             style={[
               s.sheetInner,
               {
-                backgroundColor: colors.background,
+                backgroundColor: "#F4F5F7",
                 paddingBottom: insets.bottom + 16,
                 maxHeight: SHEET_MAX_HEIGHT,
               },
             ]}>
-            {/* Drag Handle */}
-            <View style={[s.handle, {backgroundColor: colors.sheetHandle}]} />
+            {/* Handle + Close row */}
+            <View style={s.handleRow}>
+              <View style={{ flex: 1 }} />
+              <View style={[s.handle, { backgroundColor: colors.sheetHandle }]} />
+              <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                <TouchableOpacity
+                  style={[s.closeBtn, { backgroundColor: 'transparent' }]}
+                  onPress={() => { ReactNativeHapticFeedback.trigger('contextClick'); onClose(); }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <CloseIcon color={colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-            {/* Close Button */}
-            <TouchableOpacity
-              style={[s.closeBtn, {backgroundColor: colors.surface}]}
-              onPress={onClose}
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
-              <CloseIcon color={colors.textSecondary} />
-            </TouchableOpacity>
+            {/* Decorative wavy circle — header area */}
+            <View style={s.wavyCircleWrap} pointerEvents="none">
+              <WavyCircle />
+            </View>
 
+            {/* Decorative parallelogram — bottom right */}
+            <View style={s.parallelogramWrap} pointerEvents="none">
+              <ParallelogramIcon />
+            </View>
             {step === 'success' && submitResult ? (
               <SuccessView
                 result={submitResult}
@@ -444,14 +536,14 @@ export function JobApplicationSheet({visible, hoursType, onClose}: Props) {
               <>
                 {/* Header */}
                 <View style={s.header}>
-                  <Text style={[s.headerLabel, {color: colors.primary}]}>
+                  <Text style={[s.headerLabel, { color: colors.primary }]}>
                     आवेदन की गई नौकरी
                   </Text>
-                  <Text style={[s.headerHours, {color: colors.text}]}>
+                  <Text style={[s.headerHours, { color: colors.text }]}>
                     {hoursLabel}
                   </Text>
                   {form && (
-                    <Text style={[s.headerSubtitle, {color: colors.textSecondary}]}>
+                    <Text style={[s.headerSubtitle, { color: colors.textSecondary }]}>
                       {form.subtitle.hi}
                     </Text>
                   )}
@@ -464,13 +556,13 @@ export function JobApplicationSheet({visible, hoursType, onClose}: Props) {
                   </View>
                 ) : loadError ? (
                   <View style={s.loadingWrap}>
-                    <Text style={[s.errorText, {color: colors.danger}]}>
+                    <Text style={[s.errorText, { color: colors.danger }]}>
                       {loadError}
                     </Text>
                     <TouchableOpacity
-                      style={[s.retryBtn, {borderColor: colors.primary}]}
+                      style={[s.retryBtn, { borderColor: colors.primary }]}
                       onPress={loadForm}>
-                      <Text style={[s.retryText, {color: colors.primary}]}>
+                      <Text style={[s.retryText, { color: colors.primary }]}>
                         पुनः प्रयास करें
                       </Text>
                     </TouchableOpacity>
@@ -480,47 +572,51 @@ export function JobApplicationSheet({visible, hoursType, onClose}: Props) {
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                     contentContainerStyle={s.scrollContent}>
-                    {form?.questions
-                      .filter(shouldShow)
-                      .sort((a, b) => a.order - b.order)
-                      .map(q => (
-                        <View key={q.id} style={[s.questionBlock, {backgroundColor: colors.background, borderColor: colors.borderLight}]}>
-                          <Text style={[s.questionText, {color: colors.textMuted}]}>
-                            {q.question.hi}
-                            {q.required && (
-                              <Text style={{color: colors.danger}}> *</Text>
-                            )}
+                    <View style={[s.questionsContainer, { backgroundColor: colors.background }]}>
+                      {form?.questions
+                        .filter(shouldShow)
+                        .sort((a, b) => a.order - b.order)
+                        .map((q, idx, arr) => (
+                          <React.Fragment key={`${q.id}-${idx}`}>
+                            <View style={s.questionBlock}>
+                              <Text style={[s.questionText, { color: '#535151' }]}>
+                                {q.question.hi}
+                                {q.required && (
+                                  <Text style={{ color: colors.danger }}> *</Text>
+                                )}
+                              </Text>
+                              <QuestionField
+                                question={q}
+                                value={answers[q.id]}
+                                onChange={v => handleAnswer(q.id, v)}
+                                colors={colors}
+                              />
+                            </View>
+                            {idx < arr.length - 1 && <View style={[s.questionDivider, { backgroundColor: colors.inputBorder }]} />}
+                          </React.Fragment>
+                        ))}
+                      {/* Submit */}
+                      <TouchableOpacity
+                        style={[
+                          s.submitBtn,
+                          {
+                            backgroundColor: submitting
+                              ? colors.buttonDisabled
+                              : colors.primary,
+                          },
+                        ]}
+                        onPress={handleSubmit}
+                        disabled={submitting}
+                        activeOpacity={0.85}>
+                        {submitting ? (
+                          <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                          <Text style={[s.submitBtnText, { color: '#fff' }]}>
+                            आवेदन जमा करें
                           </Text>
-                          <QuestionField
-                            question={q}
-                            value={answers[q.id]}
-                            onChange={v => handleAnswer(q.id, v)}
-                            colors={colors}
-                          />
-                        </View>
-                      ))}
-
-                    {/* Submit */}
-                    <TouchableOpacity
-                      style={[
-                        s.submitBtn,
-                        {
-                          backgroundColor: submitting
-                            ? colors.buttonDisabled
-                            : colors.primary,
-                        },
-                      ]}
-                      onPress={handleSubmit}
-                      disabled={submitting}
-                      activeOpacity={0.85}>
-                      {submitting ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                      ) : (
-                        <Text style={[s.submitBtnText, {color: '#fff'}]}>
-                          आवेदन जमा करें
-                        </Text>
-                      )}
-                    </TouchableOpacity>
+                        )}
+                      </TouchableOpacity>
+                    </View>
                   </ScrollView>
                 )}
               </>
@@ -550,32 +646,44 @@ const s = StyleSheet.create({
     borderTopRightRadius: BorderRadius.xxl,
     overflow: 'hidden',
   },
+  wavyCircleWrap: {
+    position: 'absolute',
+    top: -50,
+    left: -70,
+    zIndex: 0,
+  },
+  parallelogramWrap: {
+    position: 'absolute',
+    bottom: 200,
+    right: -93,
+    zIndex: 0,
+  },
+  handleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 14,
+    paddingHorizontal: 16,
+    zIndex: 10,
+  },
   handle: {
-    alignSelf: 'center',
     width: 40,
     height: 4,
     borderRadius: 2,
-    marginTop: 10,
-    marginBottom: 4,
   },
   closeBtn: {
-    position: 'absolute',
-    top: 14,
-    right: 16,
     width: 30,
     height: 30,
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
   },
   header: {
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.sm,
+    paddingHorizontal: Spacing.hp,
+    paddingTop: Spacing.xl,
     paddingBottom: 4,
   },
   headerLabel: {
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.subtitle,
     fontFamily: 'NotoSansDevanagari-Medium',
     fontWeight: '500',
     letterSpacing: 0.2,
@@ -617,22 +725,29 @@ const s = StyleSheet.create({
     fontFamily: 'GolosText-Medium',
   },
   scrollContent: {
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.hp,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
     gap: 12,
   },
-  questionBlock: {
+  questionsContainer: {
     borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    paddingBottom: 16,
+  },
+  questionBlock: {
     padding: Spacing.md,
-    gap: 10,
-    borderWidth: 1,
+  },
+  questionDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: Spacing.md,
   },
   questionText: {
     fontSize: FontSizes.body,
     fontFamily: 'NotoSansDevanagari-Medium',
-    fontWeight: '500',
+    fontWeight: '700',
     lineHeight: 22,
+    marginBottom: 8,
   },
   // Options grid
   optionsGrid: {
@@ -667,7 +782,7 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   optionLabel: {
-    fontSize: FontSizes.body,
+    fontSize: FontSizes.sm,
     fontFamily: 'NotoSansDevanagari-SemiBold',
     fontWeight: '600',
     flexShrink: 1,
@@ -684,9 +799,11 @@ const s = StyleSheet.create({
   // Submit button
   submitBtn: {
     height: 50,
-    borderRadius: BorderRadius.pill,
+    borderRadius: BorderRadius.button,
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'center',
+    paddingHorizontal: Spacing.xl,
     marginTop: 8,
   },
   submitBtnText: {

@@ -4,253 +4,246 @@
  * These mirror the exact shape returned by GET /api/v1/vendor/job-applications/form
  * and can be seeded directly to the DB. They are also used as an offline
  * fallback inside JobApplicationSheet when the API is unreachable.
+ *
+ * Location question logic:
+ *  - Delhi NCR + 10h  → no location question
+ *  - Delhi NCR + 24h  → options: दिल्ली NCR / पूरे भारत में कहीं भी
+ *  - Outside NCR + 10h → options: NCR / अपने शहर में
+ *  - Outside NCR + 24h → options: अपने शहर में / पूरे भारत में कहीं भी
  */
 
-import type {FormTemplateResponse} from './jobApplicationApi';
+import type {
+  FormQuestion,
+  FormTemplateResponse,
+  HoursType,
+  JobCategory,
+  QuestionOption,
+} from './jobApplicationApi';
 
-// ─── 10-Hour Form ─────────────────────────────────────────────────────────────
+// ─── Delhi NCR Locations ──────────────────────────────────────────────────────
 
-export const FORM_10_HOURS: FormTemplateResponse = {
-  formId: 'static-form-10-hours-v1',
-  version: 1,
-  category: 'japa',
-  hoursType: '10-hours',
-  title: {
-    hi: 'आवेदन की गई नौकरी',
-    en: 'Job Application',
-  },
-  subtitle: {
-    hi: '( आवेदन करने के लिए कृपया नीचे दी गई जानकारी भरें )',
-    en: '( Please fill in the information below to apply )',
-  },
-  questions: [
-    {
-      id: 'job_type',
-      question: {
-        hi: 'आप किस क्षेत्र में काम देख रही हैं?',
-        en: 'What type of work are you looking for?',
-      },
-      type: 'multi-select',
-      required: true,
-      order: 1,
-      options: [
-        {id: 'japa',        label: 'जापा',       value: 'japa'},
-        {id: 'nanny',       label: 'नैनी',       value: 'nanny'},
-        {id: 'babysitter',  label: 'बेबीसिटर',  value: 'babysitter'},
-        {id: 'baby-maid',   label: 'बेबी मेड',  value: 'baby-maid'},
-      ],
-    },
-    {
-      id: 'start_time',
-      question: {
-        hi: 'आप काम कब से शुरू कर सकती हैं?',
-        en: 'When can you start work?',
-      },
-      type: 'single-select',
-      required: true,
-      order: 2,
-      options: [
-        {id: 'immediate', label: 'तुरंत',       value: 'immediate'},
-        {id: '1-week',    label: '1 हफ्ते में', value: '1-week'},
-        {id: '15-days',   label: '15 दिनों में', value: '15-days'},
-        {id: '1-month',   label: '1 महीने में', value: '1-month'},
-      ],
-    },
-    {
-      id: 'work_location',
-      question: {
-        hi: 'आप कहाँ काम करना चाहती हैं?',
-        en: 'Where do you want to work?',
-      },
-      type: 'single-select',
-      required: true,
-      order: 3,
-      options: [
-        {id: 'delhi-ncr',    label: 'दिल्ली NCR',              value: 'delhi-ncr'},
-        {id: 'outside-ncr',  label: 'दिल्ली NCR के बाहर',     value: 'outside-ncr'},
-      ],
-    },
-    {
-      id: 'salary_expectation',
-      question: {
-        hi: 'आप कितनी सैलरी की उम्मीद रखती हैं? (₹/माह)',
-        en: 'What is your salary expectation? (₹/month)',
-      },
-      type: 'single-select',
-      required: true,
-      order: 4,
-      options: [
-        {id: '8k-10k',   label: '₹8,000 – ₹10,000',   value: '8k-10k'},
-        {id: '10k-12k',  label: '₹10,000 – ₹12,000',  value: '10k-12k'},
-        {id: '12k-15k',  label: '₹12,000 – ₹15,000',  value: '12k-15k'},
-        {id: '15k-plus', label: '₹15,000 से अधिक',     value: '15k-plus'},
-      ],
-    },
-    {
-      id: 'experience',
-      question: {
-        hi: 'आपका अनुभव कितने साल का है?',
-        en: 'How many years of experience do you have?',
-      },
-      type: 'single-select',
-      required: true,
-      order: 5,
-      options: [
-        {id: 'fresher',  label: 'कोई अनुभव नहीं', value: 'fresher'},
-        {id: '1-2yr',    label: '1-2 साल',         value: '1-2yr'},
-        {id: '3-5yr',    label: '3-5 साल',         value: '3-5yr'},
-        {id: '5yr-plus', label: '5 साल से अधिक',  value: '5yr-plus'},
-      ],
-    },
-    {
-      id: 'accommodation',
-      question: {
-        hi: 'क्या आप रहने की सुविधा चाहती हैं?',
-        en: 'Do you need accommodation?',
-      },
-      type: 'single-select',
-      required: false,
-      order: 6,
-      options: [
-        {id: 'live-in',  label: 'हाँ, रहना चाहूँगी',   value: 'live-in'},
-        {id: 'live-out', label: 'नहीं, घर से आऊँगी',   value: 'live-out'},
-      ],
-    },
-  ],
+export const DELHI_NCR_LOCATIONS = [
+  'faridabad',
+  'gurugram',
+  'gurgaon',
+  'rohtak',
+  'sonepat',
+  'rewari',
+  'jhajjhar',
+  'panipat',
+  'palwal',
+  'bhiwani',
+  'karnal',
+  'meerut',
+  'ghaziabad',
+  'gautam-budh-nagar',
+  'gautam-buddha-nagar',
+  'alwar',
+  'noida',
+  'delhi',
+  'mahendragarh',
+  'kanina',
+  // Hindi variants
+  'फरीदाबाद',
+  'गुरुग्राम',
+  'गुड़गाँव',
+  'रोहतक',
+  'सोनीपत',
+  'रेवाड़ी',
+  'झज्जर',
+  'पानीपत',
+  'पलवल',
+  'भिवानी',
+  'करनाल',
+  'मेरठ',
+  'गाज़ियाबाद',
+  'गाजियाबाद',
+  'गौतमबुद्ध नगर',
+  'अलवर',
+  'नोएडा',
+  'दिल्ली',
+  'महेंद्रगढ़',
+  'कनीना',
+  'एनसीआर',
+  'ncr',
+];
+
+export function isInDelhiNCR(address: string): boolean {
+  const lower = address.toLowerCase();
+  return DELHI_NCR_LOCATIONS.some(loc => lower.includes(loc));
+}
+
+// ─── Shared question builders ─────────────────────────────────────────────────
+
+const JOB_TYPE_OPTIONS: QuestionOption[] = [
+  {id: 'japa', label: 'जापा', value: 'japa'},
+  {id: 'nanny', label: 'नैनी', value: 'nanny'},
+  {id: 'babysitter', label: 'बेबीसिटर', value: 'babysitter'},
+  {id: 'baby-maid', label: 'बेबी मेड', value: 'baby-maid'},
+];
+
+const START_TIME_OPTIONS: QuestionOption[] = [
+  {id: 'immediate', label: 'तुरंत', value: 'immediate'},
+  {id: '1-week', label: '1 हफ्ते में', value: '1-week'},
+  {id: '15-days', label: '15 दिनों में', value: '15-days'},
+  {id: '1-month', label: '1 महीने में', value: '1-month'},
+];
+
+function getLocationOptions(
+  isNCR: boolean,
+  hours: HoursType,
+): QuestionOption[] | null {
+  if (isNCR && hours === '10-hours') return null; // don't ask
+  if (isNCR && hours === '24-hours') {
+    return [
+      {id: 'myCity', label: 'दिल्ली NCR', value: 'myCity'},
+      {id: 'both', label: 'पूरे भारत में कहीं भी', value: 'both'},
+    ];
+  }
+  if (!isNCR && hours === '10-hours') {
+    return [
+      {id: 'outsideCity', label: 'NCR', value: 'outsideCity'},
+      {id: 'myCity', label: 'अपने शहर में', value: 'myCity'},
+    ];
+  }
+  // Outside NCR + 24h
+  return [
+    {id: 'myCity', label: 'अपने शहर में', value: 'myCity'},
+    {id: 'both', label: 'पूरे भारत में कहीं भी', value: 'both'},
+  ];
+}
+
+const FORM_TITLE = {hi: 'आवेदन की गई नौकरी', en: 'Job Application'};
+const FORM_SUBTITLE = {
+  hi: '( आवेदन करने के लिए कृपया नीचे दी गई जानकारी भरें )',
+  en: '( Please fill in the information below to apply )',
 };
 
-// ─── 24-Hour Form ─────────────────────────────────────────────────────────────
-
-export const FORM_24_HOURS: FormTemplateResponse = {
-  formId: 'static-form-24-hours-v1',
-  version: 1,
-  category: 'japa',
-  hoursType: '24-hours',
-  title: {
-    hi: 'आवेदन की गई नौकरी',
-    en: 'Job Application',
-  },
-  subtitle: {
-    hi: '( आवेदन करने के लिए कृपया नीचे दी गई जानकारी भरें )',
-    en: '( Please fill in the information below to apply )',
-  },
-  questions: [
-    {
-      id: 'job_type',
-      question: {
-        hi: 'आप किस क्षेत्र में काम देख रही हैं?',
-        en: 'What type of work are you looking for?',
-      },
-      type: 'multi-select',
-      required: true,
-      order: 1,
-      options: [
-        {id: 'japa',        label: 'जापा',       value: 'japa'},
-        {id: 'nanny',       label: 'नैनी',       value: 'nanny'},
-        {id: 'babysitter',  label: 'बेबीसिटर',  value: 'babysitter'},
-        {id: 'baby-maid',   label: 'बेबी मेड',  value: 'baby-maid'},
-      ],
-    },
-    {
-      id: 'start_time',
-      question: {
-        hi: 'आप काम कब से शुरू कर सकती हैं?',
-        en: 'When can you start work?',
-      },
-      type: 'single-select',
-      required: true,
-      order: 2,
-      options: [
-        {id: 'immediate', label: 'तुरंत',        value: 'immediate'},
-        {id: '1-week',    label: '1 हफ्ते में',  value: '1-week'},
-        {id: '15-days',   label: '15 दिनों में', value: '15-days'},
-        {id: '1-month',   label: '1 महीने में',  value: '1-month'},
-      ],
-    },
-    {
-      id: 'work_location',
-      question: {
-        hi: 'आप कहाँ काम करना चाहती हैं?',
-        en: 'Where do you want to work?',
-      },
-      type: 'single-select',
-      required: true,
-      order: 3,
-      options: [
-        {id: 'delhi-ncr',    label: 'दिल्ली NCR',          value: 'delhi-ncr'},
-        {id: 'outside-ncr',  label: 'दिल्ली NCR के बाहर', value: 'outside-ncr'},
-      ],
-    },
-    {
-      id: 'salary_expectation',
-      question: {
-        hi: 'आप कितनी सैलरी की उम्मीद रखती हैं? (₹/माह)',
-        en: 'What is your salary expectation? (₹/month)',
-      },
-      type: 'single-select',
-      required: true,
-      order: 4,
-      options: [
-        {id: '12k-15k',  label: '₹12,000 – ₹15,000', value: '12k-15k'},
-        {id: '15k-18k',  label: '₹15,000 – ₹18,000', value: '15k-18k'},
-        {id: '18k-22k',  label: '₹18,000 – ₹22,000', value: '18k-22k'},
-        {id: '22k-plus', label: '₹22,000 से अधिक',   value: '22k-plus'},
-      ],
-    },
-    {
-      id: 'experience',
-      question: {
-        hi: 'आपका अनुभव कितने साल का है?',
-        en: 'How many years of experience do you have?',
-      },
-      type: 'single-select',
-      required: true,
-      order: 5,
-      options: [
-        {id: 'fresher',  label: 'कोई अनुभव नहीं', value: 'fresher'},
-        {id: '1-2yr',    label: '1-2 साल',         value: '1-2yr'},
-        {id: '3-5yr',    label: '3-5 साल',         value: '3-5yr'},
-        {id: '5yr-plus', label: '5 साल से अधिक',  value: '5yr-plus'},
-      ],
-    },
-    {
-      id: 'infant_care',
-      question: {
-        hi: 'क्या आपने नवजात शिशु की देखभाल की है?',
-        en: 'Have you cared for a newborn baby?',
-      },
-      type: 'single-select',
-      required: false,
-      order: 6,
-      options: [
-        {id: 'yes',       label: 'हाँ',             value: 'yes'},
-        {id: 'no',        label: 'नहीं',             value: 'no'},
-        {id: 'training',  label: 'ट्रेनिंग ली है',  value: 'training'},
-      ],
-    },
-    {
-      id: 'special_skills',
-      question: {
-        hi: 'आपके पास कौन सी विशेष skills हैं? (सभी चुनें)',
-        en: 'What special skills do you have? (select all that apply)',
-      },
-      type: 'multi-select',
-      required: false,
-      order: 7,
-      options: [
-        {id: 'cooking',    label: 'खाना बनाना',      value: 'cooking'},
-        {id: 'massage',    label: 'मालिश करना',      value: 'massage'},
-        {id: 'first-aid',  label: 'प्राथमिक चिकित्सा', value: 'first-aid'},
-        {id: 'english',    label: 'अंग्रेज़ी',         value: 'english'},
-      ],
-    },
-  ],
-};
-
-// ─── Lookup helper ────────────────────────────────────────────────────────────
+// ─── Hours-flow form (10h / 24h card) ─────────────────────────────────────────
 
 export function getStaticForm(
-  hoursType: '10-hours' | '24-hours',
+  hoursType: HoursType,
+  isNCR: boolean,
 ): FormTemplateResponse {
-  return hoursType === '24-hours' ? FORM_24_HOURS : FORM_10_HOURS;
+  const questions: FormQuestion[] = [
+    {
+      id: 'job_type',
+      question: {hi: 'आप किस क्षेत्र में काम देख रही हैं?', en: 'What type of work are you looking for?'},
+      type: 'single-select',
+      required: true,
+      order: 1,
+      options: JOB_TYPE_OPTIONS,
+    },
+    {
+      id: 'start_time',
+      question: {hi: 'आप काम कब से शुरू कर सकती हैं?', en: 'When can you start work?'},
+      type: 'single-select',
+      required: true,
+      order: 2,
+      options: START_TIME_OPTIONS,
+    },
+  ];
+
+  const locationOpts = getLocationOptions(isNCR, hoursType);
+  if (locationOpts) {
+    questions.push({
+      id: 'work_location',
+      question: {hi: 'आप कहाँ काम करना चाहती हैं?', en: 'Where do you want to work?'},
+      type: 'single-select',
+      required: true,
+      order: 3,
+      options: locationOpts,
+    });
+  }
+
+  return {
+    formId: `static-form-${hoursType}-v1`,
+    version: 1,
+    category: 'japa',
+    hoursType,
+    title: FORM_TITLE,
+    subtitle: FORM_SUBTITLE,
+    questions,
+  };
+}
+
+// ─── Category-flow form (opened from job category cards) ─────────────────────
+
+export function getStaticCategoryForm(
+  category: JobCategory,
+  isNCR: boolean,
+): FormTemplateResponse {
+  const questions: FormQuestion[] = [
+    {
+      id: 'work_hours',
+      question: {hi: 'आपको कितने घंटे काम करना है?', en: 'How many hours do you want to work?'},
+      type: 'single-select',
+      required: true,
+      order: 1,
+      options: [
+        {id: '10-hours', label: '10 घंटे', value: '10-hours'},
+        {id: '24-hours', label: '24 घंटे', value: '24-hours'},
+      ],
+    },
+    {
+      id: 'start_time',
+      question: {hi: 'आप काम कब से शुरू कर सकती हैं?', en: 'When can you start work?'},
+      type: 'single-select',
+      required: true,
+      order: 2,
+      options: START_TIME_OPTIONS,
+    },
+  ];
+
+  if (isNCR) {
+    // NCR + 10h → no location question (showWhen only matches 24h)
+    questions.push({
+      id: 'work_location',
+      question: {hi: 'आप कहाँ काम करना चाहती हैं?', en: 'Where do you want to work?'},
+      type: 'single-select',
+      required: true,
+      order: 3,
+      showWhen: {questionId: 'work_hours', hasValue: '24-hours'},
+      options: [
+        {id: 'myCity', label: 'दिल्ली NCR', value: 'myCity'},
+        {id: 'both', label: 'पूरे भारत में कहीं भी', value: 'both'},
+      ],
+    });
+  } else {
+    // Outside NCR + 10h
+    questions.push({
+      id: 'work_location',
+      question: {hi: 'आप कहाँ काम करना चाहती हैं?', en: 'Where do you want to work?'},
+      type: 'single-select',
+      required: true,
+      order: 3,
+      showWhen: {questionId: 'work_hours', hasValue: '10-hours'},
+      options: [
+        {id: 'outsideCity', label: 'NCR', value: 'outsideCity'},
+        {id: 'myCity', label: 'अपने शहर में', value: 'myCity'},
+      ],
+    });
+    // Outside NCR + 24h
+    questions.push({
+      id: 'work_location',
+      question: {hi: 'आप कहाँ काम करना चाहती हैं?', en: 'Where do you want to work?'},
+      type: 'single-select',
+      required: true,
+      order: 4,
+      showWhen: {questionId: 'work_hours', hasValue: '24-hours'},
+      options: [
+        {id: 'myCity', label: 'अपने शहर में', value: 'myCity'},
+        {id: 'both', label: 'पूरे भारत में कहीं भी', value: 'both'},
+      ],
+    });
+  }
+
+  return {
+    formId: `static-form-category-${category}-v1`,
+    version: 1,
+    category,
+    title: FORM_TITLE,
+    subtitle: FORM_SUBTITLE,
+    questions,
+  };
 }

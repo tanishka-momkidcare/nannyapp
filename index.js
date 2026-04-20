@@ -6,6 +6,11 @@ import { AppRegistry, Platform } from 'react-native';
 import App from './App';
 import { name as appName } from './app.json';
 
+// Enable network inspection in Chrome DevTools / Flipper
+if (__DEV__) {
+  global.XMLHttpRequest = global.originalXMLHttpRequest || global.XMLHttpRequest;
+}
+
 AppRegistry.registerComponent(appName, () => App);
 
 /**

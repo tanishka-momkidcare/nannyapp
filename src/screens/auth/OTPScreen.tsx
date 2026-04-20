@@ -141,7 +141,8 @@ export function OTPScreen({ route, navigation }: Props) {
       // Login should happen right after OTP verification.
       // Preferred job location can be saved later via separate API flow.
       await signIn(
-        result.token,
+        result.accessToken,
+        result.refreshToken,
         result.vendor.id,
         result.vendor.mobile,
         vendorName,

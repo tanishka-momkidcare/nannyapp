@@ -13,11 +13,14 @@ const Axios = axios.create({
   },
 });
 
-// ─── Request interceptor: attach access token ────────────────────────────────
+// ─── Request interceptor: attach access token + log ──────────────────────────
 Axios.interceptors.request.use(async (reqConfig) => {
   const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
   if (token) {
     reqConfig.headers.Authorization = `Bearer ${token}`;
+  }
+  if (__DEV__) {
+    console.log(`[API] ${reqConfig.method?.toUpperCase()} ${reqConfig.url}`, reqConfig.data ?? '');
   }
   return reqConfig;
 });
@@ -40,9 +43,14 @@ function processQueue(error: unknown, token: string | null = null) {
   failedQueue = [];
 }
 
-// ─── Response interceptor: auto-refresh on 401 ───────────────────────────────
+// ─── Response interceptor: log + auto-refresh on 401 ─────────────────────────
 Axios.interceptors.response.use(
-  response => response,
+  response => {
+    if (__DEV__) {
+      console.log(`[API] ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`, response.data);
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const original = error.config as InternalAxiosRequestConfig & {_retry?: boolean};
 

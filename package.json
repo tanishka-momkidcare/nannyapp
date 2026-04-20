@@ -22,6 +22,7 @@
     "react-native": "0.84.1",
     "react-native-config": "^1.6.1",
     "react-native-google-places-autocomplete": "^2.6.4",
+    "react-native-haptic-feedback": "^2.3.4",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-maps": "^1.27.2",
