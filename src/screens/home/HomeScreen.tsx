@@ -26,7 +26,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth, useTheme } from '../../context';
 import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
 import type { AppStackParamList } from '../../navigation/types';
-import { FontSizes, Spacing, BorderRadius } from '../../constants';
+import { FontSizes, Spacing, BorderRadius, scaleFont, scaleLineHeight, Colors } from '../../constants';
 import { fetchVendorHome } from '../../services/authApi';
 import type { VendorHomeLocation } from '../../services/authApi';
 import { MKCLogo } from '../../assets/images/MKCLogo';
@@ -327,13 +327,13 @@ function JobTypeCard({
       <View style={[styles.jobTypeInner, { backgroundColor: colors.cardInner }]}>
         <View style={styles.jobTypeLeft}>
           <View style={[styles.jobTypeBadge, { backgroundColor: colors.card }]}>
-            <Text style={[styles.jobTypeBadgeText, { color: colors.textMuted }]}>{badgeText}</Text>
+            <Text style={[styles.jobTypeBadgeText, { color: colors.text }]}>{badgeText}</Text>
             {badgeSubText && (
-              <Text style={[styles.jobTypeBadgeSubText, { color: colors.textMuted }]}>{badgeSubText}</Text>
+              <Text style={[styles.jobTypeBadgeSubText, { color: colors.text }]}>{badgeSubText}</Text>
             )}
           </View>
-          <View>
-            <Text style={[styles.jobTypeTitle, { color: colors.textMuted }]}>{title}</Text>
+          <View style={{ marginVertical: scaleFont(6) }}>
+            <Text style={[styles.jobTypeTitle, { color: colors.text }]}>{title}</Text>
             {subtitle && (
               <Text style={[styles.jobTypeSubtitle, { color: colors.textMuted }]}>{subtitle}</Text>
             )}
@@ -353,7 +353,7 @@ function JobTypeCard({
 
 export function HomeScreen() {
   const { colors, isDark, themeMode, setThemeMode } = useTheme();
-  const { signOut, vendorName, vendorMobile, vendorLocation, updateVendorLocation, signIn } = useAuth();
+  const { signOut, vendorName, vendorMobile, vendorLocation, updateVendorLocation, setHasJobLocation, signIn } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const { handleScroll, hide, show } = useTabBarVisibility();
   const insets = useSafeAreaInsets();
@@ -403,6 +403,7 @@ export function HomeScreen() {
       // Keep local auth context in sync
       if (home.primaryLocation) {
         await updateVendorLocation(home.primaryLocation.address);
+        await setHasJobLocation(true);
       }
     } catch (err: any) {
       if (__DEV__) console.warn('[HomeScreen] fetchVendorHome error:', err?.message);
@@ -550,7 +551,7 @@ export function HomeScreen() {
                 </TouchableOpacity>
               </View>
               <View style={[styles.actionImagePlaceholder, { backgroundColor: colors.surface }]}>
-                <Text style={{ color: colors.textMuted, fontSize: 12 }}>Image</Text>
+                <Text style={{ color: colors.textMuted, fontSize: FontSizes.sm }}>Image</Text>
               </View>
             </View>
           )}
@@ -560,7 +561,7 @@ export function HomeScreen() {
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>काम के प्रकार (Job categories)</Text>
         </View>
-        <Text style={[styles.sectionDescription, { color: colors.textMuted, marginLeft: HP, marginBottom: Spacing.sm }]}>अपनी सुविधा के अनुसार काम चुनें,, अप्लाई करें</Text>
+        <Text style={[styles.sectionDescription, { color: colors.textMuted, marginLeft: HP, marginBottom: Spacing.sm }]}>अपनी सुविधा के अनुसार काम चुनें, अप्लाई करें</Text>
 
         <View style={styles.jobCategoriesContainer}>
           {(isDark ? JOB_CATEGORIES_DARK : JOB_CATEGORIES_LIGHT).map(category => (
@@ -573,9 +574,8 @@ export function HomeScreen() {
                 <Image
                   source={category.icon}
                   style={{
-                    width: 40,
-                    height: 40,
-                    // resizeMode: 'contain',
+                    width: scaleFont(40),
+                    height: scaleFont(40),
                   }}
                 />
               </View>
@@ -586,24 +586,26 @@ export function HomeScreen() {
         </View>
 
         {/* ── Job Type Cards ── */}
-        <JobTypeCard
-          badgeText="24"
-          badgeSubText="Hrs"
-          title="फुल-टाइम (24 घंटे) के काम"
-          subtitle="जापा / नैनी / बेबीसिटर"
-          isDark={isDark}
-          colors={colors}
-          onPress={() => { setJobSheetCategory(undefined); setJobSheetHours('24-hours'); setJobSheetVisible(true); }}
-        />
-        <JobTypeCard
-          badgeText="10"
-          badgeSubText="Hrs"
-          title="पार्ट-टाइम (10 घंटे) के काम"
-          subtitle="जापा / नैनी / बेबीसिटर"
-          isDark={isDark}
-          colors={colors}
-          onPress={() => { setJobSheetCategory(undefined); setJobSheetHours('10-hours'); setJobSheetVisible(true); }}
-        />
+        <View style={{ marginTop: scaleFont(28), marginHorizontal: scaleFont(7) }}>
+          <JobTypeCard
+            badgeText="24"
+            badgeSubText="Hrs"
+            title="फुल-टाइम (24 घंटे) के काम"
+            subtitle="जापा / नैनी / बेबीसिटर"
+            isDark={isDark}
+            colors={colors}
+            onPress={() => { setJobSheetCategory(undefined); setJobSheetHours('24-hours'); setJobSheetVisible(true); }}
+          />
+          <JobTypeCard
+            badgeText="10"
+            badgeSubText="Hrs"
+            title="पार्ट-टाइम (10 घंटे) के काम"
+            subtitle="जापा / नैनी / बेबीसिटर"
+            isDark={isDark}
+            colors={colors}
+            onPress={() => { setJobSheetCategory(undefined); setJobSheetHours('10-hours'); setJobSheetVisible(true); }}
+          />
+        </View>
 
         {/* ── Decorative Icon ── */}
         <View style={styles.bottomIconContainer} pointerEvents="none">
@@ -952,7 +954,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textAlignVertical: 'center',
     lineHeight: 40,
-    fontSize: 20,
+    fontSize: FontSizes.title,
     fontFamily: 'GolosText-Bold',
     fontWeight: '700',
   },
@@ -961,10 +963,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   greeting: {
-    fontSize: 18,
+    fontSize: FontSizes.title,
     fontFamily: 'NotoSansDevanagari-SemiBold',
     fontWeight: '700',
-    lineHeight: 26,
+    lineHeight: scaleLineHeight(26),
   },
   statusRow: {
     flexDirection: 'row',
@@ -992,7 +994,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   ratingText: {
-    fontSize: FontSizes.body,
+    fontSize: FontSizes.caption,
     fontFamily: 'GolosText-SemiBold',
     fontWeight: '600',
   },
@@ -1018,7 +1020,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   locationText: {
-    fontSize: FontSizes.body,
+    fontSize: FontSizes.caption,
     fontFamily: 'GolosText-Medium',
     flex: 1,
   },
@@ -1027,18 +1029,15 @@ const styles = StyleSheet.create({
   sectionHeader: {
     paddingHorizontal: HP,
     marginTop: SECTION_GAP,
-    marginBottom: SECTION_CONTENT_GAP,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: FontSizes.subtitle,
     fontFamily: 'NotoSansDevanagari-SemiBold',
     fontWeight: '700',
-    lineHeight: 26,
   },
   sectionSubtitle: {
-    fontSize: FontSizes.caption,
+    fontSize: FontSizes.subtitle,
     fontFamily: 'GolosText-Regular',
-    marginTop: 2,
   },
 
   /* ── Action Cards ── */
@@ -1084,20 +1083,20 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.md,
   },
   sectionDescription: {
-    fontSize: FontSizes.body,
-    lineHeight: 20,
+    fontSize: FontSizes.caption,
+    color: Colors.light.textMuted,
   },
   jobCategoriesContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: HP,
-    marginBottom: Spacing.lg,
+    marginTop: Spacing.lg,
   },
 
   jobCategoryCard: {
     width: (SW - HP * 2 - HP * 2) / 4,
     alignItems: 'center',
-    paddingBottom:3,
+    paddingBottom: 3,
     borderRadius: BorderRadius.md,
   },
   jobCategoryIcon: {
@@ -1110,10 +1109,17 @@ const styles = StyleSheet.create({
   },
   jobCategoryTitle: {
     fontSize: FontSizes.sm,
+    fontFamily: 'NotoSansDevanagari-SemiBold',
     fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: scaleLineHeight(16),
   },
   jobCategorySubtitle: {
-    fontSize: 10,
+    fontSize: FontSizes.sm,
+    fontFamily: 'GolosText-Medium',
+    fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: scaleLineHeight(16),
   },
   jobTypeCard: {
     marginHorizontal: HP,
@@ -1121,6 +1127,11 @@ const styles = StyleSheet.create({
     padding: 6,
     borderRadius: BorderRadius.xl,
     borderWidth: 1,
+    shadowColor: '#0000000F',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 3,
   },
   jobTypeInner: {
     flexDirection: 'row',
@@ -1129,6 +1140,11 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     borderRadius: BorderRadius.lg,
     overflow: 'hidden',
+    shadowColor: '#0000000F',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 3,
   },
   jobTypeWaveContainer: {
     position: 'absolute',
@@ -1142,29 +1158,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   jobTypeBadge: {
-    width: 50,
-    height: 50,
-    borderRadius: BorderRadius.lg,
+    width: scaleFont(40),
+    height: scaleFont(40),
+    borderRadius: scaleFont(5),
     marginRight: Spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
   jobTypeBadgeText: {
-    fontSize: FontSizes.subtitle,
+    fontSize: FontSizes.sm,
     fontWeight: '700',
   },
   jobTypeBadgeSubText: {
-    fontSize: FontSizes.subtitle,
+    fontSize: FontSizes.sm,
     marginTop: -4,
     fontWeight: '700',
   },
   jobTypeTitle: {
-    fontSize: FontSizes.subtitle,
+    fontSize: FontSizes.caption,
     fontWeight: '600',
   },
   jobTypeSubtitle: {
-    fontSize: FontSizes.body,
-    marginTop: 2,
+    fontSize: FontSizes.sm,
   },
   helpCard: {
     backgroundColor: '#0F182B',
@@ -1277,22 +1292,22 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   benefitOfferTitle: {
-    fontSize: 20,
+    fontSize: FontSizes.title,
     fontFamily: 'NotoSansDevanagari-Bold',
     fontWeight: '700',
-    lineHeight: 28,
+    lineHeight: scaleLineHeight(28),
   },
   benefitOfferSubtitle: {
     marginTop: 4,
-    fontSize: 13,
+    fontSize: FontSizes.sm2,
     fontFamily: 'NotoSansDevanagari-Regular',
-    lineHeight: 18,
+    lineHeight: scaleLineHeight(18),
   },
   benefitOfferDesc: {
     marginTop: 8,
-    fontSize: 13,
+    fontSize: FontSizes.sm2,
     fontFamily: 'NotoSansDevanagari-Regular',
-    lineHeight: 18,
+    lineHeight: scaleLineHeight(18),
   },
   benefitOfferBtn: {
     marginTop: 14,
@@ -1303,7 +1318,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E07A2F',
   },
   benefitOfferBtnText: {
-    fontSize: 13,
+    fontSize: FontSizes.sm2,
     fontFamily: 'GolosText-SemiBold',
     fontWeight: '700',
     color: '#FFFFFF',
@@ -1387,15 +1402,15 @@ const styles = StyleSheet.create({
   },
   jobsGivenNumber: {
     marginTop: 6,
-    fontSize: 70,
-    lineHeight: 60,
+    fontSize: FontSizes.display1,
+    lineHeight: scaleLineHeight(60),
     fontFamily: 'GolosText-Bold',
     fontWeight: '800',
     color: '#D6D6D6',
   },
   jobsGivenSuffix: {
-    fontSize: 40,
-    lineHeight: 36,
+    fontSize: FontSizes.display2,
+    lineHeight: scaleLineHeight(36),
     fontFamily: 'GolosText-SemiBold',
     fontWeight: '700',
     color: '#D6D6D6',
@@ -1426,16 +1441,16 @@ const styles = StyleSheet.create({
   },
   jobsStatText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: FontSizes.body,
     fontFamily: 'NotoSansDevanagari-Medium',
     flex: 1,
-    lineHeight: 20,
+    lineHeight: scaleLineHeight(20),
   },
   jobsStatDescription: {
     color: 'rgba(255,255,255,0.85)',
-    fontSize: 14,
+    fontSize: FontSizes.body,
     fontFamily: 'NotoSansDevanagari-Regular',
-    lineHeight: 19,
+    lineHeight: scaleLineHeight(19),
     textAlign: 'center',
   },
 

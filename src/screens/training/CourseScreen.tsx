@@ -1,5 +1,6 @@
 import React from 'react';
 import {Platform, StatusBar, StyleSheet, Text, View} from 'react-native';
+import {FontSizes} from '../../constants';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {BlurView} from '@react-native-community/blur';
 import {useTheme} from '../../context';
@@ -58,12 +59,12 @@ const styles = StyleSheet.create({
   },
   content: {flex: 1, alignItems: 'center', justifyContent: 'center'},
   title: {
-    fontSize: 24,
+    fontSize: FontSizes.h1,
     fontFamily: 'NotoSansDevanagari-SemiBold',
     fontWeight: '700',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: FontSizes.body,
     fontFamily: 'NotoSansDevanagari-Regular',
     marginTop: 8,
   },

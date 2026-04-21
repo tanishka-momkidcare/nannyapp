@@ -111,7 +111,7 @@ async function clearRecents() {
 
 export function EditLocationScreen({navigation}: Props) {
   const {colors, isDark} = useTheme();
-  const {updateVendorLocation, vendorId} = useAuth();
+  const {updateVendorLocation, vendorId, setHasJobLocation} = useAuth();
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<PlacePrediction[]>([]);
@@ -166,8 +166,17 @@ export function EditLocationScreen({navigation}: Props) {
       if (__DEV__) console.warn('[EditLocation] job-location API error:', err);
     }
 
-    navigation.goBack();
-  }, [navigation, updateVendorLocation, vendorId]);
+    // Ensure the job-location gate opens (no-op if already true)
+    // When the gate flips, React Navigation auto-resets the stack,
+    // so goBack() is only needed when already inside MainTabs.
+    const wasAlreadySet = await AsyncStorage.getItem('@nannyapp_has_job_location') === 'true';
+    await setHasJobLocation(true);
+
+    if (wasAlreadySet) {
+      navigation.goBack();
+    }
+    // else: conditional group switch handles navigation automatically
+  }, [navigation, updateVendorLocation, vendorId, setHasJobLocation]);
 
   const handleSearch = useCallback((text: string) => {
     setQuery(text);

@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Dimensions,
   Modal,
   PermissionsAndroid,
@@ -43,6 +42,7 @@ export function OTPScreen({ route, navigation }: Props) {
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [timer, setTimer] = useState(RESEND_SECONDS);
   const [verifying, setVerifying] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
   // Extract OTP digits from an SMS message
@@ -112,6 +112,7 @@ export function OTPScreen({ route, navigation }: Props) {
     const next = [...otp];
     next[index] = digit;
     setOtp(next);
+    if (errorMsg) setErrorMsg('');
     if (digit && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -148,7 +149,7 @@ export function OTPScreen({ route, navigation }: Props) {
         vendorName,
       );
     } catch (e: any) {
-      Alert.alert('त्रुटि', e.message || 'OTP सत्यापन में समस्या हुई।');
+      setErrorMsg(e.message || 'OTP सत्यापन में समस्या हुई।');
     } finally {
       setVerifying(false);
     }
@@ -160,6 +161,7 @@ export function OTPScreen({ route, navigation }: Props) {
     }
     setTimer(RESEND_SECONDS);
     setOtp(Array(OTP_LENGTH).fill(''));
+    setErrorMsg('');
     inputRefs.current[0]?.focus();
     sendOtp(phone).catch(() => {});
   }
@@ -240,12 +242,18 @@ export function OTPScreen({ route, navigation }: Props) {
                 {
                   backgroundColor: colors.inputBackground,
                   borderColor: colors.inputBorder,
-                  color: colors.textBlue,
+                  color: errorMsg ? '#DC2626' : colors.textBlue,
                 },
                 digit
                   ? {
                       borderColor: colors.iconBlue,
                       backgroundColor: colors.otpFilledBackground,
+                    }
+                  : null,
+                errorMsg
+                  ? {
+                      borderColor: '#DC2626',
+                      backgroundColor: '#FEE2E2',
                     }
                   : null,
               ]}
@@ -263,6 +271,11 @@ export function OTPScreen({ route, navigation }: Props) {
             />
           ))}
         </View>
+
+        {/* ── Error message ── */}
+        {errorMsg ? (
+          <Text style={styles.errorText}>{errorMsg}</Text>
+        ) : null}
 
         {/* ── Resend ── */}
         <View style={styles.resendRow}>
@@ -354,6 +367,13 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
+  errorText: {
+    color: '#DC2626',
+    fontSize: 13,
+    fontWeight: '600',
+    marginHorizontal: 24,
+    marginBottom: 8,
+  },
   logoIcon: {
     marginLeft: -88,
     marginTop: -100,
@@ -416,7 +436,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginHorizontal: 24,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   otpBox: {
     width: (width - 48 - 30) / OTP_LENGTH,

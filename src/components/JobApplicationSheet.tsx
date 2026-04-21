@@ -55,7 +55,7 @@ function ParallelogramIcon() {
   );
 }
 import { useAuth } from '../context/AuthContext';
-import { BorderRadius, FontSizes, Spacing } from '../constants';
+import { BorderRadius, FontSizes, Spacing, scaleLineHeight } from '../constants';
 import {
   submitJobApplication,
 } from '../services/jobApplicationApi';
@@ -689,11 +689,11 @@ const s = StyleSheet.create({
     letterSpacing: 0.2,
   },
   headerHours: {
-    fontSize: 22,
+    fontSize: FontSizes.h2x,
     fontFamily: 'NotoSansDevanagari-Bold',
     fontWeight: '700',
     marginTop: 2,
-    lineHeight: 32,
+    lineHeight: scaleLineHeight(32),
   },
   headerSubtitle: {
     fontSize: FontSizes.sm,

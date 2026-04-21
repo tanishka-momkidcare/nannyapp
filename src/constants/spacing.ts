@@ -1,11 +1,13 @@
+import { scaleFont } from './fontSizes';
+
 export const Spacing = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  hp: 20,
-  lg: 24,
-  xl: 32,
-  xxl: 48,
+  xs: scaleFont(4),
+  sm: scaleFont(8),
+  md: scaleFont(16),
+  hp: scaleFont(20),
+  lg: scaleFont(24),
+  xl: scaleFont(32),
+  xxl: scaleFont(48),
 } as const;
 
 export const BorderRadius = {

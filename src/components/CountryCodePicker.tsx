@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   flag: {
-    fontSize: 18,
+    fontSize: FontSizes.h3,
     marginRight: 6,
   },
   dialCode: {
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sheetTitle: {
-    fontSize: 18,
+    fontSize: FontSizes.h3,
     fontWeight: '700',
     marginBottom: 12,
   },
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   rowFlag: {
-    fontSize: 22,
+    fontSize: FontSizes.h2x,
     marginRight: 12,
   },
   rowName: {

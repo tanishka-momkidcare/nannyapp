@@ -30,7 +30,7 @@ import {LoginScreenBottomIcon} from '../../assets/images/LoginScreenBottomIcon';
 const {width: SW} = Dimensions.get('window');
 type Props = NativeStackScreenProps<AuthStackParamList, 'LocationPermission'>;
 
-type PermState = 'initial' | 'notGranted' | 'denied';
+type PermState = 'initial' | 'notGranted' | 'backgroundNeeded' | 'denied';
 
 /* ── Animated map-radar with MKC logo ── */
 function RadarGraphic({size}: {size: number}) {
@@ -140,11 +140,23 @@ export function LocationPermissionScreen({navigation, route}: Props) {
   useEffect(() => {
     (async () => {
       if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.check(
+        const fineGranted = await PermissionsAndroid.check(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         );
-        if (granted) {
-          fetchLocationAndNavigate();
+        if (fineGranted) {
+          const apiLevel = Number(Platform.Version);
+          if (apiLevel >= 29) {
+            const bgGranted = await PermissionsAndroid.check(
+              PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+            );
+            if (bgGranted) {
+              fetchLocationAndNavigate();
+            } else {
+              setPermState('backgroundNeeded');
+            }
+          } else {
+            fetchLocationAndNavigate();
+          }
         }
       }
     })();
@@ -155,16 +167,32 @@ export function LocationPermissionScreen({navigation, route}: Props) {
     const subscription = AppState.addEventListener('change', async (nextAppState) => {
       if (
         appStateRef.current.match(/inactive|background/) &&
-        nextAppState === 'active' &&
-        permState === 'denied'
+        nextAppState === 'active'
       ) {
         if (Platform.OS === 'android') {
-          const granted = await PermissionsAndroid.check(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          );
-          if (granted) {
-            setPermState('initial');
-            fetchLocationAndNavigate();
+          if (permState === 'backgroundNeeded') {
+            const bgGranted = await PermissionsAndroid.check(
+              PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+            );
+            if (bgGranted) {
+              setPermState('initial');
+              fetchLocationAndNavigate();
+            }
+          } else if (permState === 'denied') {
+            const fineGranted = await PermissionsAndroid.check(
+              PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            );
+            if (fineGranted) {
+              const bgGranted = await PermissionsAndroid.check(
+                PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
+              );
+              if (bgGranted) {
+                setPermState('initial');
+                fetchLocationAndNavigate();
+              } else {
+                setPermState('backgroundNeeded');
+              }
+            }
           }
         }
       }
@@ -174,7 +202,7 @@ export function LocationPermissionScreen({navigation, route}: Props) {
   }, [permState, fetchLocationAndNavigate]);
 
   const handlePress = useCallback(async () => {
-    if (permState === 'denied') {
+    if (permState === 'denied' || permState === 'backgroundNeeded') {
       Linking.openSettings();
       return;
     }
@@ -224,26 +252,20 @@ export function LocationPermissionScreen({navigation, route}: Props) {
       );
       setLoading(false);
       if (result === PermissionsAndroid.RESULTS.GRANTED) {
-        // After granting fine location, request background ("Allow all the time")
-        // On API 30+ this opens the system settings page for background permission
+        // Check if "Allow all the time" (background) is already granted
         if (apiLevel >= 30) {
           const bgGranted = await PermissionsAndroid.check(
             PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
           );
-          if (!bgGranted) {
-            await PermissionsAndroid.request(
-              PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
-              {
-                title: 'हमेशा लोकेशन की अनुमति',
-                message:
-                  'बेहतर अनुभव के लिए कृपया "हमेशा अनुमति दें" चुनें ताकि हम आपको नज़दीकी सेवाएं दिखा सकें।',
-                buttonPositive: 'सेटिंग्स खोलें',
-                buttonNegative: 'अभी नहीं',
-              },
-            );
+          if (bgGranted) {
+            fetchLocationAndNavigate();
+          } else {
+            // Show instructions — user must enable in Settings
+            setPermState('backgroundNeeded');
           }
+        } else {
+          fetchLocationAndNavigate();
         }
-        fetchLocationAndNavigate();
       } else if (result === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
         setPermState('denied');
       } else {
@@ -272,9 +294,15 @@ export function LocationPermissionScreen({navigation, route}: Props) {
       buttonLabel = 'लोकेशन चालू करें';
       buttonIcon = 'navigate-outline';
       break;
+    case 'backgroundNeeded':
+      heading = '"हमेशा अनुमति दें" चालू करें';
+      subtitle = '';
+      buttonLabel = 'सेटिंग्स खोलें';
+      buttonIcon = 'settings-outline';
+      break;
     case 'denied':
-      heading = 'अपनी Location शेयर करें';
-      subtitle = 'लोकेशन की अनुमति बंद है, कृपया सेटिंग्स में जाकर इसे चालू करें';
+      heading = 'लोकेशन की अनुमति चालू करें';
+      subtitle = '';
       buttonLabel = 'सेटिंग्स में जाएं';
       buttonIcon = 'settings-outline';
       break;
@@ -299,19 +327,45 @@ export function LocationPermissionScreen({navigation, route}: Props) {
           <Text style={[st.sub, {color: colors.textMuted}]}>{subtitle}</Text>
         ) : null}
 
-        {/* ── Radar card ── */}
-        <View style={[st.radarCard, {backgroundColor: isDark ? colors.surface : colors.onboardingBackground}]}>
-          <MemoRadarGraphic size={110} />
-          <Text style={[st.fetchingText, {color: colors.textMuted}]} numberOfLines={2}>
-            {detectedAddress || 'Fetching your location.....'}
-          </Text>
-          {detectedAddress ? (
-            <View style={st.detectedBadge}>
-              <Ionicons name="checkmark-circle" size={14} color={colors.success} />
-              <Text style={[st.detectedBadgeText, { color: colors.success }]}>आगे बढ़ रहे हैं...</Text>
+        {/* ── Radar / Instructions card ── */}
+        {permState === 'backgroundNeeded' || permState === 'denied' ? (
+          <View style={[st.instructionCard, {backgroundColor: isDark ? colors.surface : colors.onboardingBackground}]}>
+            <Text style={[st.instructionTitle, {color: colors.text}]}>
+              {permState === 'backgroundNeeded' ? 'सेटिंग्स में ये करें:' : 'लोकेशन चालू करने के लिए:'}
+            </Text>
+            {[
+              {step: '1', text: '"Permissions" (अनुमतियां) पर टैप करें'},
+              {step: '2', text: '"Location" (लोकेशन) पर टैप करें'},
+              {step: '3', text: '"Allow all the time"\n(हमेशा अनुमति दें) चुनें'},
+            ].map(item => (
+              <View key={item.step} style={st.instructionRow}>
+                <View style={[st.stepCircle, {backgroundColor: colors.iconBlue}]}>
+                  <Text style={st.stepNumber}>{item.step}</Text>
+                </View>
+                <Text style={[st.instructionText, {color: colors.textMuted}]}>{item.text}</Text>
+              </View>
+            ))}
+            <View style={st.autoRefreshBadge}>
+              <Ionicons name="refresh-circle-outline" size={16} color={colors.success} />
+              <Text style={[st.autoRefreshText, {color: colors.success}]}>
+                अनुमति देने के बाद ऑटो-रिफ्रेश होगा
+              </Text>
             </View>
-          ) : null}
-        </View>
+          </View>
+        ) : (
+          <View style={[st.radarCard, {backgroundColor: isDark ? colors.surface : colors.onboardingBackground}]}>
+            <MemoRadarGraphic size={110} />
+            <Text style={[st.fetchingText, {color: colors.textMuted}]} numberOfLines={2}>
+              {detectedAddress || 'Fetching your location.....'}
+            </Text>
+            {detectedAddress ? (
+              <View style={st.detectedBadge}>
+                <Ionicons name="checkmark-circle" size={14} color={colors.success} />
+                <Text style={[st.detectedBadgeText, { color: colors.success }]}>आगे बढ़ रहे हैं...</Text>
+              </View>
+            ) : null}
+          </View>
+        )}
 
         <View style={{flex: 1}} />
 
@@ -410,4 +464,52 @@ const st = StyleSheet.create({
   },
   ctaBtnInner: {flexDirection: 'row', alignItems: 'center'},
   ctaText: {fontSize: FontSizes.button, fontWeight: '700'},
+
+  instructionCard: {
+    width: '100%',
+    padding: 20,
+    borderRadius: BorderRadius.xxl,
+    marginTop: 16,
+  },
+  instructionTitle: {
+    fontSize: FontSizes.subtitle,
+    fontWeight: '700',
+    marginBottom: 16,
+  },
+  instructionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+    gap: 12,
+  },
+  stepCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepNumber: {
+    color: '#fff',
+    fontSize: FontSizes.sm,
+    fontWeight: '700',
+  },
+  instructionText: {
+    fontSize: FontSizes.caption,
+    flex: 1,
+    lineHeight: 22,
+  },
+  autoRefreshBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(0,0,0,0.1)',
+  },
+  autoRefreshText: {
+    fontSize: FontSizes.sm,
+    fontWeight: '600',
+  },
 });

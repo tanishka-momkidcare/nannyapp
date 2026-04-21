@@ -27,6 +27,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useAuth, useTheme, useLocationTrackingContext} from '../../context';
 import Axios from '../../services/Axios';
 import {config1} from '../../constants/config';
+import {FontSizes, scaleLineHeight} from '../../constants';
 
 const AUTO_REFRESH_MS = 30_000;
 
@@ -502,7 +503,7 @@ export function LocationDebugScreen() {
             <View style={s.alertFooter}>
               <Text style={[s.alertTime, {color: colors.textSecondary}]}>{fmt(a.createdAt)}</Text>
               <View style={[s.resolvedBadge, {backgroundColor: a.resolved ? '#22C55E20' : '#EF444420'}]}>
-                <Text style={{color: a.resolved ? '#22C55E' : '#EF4444', fontSize: 11, fontWeight: '600'}}>
+                <Text style={{color: a.resolved ? '#22C55E' : '#EF4444', fontSize: FontSizes.xs2, fontWeight: '600'}}>
                   {a.resolved ? 'Resolved' : 'Open'}
                 </Text>
               </View>
@@ -580,11 +581,11 @@ export function LocationDebugScreen() {
       {/* Header */}
       <View style={[s.header, {borderBottomColor: colors.border}]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={s.backBtn}>
-          <Text style={{color: colors.primary, fontSize: 16}}>← Back</Text>
+          <Text style={{color: colors.primary, fontSize: FontSizes.subtitle}}>← Back</Text>
         </TouchableOpacity>
         <Text style={[s.headerTitle, {color: colors.text}]}>Location Tracking</Text>
         <TouchableOpacity onPress={onRefresh} style={s.backBtn}>
-          <Text style={{color: colors.primary, fontSize: 14, textAlign: 'right'}}>
+          <Text style={{color: colors.primary, fontSize: FontSizes.body, textAlign: 'right'}}>
             {refreshing ? '...' : '↻'}
           </Text>
         </TouchableOpacity>
@@ -717,7 +718,7 @@ const s = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   backBtn: {width: 60},
-  headerTitle: {fontSize: 17, fontWeight: '700'},
+  headerTitle: {fontSize: FontSizes.subtitle2, fontWeight: '700'},
   tabBar: {
     flexDirection: 'row',
     borderBottomWidth: StyleSheet.hairlineWidth,
@@ -725,97 +726,97 @@ const s = StyleSheet.create({
     maxHeight: 44,
   },
   tab: {paddingHorizontal: 16, paddingVertical: 12},
-  tabText: {fontSize: 13, fontWeight: '600'},
+  tabText: {fontSize: FontSizes.sm2, fontWeight: '600'},
   scroll: {padding: 16},
-  sectionTitle: {fontSize: 15, fontWeight: '700', marginTop: 18, marginBottom: 8},
+  sectionTitle: {fontSize: FontSizes.input2, fontWeight: '700', marginTop: 18, marginBottom: 8},
 
   // Connection
   connRow: {flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 8, marginBottom: 12},
   connDot: {width: 8, height: 8, borderRadius: 4, marginRight: 8},
-  connText: {color: '#D1D5DB', fontSize: 12, flex: 1},
-  connTime: {color: '#9CA3AF', fontSize: 10},
+  connText: {color: '#D1D5DB', fontSize: FontSizes.sm, flex: 1},
+  connTime: {color: '#9CA3AF', fontSize: FontSizes.xs},
 
   // Stats
   statsGrid: {flexDirection: 'row', flexWrap: 'wrap', borderRadius: 12, padding: 4},
   statBox: {width: '50%', padding: 14, alignItems: 'center'},
-  statValue: {fontSize: 32, fontWeight: '800'},
-  statLabel: {fontSize: 11, color: '#9CA3AF', marginTop: 2},
+  statValue: {fontSize: FontSizes.display3, fontWeight: '800'},
+  statLabel: {fontSize: FontSizes.xs2, color: '#9CA3AF', marginTop: 2},
 
   // My Data
   myDataCard: {borderRadius: 12, padding: 14, marginTop: 12},
-  myDataTitle: {fontSize: 14, fontWeight: '700', marginBottom: 2},
-  myDataId: {fontSize: 10, marginBottom: 10, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace'},
+  myDataTitle: {fontSize: FontSizes.body, fontWeight: '700', marginBottom: 2},
+  myDataId: {fontSize: FontSizes.xs, marginBottom: 10, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace'},
   myDataRow: {flexDirection: 'row', justifyContent: 'space-around'},
   miniStat: {alignItems: 'center'},
-  miniStatValue: {fontSize: 22, fontWeight: '800'},
-  miniStatLabel: {fontSize: 9, color: '#9CA3AF', marginTop: 1},
+  miniStatValue: {fontSize: FontSizes.h2x, fontWeight: '800'},
+  miniStatLabel: {fontSize: FontSizes.xxs, color: '#9CA3AF', marginTop: 1},
 
   // Buttons
   buttonRow: {flexDirection: 'row', gap: 8, marginBottom: 8},
   actionBtn: {flex: 1, padding: 13, borderRadius: 10, alignItems: 'center'},
-  btnText: {color: '#fff', fontWeight: '700', fontSize: 12},
+  btnText: {color: '#fff', fontWeight: '700', fontSize: FontSizes.sm},
 
   // Info
   infoBox: {padding: 10, borderRadius: 8, marginTop: 4},
-  infoText: {fontSize: 12, fontWeight: '600'},
-  viewAll: {color: '#3B82F6', fontSize: 13, fontWeight: '600', textAlign: 'center', paddingVertical: 8},
+  infoText: {fontSize: FontSizes.sm, fontWeight: '600'},
+  viewAll: {color: '#3B82F6', fontSize: FontSizes.sm2, fontWeight: '600', textAlign: 'center', paddingVertical: 8},
 
   // Location Card
   locCard: {padding: 10, borderRadius: 10, marginBottom: 6},
   locHeader: {flexDirection: 'row', alignItems: 'center', gap: 6},
-  locIndex: {fontSize: 11, fontWeight: '700', width: 28},
-  locCoord: {fontSize: 13, fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', flex: 1},
+  locIndex: {fontSize: FontSizes.xs2, fontWeight: '700', width: 28},
+  locCoord: {fontSize: FontSizes.sm2, fontWeight: '600', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', flex: 1},
   mockBadge: {backgroundColor: '#EF4444', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4},
-  mockText: {color: '#fff', fontSize: 9, fontWeight: '800'},
+  mockText: {color: '#fff', fontSize: FontSizes.xxs, fontWeight: '800'},
   locMeta: {flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6},
-  locTime: {fontSize: 10, marginTop: 4},
+  locTime: {fontSize: FontSizes.xs, marginTop: 4},
 
   // Tags
   tag: {paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4},
-  tagText: {fontSize: 10, fontWeight: '600'},
+  tagText: {fontSize: FontSizes.xs, fontWeight: '600'},
 
   // Cards
   card: {borderRadius: 12, padding: 14, marginBottom: 8},
   cardHeader: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8},
-  cardId: {fontSize: 11, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace'},
+  cardId: {fontSize: FontSizes.xs2, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace'},
   cardBody: {},
 
   // Badge
   badge: {paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6},
-  badgeText: {color: '#fff', fontSize: 10, fontWeight: '700'},
+  badgeText: {color: '#fff', fontSize: FontSizes.xs, fontWeight: '700'},
 
   // Rows
   row: {flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4},
-  rowLabel: {fontSize: 12},
-  rowValue: {fontSize: 12, fontWeight: '600'},
+  rowLabel: {fontSize: FontSizes.sm},
+  rowValue: {fontSize: FontSizes.sm, fontWeight: '600'},
 
   // Alerts
-  alertType: {fontSize: 13, fontWeight: '800'},
-  alertDetails: {fontSize: 12, marginTop: 4, lineHeight: 18},
+  alertType: {fontSize: FontSizes.sm2, fontWeight: '800'},
+  alertDetails: {fontSize: FontSizes.sm, marginTop: 4, lineHeight: scaleLineHeight(18)},
   alertFooter: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8},
-  alertTime: {fontSize: 10},
+  alertTime: {fontSize: FontSizes.xs},
   resolvedBadge: {paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6},
 
   // Geofence
   geoRow: {flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 8, marginBottom: 4},
   geoBadge: {paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginRight: 10},
-  geoBadgeText: {color: '#fff', fontSize: 11, fontWeight: '700'},
+  geoBadgeText: {color: '#fff', fontSize: FontSizes.xs2, fontWeight: '700'},
   geoInfo: {flex: 1},
-  geoCoord: {fontSize: 12, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace'},
-  geoTime: {fontSize: 10, marginTop: 2},
+  geoCoord: {fontSize: FontSizes.sm, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace'},
+  geoTime: {fontSize: FontSizes.xs, marginTop: 2},
 
   // Status lines
   statusLine: {flexDirection: 'row', alignItems: 'center', paddingVertical: 5},
-  statusDot: {fontSize: 10, marginRight: 8},
-  statusLabel: {fontSize: 12, flex: 1},
-  statusLabelSm: {fontSize: 11, flex: 1},
-  statusValue: {fontSize: 11, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace'},
+  statusDot: {fontSize: FontSizes.xs, marginRight: 8},
+  statusLabel: {fontSize: FontSizes.sm, flex: 1},
+  statusLabelSm: {fontSize: FontSizes.xs2, flex: 1},
+  statusValue: {fontSize: FontSizes.xs2, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace'},
 
   // Code
   codeBlock: {padding: 12, borderRadius: 10},
-  codeText: {fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 10},
+  codeText: {fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: FontSizes.xs},
 
   // Empty
   empty: {padding: 40, alignItems: 'center'},
-  emptyText: {color: '#6B7280', fontSize: 14, textAlign: 'center'},
+  emptyText: {color: '#6B7280', fontSize: FontSizes.body, textAlign: 'center'},
 });

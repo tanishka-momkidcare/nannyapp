@@ -12,7 +12,7 @@ import Svg, {Path, Circle} from 'react-native-svg';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {useAuth, useTheme} from '../../context';
-import {FontSizes, BorderRadius} from '../../constants';
+import {FontSizes, BorderRadius, scaleLineHeight} from '../../constants';
 import type {AppStackParamList} from '../../navigation/types';
 
 /* ── Icons ── */
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: FontSizes.h3,
     fontFamily: 'NotoSansDevanagari-SemiBold',
     fontWeight: '700',
   },
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: {
-    fontSize: 24,
+    fontSize: FontSizes.h1,
     fontFamily: 'GolosText-Bold',
     fontWeight: '700',
   },
@@ -360,10 +360,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   userName: {
-    fontSize: 20,
+    fontSize: FontSizes.title,
     fontFamily: 'NotoSansDevanagari-SemiBold',
     fontWeight: '700',
-    lineHeight: 28,
+    lineHeight: scaleLineHeight(28),
   },
   userPhone: {
     fontSize: FontSizes.body,
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   menuLabel: {
-    fontSize: 16,
+    fontSize: FontSizes.subtitle,
     fontFamily: 'NotoSansDevanagari-Medium',
     fontWeight: '500',
   },

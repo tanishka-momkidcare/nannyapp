@@ -2,9 +2,6 @@ export type AuthStackParamList = {
   SignIn: undefined;
   SignUp: undefined;
   OTPVerification: {phone: string};
-  LocationPermission: {phone: string; otp: string};
-  LocationSelection: {phone: string; otp: string; latitude: number; longitude: number; selectedArea?: string};
-  AreaSearch: {phone: string; otp: string; latitude: number; longitude: number};
 };
 
 export type BottomTabParamList = {
@@ -16,6 +13,8 @@ export type BottomTabParamList = {
 };
 
 export type AppStackParamList = {
+  LocationPermission: undefined;
+  JobLocationSetup: undefined;
   MainTabs: undefined;
   ProfileSettings: undefined;
   EditLocation: undefined;

@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { useAuth, useTheme } from '../../context';
-import { FontSizes, BorderRadius } from '../../constants';
+import { FontSizes, BorderRadius, scaleLineHeight } from '../../constants';
 import NannyImage from '../../assets/Group 13273.svg';
 import BlueShieldIcon from '../../assets/BlueShield.svg';
 import { MKCLogoIconBlue } from '../../assets/images/MKCLogoIconBlue';
@@ -39,7 +39,7 @@ const SLIDES: SlideConfig[] = [
   },
 ];
 
-/* ── Shield icon for badge ── */
+/* -- Shield icon for badge -- */
 
 export function WelcomeScreen() {
   const { completeOnboarding } = useAuth();
@@ -114,9 +114,9 @@ export function WelcomeScreen() {
           )}
         />
 
-        {/* ── Footer ── */}
+        {/* -- Footer -- */}
         <View style={st.footer}>
-          {/* Pagination dots — only show when multiple slides */}
+          {/* Pagination dots � only show when multiple slides */}
           {SLIDES.length > 1 && (
             <View style={st.pagination}>
               {SLIDES.map((_, i) => (
@@ -173,7 +173,7 @@ export function WelcomeScreen() {
 const st = StyleSheet.create({
   container: { flex: 1, },
 
-  /* ── Logo ── */
+  /* -- Logo -- */
   logoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -186,7 +186,7 @@ const st = StyleSheet.create({
     marginTop: 2,
   },
 
-  /* ── Hero ── */
+  /* -- Hero -- */
   heroSection: {
     height: HERO_H,
     alignItems: 'center',
@@ -208,7 +208,7 @@ const st = StyleSheet.create({
     zIndex: 1,
   },
 
-  /* ── Slides ── */
+  /* -- Slides -- */
   flatList: { flexGrow: 0 },
   slide: {
     paddingHorizontal: 24,
@@ -217,7 +217,7 @@ const st = StyleSheet.create({
     alignItems: 'center',
   },
 
-  /* ── Badge ── */
+  /* -- Badge -- */
   badge: {
     position: 'absolute',
     bottom: 21,
@@ -239,23 +239,23 @@ const st = StyleSheet.create({
     marginLeft: 8,
   },
 
-  /* ── Text ── */
+  /* -- Text -- */
   title: {
-    fontSize: 18,
+    fontSize: FontSizes.h3,
     fontFamily: 'NotoSansDevanagari-SemiBold',
     textAlign: 'center',
     marginBottom: 4,
-    lineHeight: 24,
+    lineHeight: scaleLineHeight(24),
   },
   description: {
-    fontSize: 16,
+    fontSize: FontSizes.subtitle,
     fontFamily: 'NotoSansDevanagari-Medium',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: scaleLineHeight(20),
     letterSpacing: 0,
   },
 
-  /* ── Footer ── */
+  /* -- Footer -- */
   footer: {
     paddingHorizontal: 32,
     paddingBottom: 30,

@@ -58,13 +58,22 @@ export interface LoginLocation {
 }
 
 async function request<T>(path: string, body: Record<string, unknown>): Promise<ApiResponse<T>> {
-  const { data } = await Axios.post<ApiResponse<T>>(`${config1.API_HOST}${path}`, body);
+  try {
+    const { data } = await Axios.post<ApiResponse<T>>(`${config1.API_HOST}${path}`, body);
 
-  if (!data.success) {
-    throw new Error(data.message || 'API error');
+    if (!data.success) {
+      throw new Error(data.message || 'API error');
+    }
+
+    return data;
+  } catch (err: any) {
+    // Extract message from API response body (e.g. {success:false, message:"Invalid OTP."})
+    const apiMessage = err?.response?.data?.message;
+    if (apiMessage) {
+      throw new Error(apiMessage);
+    }
+    throw err;
   }
-
-  return data;
 }
 
 /** Send OTP to the given mobile number. */

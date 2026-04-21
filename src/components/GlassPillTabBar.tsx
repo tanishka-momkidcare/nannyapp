@@ -1,5 +1,6 @@
 import React, {useEffect, useRef} from 'react';
 import {Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {FontSizes, scaleLineHeight} from '../constants';
 import {BlurView} from '@react-native-community/blur';
 import Svg, {Path, Circle, Rect} from 'react-native-svg';
 import type {BottomTabBarProps} from '@react-navigation/bottom-tabs';
@@ -388,7 +389,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   tabLabel: {
-    fontSize: 11,
-    lineHeight: 16,
+    fontSize: FontSizes.xs2,
+    lineHeight: scaleLineHeight(16),
   },
 });

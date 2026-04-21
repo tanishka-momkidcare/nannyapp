@@ -32,6 +32,7 @@ import Svg, {Path} from 'react-native-svg';
 import {useAuth, useTheme} from '../../context';
 import {useLocationTrackingContext} from '../../context/LocationTrackingContext';
 import {GOOGLE_MAPS_API_KEY, reverseGeocode, config1} from '../../constants/config';
+import {FontSizes, scaleLineHeight} from '../../constants';
 import Axios from '../../services/Axios';
 import {addJobLocation} from '../../services/jobLocationApi';
 
@@ -295,7 +296,7 @@ export function CreateShiftScreen() {
                 borderRadius: 12,
                 backgroundColor: isDark ? '#1a1a2e' : '#fff',
                 color: colors.text,
-                fontSize: 14,
+                fontSize: FontSizes.body,
                 paddingLeft: 40,
                 borderWidth: 1,
                 borderColor: colors.border,
@@ -308,7 +309,7 @@ export function CreateShiftScreen() {
                 backgroundColor: isDark ? '#1a1a2e' : '#fff',
                 padding: 12,
               },
-              description: {color: colors.text, fontSize: 13},
+              description: {color: colors.text, fontSize: FontSizes.sm2},
               separator: {backgroundColor: colors.border},
               listView: {
                 backgroundColor: isDark ? '#1a1a2e' : '#fff',
@@ -423,7 +424,7 @@ const st = StyleSheet.create({
     zIndex: 10,
   },
   headerBtn: {width: 40, height: 40, alignItems: 'center', justifyContent: 'center'},
-  headerTitle: {fontSize: 17, fontWeight: '700'},
+  headerTitle: {fontSize: FontSizes.subtitle2, fontWeight: '700'},
   mapContainer: {flex: 1, position: 'relative'},
   map: {...StyleSheet.absoluteFillObject},
   searchOverlay: {
@@ -465,8 +466,8 @@ const st = StyleSheet.create({
       android: {elevation: 3},
     }),
   },
-  locationAddr: {fontSize: 13, fontWeight: '600', lineHeight: 18},
-  locationCoord: {fontSize: 10, marginTop: 2, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace'},
+  locationAddr: {fontSize: FontSizes.sm2, fontWeight: '600', lineHeight: scaleLineHeight(18)},
+  locationCoord: {fontSize: FontSizes.xs, marginTop: 2, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace'},
   sheet: {
     paddingHorizontal: 16,
     paddingTop: 14,
@@ -478,7 +479,7 @@ const st = StyleSheet.create({
       android: {elevation: 8},
     }),
   },
-  label: {fontSize: 13, fontWeight: '700', marginBottom: 8},
+  label: {fontSize: FontSizes.sm2, fontWeight: '700', marginBottom: 8},
   chipRow: {flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14},
   chip: {
     paddingHorizontal: 14,
@@ -486,12 +487,12 @@ const st = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
   },
-  chipText: {fontSize: 13, fontWeight: '600'},
+  chipText: {fontSize: FontSizes.sm2, fontWeight: '600'},
   createBtn: {
     paddingVertical: 15,
     borderRadius: 14,
     alignItems: 'center',
     marginTop: 4,
   },
-  createBtnText: {color: '#fff', fontSize: 15, fontWeight: '700'},
+  createBtnText: {color: '#fff', fontSize: FontSizes.input2, fontWeight: '700'},
 });
